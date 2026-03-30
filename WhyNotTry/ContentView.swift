@@ -163,6 +163,7 @@ struct DiscoverView: View {
                 .disabled(activities.isEmpty)
             }
             .padding()
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .navigationTitle("Why Not Try")
         }
     }
@@ -327,6 +328,7 @@ struct ChecklistView: View {
                     }
                 }
             }
+            .background(Color(.systemGroupedBackground).ignoresSafeArea())
             .navigationTitle("My List")
             .searchable(text: $searchText, prompt: "Search activities & places")
             .toolbar {
