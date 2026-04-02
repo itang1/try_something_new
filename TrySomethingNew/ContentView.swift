@@ -618,6 +618,27 @@ struct LocationInputSheet: View {
     @State private var addressText = ""
     @State private var isGeocoding = false
     @State private var completer = SearchCompleter()
+    @AppStorage("recentAddresses") private var recentAddressesData = ""
+
+    private var recentAddresses: [String] {
+        guard !recentAddressesData.isEmpty,
+              let data = recentAddressesData.data(using: .utf8),
+              let addresses = try? JSONDecoder().decode([String].self, from: data) else {
+            return []
+        }
+        return addresses
+    }
+
+    private func saveToRecent(_ address: String) {
+        var current = recentAddresses
+        current.removeAll { $0 == address }
+        current.insert(address, at: 0)
+        if current.count > 5 { current = Array(current.prefix(5)) }
+        if let data = try? JSONEncoder().encode(current),
+           let str = String(data: data, encoding: .utf8) {
+            recentAddressesData = str
+        }
+    }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -667,13 +688,14 @@ struct LocationInputSheet: View {
                 }
             }
 
-            // Autocomplete suggestions
+            // Autocomplete suggestions or recent searches
             if !completer.results.isEmpty {
                 List(completer.results.prefix(6), id: \.self) { result in
                     Button {
                         isGeocoding = true
                         Task {
                             await locationManager.geocode(completion: result)
+                            saveToRecent(locationManager.displayName)
                             isGeocoding = false
                             isPresented = false
                         }
@@ -692,6 +714,42 @@ struct LocationInputSheet: View {
                     }
                 }
                 .listStyle(.plain)
+            } else if !recentAddresses.isEmpty && addressText.isEmpty {
+                // Recent searches shown when text field is empty
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Recent")
+                        .font(.caption.bold())
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 4)
+                    ForEach(recentAddresses, id: \.self) { address in
+                        Button {
+                            isGeocoding = true
+                            Task {
+                                await locationManager.geocode(address)
+                                saveToRecent(locationManager.displayName)
+                                isGeocoding = false
+                                isPresented = false
+                            }
+                        } label: {
+                            HStack(spacing: 10) {
+                                Image(systemName: "clock.arrow.circlepath")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                                Text(address)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.primary)
+                                Spacer()
+                            }
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 4)
+                        }
+                        if address != recentAddresses.last {
+                            Divider().padding(.leading, 34)
+                        }
+                    }
+                }
+                .padding(.top, 4)
+                Spacer()
             } else {
                 Spacer()
             }
@@ -706,6 +764,7 @@ struct LocationInputSheet: View {
         isGeocoding = true
         Task {
             await locationManager.geocode(trimmed)
+            saveToRecent(locationManager.displayName)
             isGeocoding = false
             isPresented = false
         }
