@@ -7,10 +7,41 @@ xcuserdata/
 # Build output
 DerivedData/
 build/
+*.o
+*.d
+*.dSYM/
+*.ipa
+*.hmap
 
-# macOS
-.DS_Store
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
 
 # Swift Package Manager
 .build/
 .swiftpm/
+Packages/
+Package.resolved
+
+# CocoaPods (if ever added)
+Pods/
+*.xcworkspace
+
+# Carthage (if ever added)
+Carthage/Build/
+
+# Fastlane (if ever added)
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Credentials / secrets — never commit these
+*.p12
+*.mobileprovision
+AuthKey_*.p8
