@@ -1,6 +1,6 @@
 //
 //  Activity.swift
-//  MyBucketList
+//  Try Something New
 //
 //  Created by Irene Tang on 12/20/25.
 //

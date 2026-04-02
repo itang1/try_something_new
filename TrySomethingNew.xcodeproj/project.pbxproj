@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXFileReference section */
-		FCA2EEC32EF74E090092ABBD /* WhyNotTry.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WhyNotTry.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FCA2EEC32EF74E090092ABBD /* TrySomethingNew.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TrySomethingNew.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		FCA2EEC52EF74E090092ABBD /* WhyNotTry */ = {
+		FCA2EEC52EF74E090092ABBD /* TrySomethingNew */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = WhyNotTry;
+			path = TrySomethingNew;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -30,7 +30,7 @@
 		FCA2EEBA2EF74E090092ABBD = {
 			isa = PBXGroup;
 			children = (
-				FCA2EEC52EF74E090092ABBD /* WhyNotTry */,
+				FCA2EEC52EF74E090092ABBD /* TrySomethingNew */,
 				FCA2EEC42EF74E090092ABBD /* Products */,
 			);
 			sourceTree = "<group>";
@@ -38,7 +38,7 @@
 		FCA2EEC42EF74E090092ABBD /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FCA2EEC32EF74E090092ABBD /* WhyNotTry.app */,
+				FCA2EEC32EF74E090092ABBD /* TrySomethingNew.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -46,9 +46,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		FCA2EEC22EF74E090092ABBD /* WhyNotTry */ = {
+		FCA2EEC22EF74E090092ABBD /* TrySomethingNew */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FCA2EECE2EF74E090092ABBD /* Build configuration list for PBXNativeTarget "WhyNotTry" */;
+			buildConfigurationList = FCA2EECE2EF74E090092ABBD /* Build configuration list for PBXNativeTarget "TrySomethingNew" */;
 			buildPhases = (
 				FCA2EEBF2EF74E090092ABBD /* Sources */,
 				FCA2EEC02EF74E090092ABBD /* Frameworks */,
@@ -57,11 +57,11 @@
 			buildRules = (
 			);
 			fileSystemSynchronizedGroups = (
-				FCA2EEC52EF74E090092ABBD /* WhyNotTry */,
+				FCA2EEC52EF74E090092ABBD /* TrySomethingNew */,
 			);
-			name = WhyNotTry;
-			productName = WhyNotTry;
-			productReference = FCA2EEC32EF74E090092ABBD /* WhyNotTry.app */;
+			name = TrySomethingNew;
+			productName = TrySomethingNew;
+			productReference = FCA2EEC32EF74E090092ABBD /* TrySomethingNew.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -79,7 +79,7 @@
 					};
 				};
 			};
-			buildConfigurationList = FCA2EEBE2EF74E090092ABBD /* Build configuration list for PBXProject "W" */;
+			buildConfigurationList = FCA2EEBE2EF74E090092ABBD /* Build configuration list for PBXProject "TrySomethingNew" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -93,7 +93,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				FCA2EEC22EF74E090092ABBD /* WhyNotTry */,
+				FCA2EEC22EF74E090092ABBD /* TrySomethingNew */,
 			);
 		};
 /* End PBXProject section */
@@ -115,7 +115,7 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		FCA2EECC2EF74E090092ABBD /* Debug configuration for PBXProject "W" */ = {
+		FCA2EECC2EF74E090092ABBD /* Debug configuration for PBXProject "TrySomethingNew" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -180,7 +180,7 @@
 			};
 			name = Debug;
 		};
-		FCA2EECD2EF74E090092ABBD /* Release configuration for PBXProject "W" */ = {
+		FCA2EECD2EF74E090092ABBD /* Release configuration for PBXProject "TrySomethingNew" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -238,7 +238,7 @@
 			};
 			name = Release;
 		};
-		FCA2EECF2EF74E090092ABBD /* Debug configuration for PBXNativeTarget "WhyNotTry" */ = {
+		FCA2EECF2EF74E090092ABBD /* Debug configuration for PBXNativeTarget "TrySomethingNew" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -247,19 +247,20 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Bucket;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_CFBundleDisplayName = "Try Something New";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.WhyNotTry;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pastureraised.trysomethingnew;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -274,30 +275,33 @@
 			};
 			name = Debug;
 		};
-		FCA2EED02EF74E090092ABBD /* Release configuration for PBXNativeTarget "WhyNotTry" */ = {
+		FCA2EED02EF74E090092ABBD /* Release configuration for PBXNativeTarget "TrySomethingNew" */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = R2ASSYYV29;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Bucket;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_CFBundleDisplayName = "Try Something New";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.travel";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.PastureRaised.BucketBlaster;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pastureraised.trysomethingnew;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -314,19 +318,19 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		FCA2EEBE2EF74E090092ABBD /* Build configuration list for PBXProject "W" */ = {
+		FCA2EEBE2EF74E090092ABBD /* Build configuration list for PBXProject "TrySomethingNew" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				FCA2EECC2EF74E090092ABBD /* Debug configuration for PBXProject "W" */,
-				FCA2EECD2EF74E090092ABBD /* Release configuration for PBXProject "W" */,
+				FCA2EECC2EF74E090092ABBD /* Debug configuration for PBXProject "TrySomethingNew" */,
+				FCA2EECD2EF74E090092ABBD /* Release configuration for PBXProject "TrySomethingNew" */,
 			);
 			defaultConfigurationName = Release;
 		};
-		FCA2EECE2EF74E090092ABBD /* Build configuration list for PBXNativeTarget "WhyNotTry" */ = {
+		FCA2EECE2EF74E090092ABBD /* Build configuration list for PBXNativeTarget "TrySomethingNew" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				FCA2EECF2EF74E090092ABBD /* Debug configuration for PBXNativeTarget "WhyNotTry" */,
-				FCA2EED02EF74E090092ABBD /* Release configuration for PBXNativeTarget "WhyNotTry" */,
+				FCA2EECF2EF74E090092ABBD /* Debug configuration for PBXNativeTarget "TrySomethingNew" */,
+				FCA2EED02EF74E090092ABBD /* Release configuration for PBXNativeTarget "TrySomethingNew" */,
 			);
 			defaultConfigurationName = Release;
 		};

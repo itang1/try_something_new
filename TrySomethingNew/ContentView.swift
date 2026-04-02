@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  MyBucketList
+//  Try Something New
 //
 //  Created by Irene Tang on 12/20/25.
 //
@@ -194,7 +194,7 @@ struct ExploreView: View {
             }
             .padding()
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
-            .navigationTitle("My Bucket List")
+            .navigationTitle("Try Something New")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     CityPickerMenu(selectedCity: $selectedCity)
