@@ -1,6 +1,6 @@
 //
-//  WhyNotTryApp.swift
-//  WhyNotTry
+//  MyBucketListApp.swift
+//  MyBucketList
 //
 //  Created by Irene Tang on 12/20/25.
 //
@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 @main
-struct WhyNotTryApp: App {
+struct MyBucketListApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

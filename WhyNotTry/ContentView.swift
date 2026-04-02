@@ -1,6 +1,6 @@
 //
 //  ContentView.swift
-//  WhyNotTry
+//  MyBucketList
 //
 //  Created by Irene Tang on 12/20/25.
 //
@@ -16,14 +16,14 @@ struct ContentView: View {
 
     var body: some View {
         TabView {
-            DiscoverView()
+            ExploreView()
                 .tabItem {
-                    Label("Discover", systemImage: "sparkle.magnifyingglass")
+                    Label("Explore", systemImage: "sparkle.magnifyingglass")
                 }
 
             ChecklistView()
                 .tabItem {
-                    Label("My List", systemImage: "checklist")
+                    Label("Checklist", systemImage: "checklist")
                 }
         }
         .tint(.orange)
@@ -35,28 +35,38 @@ struct ContentView: View {
     private func seedDataIfNeeded() async {
         guard let url = Bundle.main.url(forResource: "activities", withExtension: "json"),
               let data = try? Data(contentsOf: url),
-              let items = try? JSONDecoder().decode([ActivityData].self, from: data) else {
+              let wrapper = try? JSONDecoder().decode(ActivitiesJSON.self, from: data) else {
             return
         }
 
+        let cityIdToName = Dictionary(uniqueKeysWithValues: wrapper.cities.map { ($0.id, $0.name) })
         let existingByName = Dictionary(uniqueKeysWithValues: activities.map { ($0.name, $0) })
 
-        for item in items {
-            if let existing = existingByName[item.name] {
-                existing.icon = item.icon
-                existing.subcategory = item.subcategory
-                existing.duration = item.duration
-                existing.cost = item.cost
-                existing.driveMinutesFromPasadena = item.driveMinutesFromPasadena
+        for raw in wrapper.activities {
+            let cityName = cityIdToName[raw.cityId] ?? "Anywhere"
+            let hints: [String: String] = raw.locationHints?.reduce(into: [:]) { result, pair in
+                let name = cityIdToName[pair.key] ?? pair.key
+                result[name] = pair.value.locations.map(\.name).joined(separator: ", ")
+            } ?? [:]
+
+            if let existing = existingByName[raw.name] {
+                existing.icon = raw.icon
+                existing.subcategory = raw.subcategory
+                existing.duration = raw.duration
+                existing.cost = raw.cost
+                existing.driveMinutes = 0
+                existing.city = cityName
+                existing.locationHints = hints
             } else {
                 let activity = Activity(
-                    name: item.name,
-                    icon: item.icon,
-                    category: item.category,
-                    subcategory: item.subcategory,
-                    duration: item.duration,
-                    cost: item.cost,
-                    driveMinutesFromPasadena: item.driveMinutesFromPasadena
+                    name: raw.name,
+                    icon: raw.icon,
+                    subcategory: raw.subcategory,
+                    duration: raw.duration,
+                    cost: raw.cost,
+                    driveMinutes: 0,
+                    city: cityName,
+                    locationHints: hints
                 )
                 modelContext.insert(activity)
             }
@@ -64,12 +74,17 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Discover View
+// MARK: - Explore View
 
-struct DiscoverView: View {
+struct ExploreView: View {
     @Query private var activities: [Activity]
+    @AppStorage("selectedCity") private var selectedCity = "Los Angeles"
     @State private var selected: Activity?
     @State private var animationTrigger = 0
+
+    private var cityActivities: [Activity] {
+        activities.filter { $0.city == selectedCity || $0.city == "Anywhere" }
+    }
 
     var body: some View {
         NavigationStack {
@@ -106,11 +121,20 @@ struct DiscoverView: View {
                             .foregroundStyle(Activity.subcategoryColor(activity.subcategory))
                             .clipShape(Capsule())
 
+                        // Location hint for universal items
+                        if let hint = activity.locationHints[selectedCity], !hint.isEmpty {
+                            Text("Try it at: \(hint)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 24)
+                        }
+
                         HStack(spacing: 8) {
                             MetadataTag(icon: "clock", text: activity.duration)
                             MetadataTag(icon: "dollarsign.circle", text: activity.cost)
-                            if activity.driveMinutesFromPasadena > 0 {
-                                MetadataTag(icon: "car.fill", text: "\(activity.driveMinutesFromPasadena) min")
+                            if activity.driveMinutes > 0 {
+                                MetadataTag(icon: "car.fill", text: "\(activity.driveMinutes) min")
                             }
                         }
 
@@ -146,9 +170,15 @@ struct DiscoverView: View {
 
                 Spacer()
 
+                if selected?.driveMinutes ?? 0 > 0 {
+                    Text("Drive times from \(CityInfo.find(selectedCity).reference)")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+
                 Button {
                     withAnimation(.spring(duration: 0.4)) {
-                        selected = activities.randomElement()
+                        selected = cityActivities.randomElement()
                         animationTrigger += 1
                     }
                 } label: {
@@ -160,11 +190,19 @@ struct DiscoverView: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
                 .sensoryFeedback(.selection, trigger: animationTrigger)
-                .disabled(activities.isEmpty)
+                .disabled(cityActivities.isEmpty)
             }
             .padding()
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
-            .navigationTitle("Why Not Try")
+            .navigationTitle("My Bucket List")
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    CityPickerMenu(selectedCity: $selectedCity)
+                }
+            }
+            .onChange(of: selectedCity) {
+                selected = nil
+            }
         }
     }
 }
@@ -199,18 +237,23 @@ enum StatusFilter: String, CaseIterable, Identifiable {
 
 struct ChecklistView: View {
     @Query(sort: \Activity.name) private var allActivities: [Activity]
+    @AppStorage("selectedCity") private var selectedCity = "Los Angeles"
     @State private var sortBy: SortOption = .name
     @State private var selectedSubcategory: String?
     @State private var statusFilter: StatusFilter = .all
     @State private var searchText = ""
 
+    private var cityFilteredAll: [Activity] {
+        allActivities.filter { $0.city == selectedCity || $0.city == "Anywhere" }
+    }
+
     private var subcategories: [String] {
-        let subs = Set(allActivities.map(\.subcategory))
+        let subs = Set(cityFilteredAll.map(\.subcategory))
         return subs.sorted()
     }
 
     private var filteredActivities: [Activity] {
-        var result = allActivities
+        var result = cityFilteredAll
 
         if let sub = selectedSubcategory {
             result = result.filter { $0.subcategory == sub }
@@ -230,7 +273,7 @@ struct ChecklistView: View {
         case .name:
             result.sort { $0.name < $1.name }
         case .distance:
-            result.sort { $0.driveMinutesFromPasadena < $1.driveMinutesFromPasadena }
+            result.sort { $0.driveMinutes < $1.driveMinutes }
         case .duration:
             result.sort { $0.durationMinutes < $1.durationMinutes }
         case .cost:
@@ -241,7 +284,7 @@ struct ChecklistView: View {
     }
 
     private var visitedCount: Int {
-        allActivities.filter(\.visited).count
+        cityFilteredAll.filter(\.visited).count
     }
 
     var body: some View {
@@ -252,15 +295,18 @@ struct ChecklistView: View {
                     HStack {
                         Image(systemName: "trophy.fill")
                             .foregroundStyle(.orange)
-                        Text("\(visitedCount) of \(allActivities.count) completed")
+                        Text("\(visitedCount) of \(cityFilteredAll.count) completed")
                             .font(.subheadline.bold())
                         Spacer()
-                        Text("\(allActivities.isEmpty ? 0 : Int(Double(visitedCount) / Double(allActivities.count) * 100))%")
+                        Text("\(cityFilteredAll.isEmpty ? 0 : Int(Double(visitedCount) / Double(cityFilteredAll.count) * 100))%")
                             .font(.subheadline.bold())
                             .foregroundStyle(.orange)
                     }
-                    ProgressView(value: allActivities.isEmpty ? 0 : Double(visitedCount) / Double(allActivities.count))
+                    ProgressView(value: cityFilteredAll.isEmpty ? 0 : Double(visitedCount) / Double(cityFilteredAll.count))
                         .tint(.orange)
+                    Text("Drive times from \(CityInfo.find(selectedCity).reference)")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
                 }
                 .padding()
                 .background(
@@ -329,9 +375,12 @@ struct ChecklistView: View {
                 }
             }
             .background(Color(.systemGroupedBackground).ignoresSafeArea())
-            .navigationTitle("My List")
+            .navigationTitle("Checklist")
             .searchable(text: $searchText, prompt: "Search activities & places")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    CityPickerMenu(selectedCity: $selectedCity)
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         ForEach(SortOption.allCases) { option in
@@ -347,6 +396,35 @@ struct ChecklistView: View {
                     }
                 }
             }
+            .onChange(of: selectedCity) {
+                selectedSubcategory = nil
+            }
+        }
+    }
+}
+
+// MARK: - City Picker Menu
+
+struct CityPickerMenu: View {
+    @Binding var selectedCity: String
+
+    var body: some View {
+        Menu {
+            Picker("City", selection: $selectedCity) {
+                ForEach(CityInfo.all, id: \.name) { city in
+                    Label(city.name, systemImage: city.icon)
+                        .tag(city.name)
+                }
+            }
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: CityInfo.find(selectedCity).icon)
+                Text(selectedCity)
+                    .font(.subheadline.bold())
+                Image(systemName: "chevron.down")
+                    .font(.caption2)
+            }
+            .foregroundStyle(.primary)
         }
     }
 }
@@ -355,6 +433,7 @@ struct ChecklistView: View {
 
 struct ActivityRow: View {
     @Bindable var activity: Activity
+    @AppStorage("selectedCity") private var selectedCity = "Los Angeles"
 
     private var color: Color {
         Activity.subcategoryColor(activity.subcategory)
@@ -392,13 +471,20 @@ struct ActivityRow: View {
                         Label(activity.cost, systemImage: "dollarsign.circle")
                         Text("·")
                         Label(activity.duration, systemImage: "clock")
-                        if activity.driveMinutesFromPasadena > 0 {
+                        if activity.driveMinutes > 0 {
                             Text("·")
-                            Label("\(activity.driveMinutesFromPasadena) min", systemImage: "car.fill")
+                            Label("\(activity.driveMinutes) min", systemImage: "car.fill")
                         }
                     }
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                    if let hint = activity.locationHints[selectedCity], !hint.isEmpty {
+                        Text(hint)
+                            .font(.caption)
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(1)
+                    }
                 }
 
                 Spacer()
@@ -467,4 +553,3 @@ struct FilterChip: View {
     ContentView()
         .modelContainer(for: Activity.self, inMemory: true)
 }
-
