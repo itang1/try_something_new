@@ -7,6 +7,8 @@
 
 import SwiftUI
 import SwiftData
+import MapKit
+import CoreLocation
 
 // MARK: - Main
 
@@ -44,10 +46,29 @@ struct ContentView: View {
 
         for raw in wrapper.activities {
             let cityName = cityIdToName[raw.cityId] ?? "Anywhere"
+
+            // Display hints: city name → comma-separated venue names
             let hints: [String: String] = raw.locationHints?.reduce(into: [:]) { result, pair in
                 let name = cityIdToName[pair.key] ?? pair.key
                 result[name] = pair.value.locations.map(\.name).joined(separator: ", ")
             } ?? [:]
+
+            // Location JSON: city name → [{name, lat, lng}] for drive time computation
+            var venuesByCityName: [String: [VenueLocation]] = [:]
+            if let hints = raw.locationHints {
+                // "Anywhere" activities: venues grouped by city inside locationHints
+                hints.forEach { cityId, group in
+                    let name = cityIdToName[cityId] ?? cityId
+                    venuesByCityName[name] = group.locations.compactMap { loc in
+                        guard let lat = loc.lat, let lng = loc.lng else { return nil }
+                        return VenueLocation(name: loc.name, lat: lat, lng: lng)
+                    }
+                }
+            } else if let lat = raw.lat, let lng = raw.lng {
+                // City-specific activities: single lat/lng on the activity itself
+                venuesByCityName[cityName] = [VenueLocation(name: raw.name, lat: lat, lng: lng)]
+            }
+            let locationJSON = (try? String(data: JSONEncoder().encode(venuesByCityName), encoding: .utf8)) ?? "{}"
 
             if let existing = existingByName[raw.name] {
                 existing.icon = raw.icon
@@ -57,6 +78,7 @@ struct ContentView: View {
                 existing.driveMinutes = 0
                 existing.city = cityName
                 existing.locationHints = hints
+                existing.locationJSON = locationJSON
             } else {
                 let activity = Activity(
                     name: raw.name,
@@ -66,7 +88,8 @@ struct ContentView: View {
                     cost: raw.cost,
                     driveMinutes: 0,
                     city: cityName,
-                    locationHints: hints
+                    locationHints: hints,
+                    locationJSON: locationJSON
                 )
                 modelContext.insert(activity)
             }
@@ -79,6 +102,7 @@ struct ContentView: View {
 struct ExploreView: View {
     @Query private var activities: [Activity]
     @AppStorage("selectedCity") private var selectedCity = "Los Angeles"
+    @Environment(LocationManager.self) private var locationManager
     @State private var selected: Activity?
     @State private var animationTrigger = 0
 
@@ -133,8 +157,9 @@ struct ExploreView: View {
                         HStack(spacing: 8) {
                             MetadataTag(icon: "clock", text: activity.duration)
                             MetadataTag(icon: "dollarsign.circle", text: activity.cost)
-                            if activity.driveMinutes > 0 {
-                                MetadataTag(icon: "car.fill", text: "\(activity.driveMinutes) min")
+                            if let coord = locationManager.coordinate,
+                               let mins = activity.nearestDriveMinutes(userLat: coord.latitude, userLng: coord.longitude, cityName: selectedCity) {
+                                MetadataTag(icon: "car.fill", text: "\(mins) min")
                             }
                         }
 
@@ -170,8 +195,8 @@ struct ExploreView: View {
 
                 Spacer()
 
-                if selected?.driveMinutes ?? 0 > 0 {
-                    Text("Drive times from \(CityInfo.find(selectedCity).reference)")
+                if locationManager.coordinate != nil {
+                    Text("Drive times from \(locationManager.displayName)")
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
@@ -198,6 +223,9 @@ struct ExploreView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     CityPickerMenu(selectedCity: $selectedCity)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    LocationPickerButton()
                 }
             }
             .onChange(of: selectedCity) {
@@ -238,6 +266,7 @@ enum StatusFilter: String, CaseIterable, Identifiable {
 struct ChecklistView: View {
     @Query(sort: \Activity.name) private var allActivities: [Activity]
     @AppStorage("selectedCity") private var selectedCity = "Los Angeles"
+    @Environment(LocationManager.self) private var locationManager
     @State private var sortBy: SortOption = .name
     @State private var selectedSubcategory: String?
     @State private var statusFilter: StatusFilter = .all
@@ -304,7 +333,7 @@ struct ChecklistView: View {
                     }
                     ProgressView(value: cityFilteredAll.isEmpty ? 0 : Double(visitedCount) / Double(cityFilteredAll.count))
                         .tint(.orange)
-                    Text("Drive times from \(CityInfo.find(selectedCity).reference)")
+                    Text(locationManager.coordinate != nil ? "Drive times from \(locationManager.displayName)" : "Set your location for drive times")
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
@@ -381,6 +410,9 @@ struct ChecklistView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     CityPickerMenu(selectedCity: $selectedCity)
                 }
+                ToolbarItem(placement: .topBarLeading) {
+                    LocationPickerButton()
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         ForEach(SortOption.allCases) { option in
@@ -434,6 +466,12 @@ struct CityPickerMenu: View {
 struct ActivityRow: View {
     @Bindable var activity: Activity
     @AppStorage("selectedCity") private var selectedCity = "Los Angeles"
+    @Environment(LocationManager.self) private var locationManager
+
+    private var computedDriveMinutes: Int? {
+        guard let coord = locationManager.coordinate else { return nil }
+        return activity.nearestDriveMinutes(userLat: coord.latitude, userLng: coord.longitude, cityName: selectedCity)
+    }
 
     private var color: Color {
         Activity.subcategoryColor(activity.subcategory)
@@ -471,9 +509,9 @@ struct ActivityRow: View {
                         Label(activity.cost, systemImage: "dollarsign.circle")
                         Text("·")
                         Label(activity.duration, systemImage: "clock")
-                        if activity.driveMinutes > 0 {
+                        if let mins = computedDriveMinutes {
                             Text("·")
-                            Label("\(activity.driveMinutes) min", systemImage: "car.fill")
+                            Label("\(mins) min", systemImage: "car.fill")
                         }
                     }
                     .font(.caption)
@@ -547,9 +585,137 @@ struct FilterChip: View {
     }
 }
 
+// MARK: - Location Picker
+
+struct LocationPickerButton: View {
+    @Environment(LocationManager.self) private var locationManager
+    @State private var showSheet = false
+
+    var body: some View {
+        Button {
+            showSheet = true
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: locationManager.coordinate != nil ? "location.fill" : "location")
+                Text(locationManager.displayName)
+                    .font(.subheadline.bold())
+                    .lineLimit(1)
+                    .frame(maxWidth: 130, alignment: .leading)
+                Image(systemName: "chevron.down")
+                    .font(.caption2)
+            }
+            .foregroundStyle(.primary)
+        }
+        .sheet(isPresented: $showSheet) {
+            LocationInputSheet(isPresented: $showSheet)
+        }
+    }
+}
+
+struct LocationInputSheet: View {
+    @Environment(LocationManager.self) private var locationManager
+    @Binding var isPresented: Bool
+    @State private var addressText = ""
+    @State private var isGeocoding = false
+    @State private var completer = SearchCompleter()
+
+    var body: some View {
+        VStack(spacing: 16) {
+            // Header
+            HStack {
+                Text("Your Location")
+                    .font(.headline)
+                Spacer()
+                Button("Done") { isPresented = false }
+                    .foregroundStyle(.blue)
+            }
+
+            // GPS button
+            Button {
+                locationManager.requestCurrentLocation()
+                isPresented = false
+            } label: {
+                Label(
+                    locationManager.isLocating ? "Locating…" : "Use My Current Location",
+                    systemImage: "location.fill"
+                )
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(.blue.opacity(0.1))
+                .foregroundStyle(.blue)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            }
+            .disabled(locationManager.isLocating)
+
+            // Address field
+            HStack {
+                TextField("Enter a city or address", text: $addressText)
+                    .textFieldStyle(.roundedBorder)
+                    .submitLabel(.search)
+                    .autocorrectionDisabled()
+                    .onSubmit { geocodeText() }
+                    .onChange(of: addressText) { completer.update(query: addressText) }
+
+                if isGeocoding {
+                    ProgressView().padding(.horizontal, 4)
+                } else if !addressText.isEmpty {
+                    Button(action: geocodeText) {
+                        Image(systemName: "arrow.right.circle.fill")
+                            .font(.title3)
+                            .foregroundStyle(.blue)
+                    }
+                }
+            }
+
+            // Autocomplete suggestions
+            if !completer.results.isEmpty {
+                List(completer.results.prefix(6), id: \.self) { result in
+                    Button {
+                        isGeocoding = true
+                        Task {
+                            await locationManager.geocode(completion: result)
+                            isGeocoding = false
+                            isPresented = false
+                        }
+                    } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(result.title)
+                                .font(.subheadline)
+                                .foregroundStyle(.primary)
+                            if !result.subtitle.isEmpty {
+                                Text(result.subtitle)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(.vertical, 2)
+                    }
+                }
+                .listStyle(.plain)
+            } else {
+                Spacer()
+            }
+        }
+        .padding()
+        .presentationDetents([.medium, .large])
+    }
+
+    private func geocodeText() {
+        let trimmed = addressText.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+        isGeocoding = true
+        Task {
+            await locationManager.geocode(trimmed)
+            isGeocoding = false
+            isPresented = false
+        }
+    }
+}
+
 // MARK: - Preview
 
 #Preview {
     ContentView()
         .modelContainer(for: Activity.self, inMemory: true)
+        .environment(LocationManager())
 }

@@ -10,9 +10,12 @@ import SwiftData
 
 @main
 struct TrySomethingNewApp: App {
+    @State private var locationManager = LocationManager()
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(locationManager)
         }
         .modelContainer(for: Activity.self)
     }

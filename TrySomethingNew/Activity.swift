@@ -41,10 +41,13 @@ final class Activity {
     var driveMinutes: Int = 0
     var city: String = "Los Angeles"
     var locationHints: [String: String] = [:]
+    // JSON-encoded [cityName: [VenueLocation]] for drive time computation
+    var locationJSON: String = "{}"
 
     init(name: String, icon: String, subcategory: String = "outdoor",
          visited: Bool = false, duration: String = "1-2 hours", cost: String = "Free",
-         driveMinutes: Int = 0, city: String = "Los Angeles", locationHints: [String: String] = [:]) {
+         driveMinutes: Int = 0, city: String = "Los Angeles", locationHints: [String: String] = [:],
+         locationJSON: String = "{}") {
         self.name = name
         self.icon = icon
         self.subcategory = subcategory
@@ -54,6 +57,26 @@ final class Activity {
         self.driveMinutes = driveMinutes
         self.city = city
         self.locationHints = locationHints
+        self.locationJSON = locationJSON
+    }
+
+    /// Returns estimated drive minutes from the given coordinates to the nearest venue in the given city.
+    func nearestDriveMinutes(userLat: Double, userLng: Double, cityName: String) -> Int? {
+        guard let data = locationJSON.data(using: .utf8),
+              let allVenues = try? JSONDecoder().decode([String: [VenueLocation]].self, from: data),
+              let venues = allVenues[cityName], !venues.isEmpty else { return nil }
+
+        func haversineKm(_ lat1: Double, _ lng1: Double, _ lat2: Double, _ lng2: Double) -> Double {
+            let R = 6371.0
+            let dLat = (lat2 - lat1) * .pi / 180
+            let dLng = (lng2 - lng1) * .pi / 180
+            let a = sin(dLat/2)*sin(dLat/2) +
+                    cos(lat1 * .pi/180)*cos(lat2 * .pi/180)*sin(dLng/2)*sin(dLng/2)
+            return R * 2 * atan2(sqrt(a), sqrt(1-a))
+        }
+
+        let minKm = venues.map { haversineKm(userLat, userLng, $0.lat, $0.lng) }.min()!
+        return max(1, Int(minKm / 50.0 * 60.0)) // assumes ~50 km/h average
     }
 
     var durationMinutes: Int {
@@ -147,6 +170,14 @@ final class Activity {
     }
 }
 
+// MARK: - Venue Location
+
+struct VenueLocation: Codable {
+    let name: String
+    let lat: Double
+    let lng: Double
+}
+
 // MARK: - JSON Decoding Structs
 
 struct ActivitiesJSON: Codable {
@@ -176,5 +207,15 @@ struct ActivityRaw: Codable {
     let subcategory: String
     let duration: String
     let cost: String
+    let lat: Double?
+    let lng: Double?
     let locationHints: [String: LocationGroup]?
+}
+
+
+// MARK: - Preview
+
+#Preview {
+    ContentView()
+        .modelContainer(for: Activity.self, inMemory: true)
 }
