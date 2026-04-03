@@ -168,6 +168,66 @@ final class Activity {
         default: return "questionmark"
         }
     }
+
+    // MARK: - Data Seeding
+
+    static func seedIfNeeded(context: ModelContext, existing: [Activity]) {
+        guard let url = Bundle.main.url(forResource: "activities", withExtension: "json"),
+              let data = try? Data(contentsOf: url),
+              let wrapper = try? JSONDecoder().decode(ActivitiesJSON.self, from: data) else {
+            return
+        }
+
+        let cityIdToName = Dictionary(uniqueKeysWithValues: wrapper.cities.map { ($0.id, $0.name) })
+        let existingByName = Dictionary(uniqueKeysWithValues: existing.map { ($0.name, $0) })
+
+        for raw in wrapper.activities {
+            let cityName = cityIdToName[raw.cityId] ?? "Anywhere"
+
+            let hints: [String: String] = raw.locationHints?.reduce(into: [:]) { result, pair in
+                let name = cityIdToName[pair.key] ?? pair.key
+                result[name] = pair.value.locations.map(\.name).joined(separator: ", ")
+            } ?? [:]
+
+            var venuesByCityName: [String: [VenueLocation]] = [:]
+            if let rawHints = raw.locationHints {
+                rawHints.forEach { cityId, group in
+                    let name = cityIdToName[cityId] ?? cityId
+                    venuesByCityName[name] = group.locations.compactMap { loc in
+                        guard let lat = loc.lat, let lng = loc.lng else { return nil }
+                        return VenueLocation(name: loc.name, lat: lat, lng: lng)
+                    }
+                }
+            } else if let lat = raw.lat, let lng = raw.lng {
+                venuesByCityName[cityName] = [VenueLocation(name: raw.name, lat: lat, lng: lng)]
+            }
+            let locationJSON = (try? String(data: JSONEncoder().encode(venuesByCityName), encoding: .utf8)) ?? "{}"
+
+            if let existing = existingByName[raw.name] {
+                existing.icon = raw.icon
+                existing.subcategory = raw.subcategory
+                existing.duration = raw.duration
+                existing.cost = raw.cost
+                existing.driveMinutes = 0
+                existing.city = cityName
+                existing.locationHints = hints
+                existing.locationJSON = locationJSON
+            } else {
+                let activity = Activity(
+                    name: raw.name,
+                    icon: raw.icon,
+                    subcategory: raw.subcategory,
+                    duration: raw.duration,
+                    cost: raw.cost,
+                    driveMinutes: 0,
+                    city: cityName,
+                    locationHints: hints,
+                    locationJSON: locationJSON
+                )
+                context.insert(activity)
+            }
+        }
+    }
 }
 
 // MARK: - Venue Location
