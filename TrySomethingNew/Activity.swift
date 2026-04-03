@@ -172,11 +172,7 @@ final class Activity {
     // MARK: - Data Seeding
 
     static func seedIfNeeded(context: ModelContext, existing: [Activity]) {
-        guard let url = Bundle.main.url(forResource: "activities", withExtension: "json"),
-              let data = try? Data(contentsOf: url),
-              let wrapper = try? JSONDecoder().decode(ActivitiesJSON.self, from: data) else {
-            return
-        }
+        guard let wrapper = loadActivitiesJSON() else { return }
 
         let cityIdToName = Dictionary(uniqueKeysWithValues: wrapper.cities.map { ($0.id, $0.name) })
         let existingByName = Dictionary(uniqueKeysWithValues: existing.map { ($0.name, $0) })
@@ -236,6 +232,17 @@ struct VenueLocation: Codable {
     let name: String
     let lat: Double
     let lng: Double
+}
+
+// MARK: - JSON Loading
+
+private func loadActivitiesJSON() -> ActivitiesJSON? {
+    guard let url = Bundle.main.url(forResource: "activities", withExtension: "json"),
+          let data = try? Data(contentsOf: url),
+          let wrapper = try? JSONDecoder().decode(ActivitiesJSON.self, from: data) else {
+        return nil
+    }
+    return wrapper
 }
 
 // MARK: - JSON Decoding Structs
