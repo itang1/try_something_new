@@ -50,13 +50,15 @@ If any check fails, try MapLibre (`@maplibre/maplibre-react-native`) with the sa
 
 ## Results
 
-| Check | iPhone (model) | Android (model) |
-|---|---|---|
-| Worst UI fps, panning | | |
-| Worst UI fps, zooming | | |
-| Longest JS stall | | |
-| Cluster recompute | | |
-| Map ready | | |
-| Looks | | |
+October 15, 2026. I don't have an iPhone or Android phone yet, so this ran in the iOS Simulator (iPhone 17e) on a Mac. The simulator uses the Mac's chip, so its frame rates are a sanity check, not proof.
 
-**Decision:**
+| Check | iOS Simulator (iPhone 17e) | Android |
+|---|---|---|
+| Worst UI fps, LA overview | 59 | Not tested |
+| Worst JS fps | 60 | Not tested |
+| Longest JS stall | None over 100 ms | Not tested |
+| Cluster recompute | 0.1 ms | Not tested |
+| Map ready | 513 ms | Not tested |
+| Looks and interactions | Good: pins, clusters, card, and city jumps | Not tested |
+
+**Decision:** pass for now. Port to Expo with `react-native-maps` and `supercluster`. Before launch, rerun the tests on a real low-end iPhone and Android phone; if either stutters, switch the map to MapLibre.
