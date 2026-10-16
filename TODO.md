@@ -2,7 +2,6 @@
 
 ## High Impact — Features
 
-- [ ] **Notes & photos on activities** — Let users attach a personal note or photo to a visited activity to journal their experience.
 
 ## Medium Impact — UX Polish
 
