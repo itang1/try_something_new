@@ -2,7 +2,6 @@
 
 ## High Impact — Features
 
-- [ ] **Smarter random picker** — Add filter controls to the Explore tab (subcategory, max drive time, max cost) so users get tailored suggestions instead of pure random.
 - [ ] **Notes & photos on activities** — Let users attach a personal note or photo to a visited activity to journal their experience.
 
 ## Medium Impact — UX Polish

@@ -1,6 +1,7 @@
 import { createContext, use, useCallback, useMemo, useState, type ReactNode } from 'react';
 import { CITIES, cityById, nearestCity, type City, type Entry } from '@/data/catalog';
 import type { Coordinate } from '@/data/drive';
+import { NO_FILTERS, type Filters } from '@/data/filters';
 import {
   loadDoneIds,
   loadPlans,
@@ -43,6 +44,10 @@ type AppState = {
   /** Marked "Not for me", so Explore stops suggesting them. */
   hiddenIds: Set<string>;
   hide: (id: string) => void;
+  unhide: (id: string) => void;
+  /** Explore's filters, kept across launches. */
+  filters: Filters;
+  setFilters: (filters: Filters) => void;
   /** Plans in the current city, by entry id. */
   plans: Map<string, Plan>;
   /** Pass null to clear the plan. */
@@ -74,6 +79,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [saved, setSaved] = usePersistedState<string[]>('savedIds', []);
   const [hidden, setHidden] = usePersistedState<string[]>('hiddenIds', []);
   const [allPlans, setAllPlans] = useState(loadPlans);
+  const [filters, setFilters] = usePersistedState<Filters>('exploreFilters', NO_FILTERS);
   const savedIds = useMemo(() => new Set(saved), [saved]);
   const hiddenIds = useMemo(() => new Set(hidden), [hidden]);
 
@@ -165,6 +171,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [saved, setSaved],
   );
   const hide = useCallback((id: string) => setHidden([...new Set([...hidden, id])]), [hidden, setHidden]);
+  const unhide = useCallback((id: string) => setHidden(hidden.filter((h) => h !== id)), [hidden, setHidden]);
 
   return (
     <AppStateContext
@@ -186,6 +193,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         toggleSaved,
         hiddenIds,
         hide,
+        unhide,
+        filters,
+        setFilters,
         plans,
         setPlan,
       }}

@@ -7,7 +7,7 @@ const UI_ICONS = [
   'chevron_right', 'close', 'content_cut', 'directions',
   'directions_car', 'directions_run', 'eco', 'favorite', 'flight', 'grid_view', 'help', 'hiking', 'history', 'ios_share',
   'keyboard_arrow_down', 'location_city', 'location_on', 'my_location', 'payments', 'person_add', 'photo_camera',
-  'radio_button_unchecked', 'remove', 'restaurant', 'schedule', 'search', 'share', 'shopping_bag', 'shuffle', 'star', 'trending_up', 'trophy',
+  'radio_button_unchecked', 'remove', 'restaurant', 'schedule', 'search', 'share', 'shopping_bag', 'shuffle', 'star', 'trending_up', 'trophy', 'tune', 'undo',
 ];
 
 const mapping = JSON.parse(readFileSync('design/icon-mapping.json', 'utf8'));

@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
+import FiltersIcon from '@expo/material-symbols/tune.xml';
 import * as Haptics from 'expo-haptics';
 import { entriesForCity, findEntry, LEVELS, type Entry } from '@/data/catalog';
 import { addDays, dayKey, formatDay } from '@/data/days';
 import { formatMinutes, placesByDistance } from '@/data/drive';
+import { describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
 import { useAppState } from '@/state/app-state';
 import { subcategory, useColors } from '@/theme';
+import { toolbarIcon } from '@/components/header-items';
 import { GradientIcon, Icon } from '@/components/icon';
 import { MetadataTag } from '@/components/chips';
 import { LocationControl } from '@/components/location-control';
@@ -22,25 +25,31 @@ function randomItem<T>(items: T[]): T {
 export default function ExploreScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { city, origin, isDone, savedIds, toggleSaved, hiddenIds, hide, plans } = useAppState();
+  const { city, origin, isDone, savedIds, toggleSaved, hiddenIds, hide, plans, filters, setFilters } = useAppState();
   const markDone = useMarkDone();
   // The pick remembers its city, so switching cities clears it without an effect.
   const [pick, setPick] = useState<{ id: string; city: string; n: number } | null>(null);
+  const [noMatch, setNoMatch] = useState(false);
 
   const entries = entriesForCity(city.id);
   const activity = pick?.city === city.id ? findEntry(city.id, pick.id) : undefined;
 
   const showAnother = (exclude?: string) => {
     const current = exclude ?? activity?.id;
-    const fresh = entries.filter((e) => e.id !== current && !hiddenIds.has(e.id) && !isDone(e.id));
-    // Early on, skip the stretches so the first few tries are easy wins.
-    const warmingUp = entries.filter((e) => isDone(e.id)).length < 3;
+    const allowed = entries.filter((e) => e.id !== current && !hiddenIds.has(e.id) && matchesFilters(e, filters, origin));
+    const fresh = allowed.filter((e) => !isDone(e.id));
+    // Early on, skip the stretches so the first few tries are easy wins, unless levels were picked on purpose.
+    const warmingUp = !filters.levels.length && entries.filter((e) => isDone(e.id)).length < 3;
     const gentle = warmingUp ? fresh.filter((e) => e.level !== 'stretch') : fresh;
-    const pool = gentle.length ? gentle : fresh.length ? fresh : entries.filter((e) => e.id !== current);
-    if (!pool.length) return;
-    const next = randomItem(pool);
+    const pool = gentle.length ? gentle : fresh.length ? fresh : allowed;
     Haptics.selectionAsync();
-    setPick({ id: next.id, city: city.id, n: (pick?.n ?? 0) + 1 });
+    if (!pool.length) {
+      setPick(null);
+      setNoMatch(true);
+      return;
+    }
+    setNoMatch(false);
+    setPick({ id: randomItem(pool).id, city: city.id, n: (pick?.n ?? 0) + 1 });
   };
 
   // A gentle nudge for a plan that's today or tomorrow. Missed plans just drop off.
@@ -51,6 +60,8 @@ export default function ExploreScreen() {
   const soonEntry = soonPlan && findEntry(city.id, soonPlan.entryId);
   const soonPlace = soonEntry?.places.find((p) => p.id === soonPlan?.placeId);
 
+  const activeFilters = describeFilters(filters, (id) => subcategory(id).label);
+
   const save = (entry: Entry) => {
     if (!savedIds.has(entry.id)) toggleSaved(entry.id);
   };
@@ -60,6 +71,33 @@ export default function ExploreScreen() {
       {/* A scroll view lets the large title lay out natively; the button sits outside it, above the tabs. */}
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
         <LocationControl />
+
+        {activeFilters.length > 0 && (
+          <View style={[styles.filterBar, { backgroundColor: colors.card }]}>
+            <Pressable
+              onPress={() => router.push('/filters')}
+              accessibilityRole="button"
+              accessibilityHint="Changes the filters"
+              style={styles.filterText}
+            >
+              <Icon name="tune" size={18} color={colors.accent} />
+              <Text style={[styles.filterLabel, { color: colors.label }]} numberOfLines={1}>
+                {activeFilters.join(' · ')}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                Haptics.selectionAsync();
+                setFilters(NO_FILTERS);
+                setNoMatch(false);
+              }}
+              hitSlop={10}
+              accessibilityLabel="Clear filters"
+            >
+              <Icon name="close" size={18} color={colors.secondary} />
+            </Pressable>
+          </View>
+        )}
 
         {soonPlan && soonEntry && (
           <Pressable
@@ -110,6 +148,14 @@ export default function ExploreScreen() {
                 }}
               />
             </SwipeCard>
+          ) : noMatch ? (
+            <View style={styles.empty}>
+              <Icon name="tune" size={60} color={colors.tertiary} />
+              <Text style={[styles.emptyTitle, { color: colors.secondary }]}>Nothing matches your filters</Text>
+              <Pressable onPress={() => router.push('/filters')} hitSlop={8}>
+                <Text style={[styles.emptyLink, { color: colors.accent }]}>Change filters</Text>
+              </Pressable>
+            </View>
           ) : (
             <View style={styles.empty}>
               <Icon name="help" size={60} color={colors.tertiary} />
@@ -135,6 +181,16 @@ export default function ExploreScreen() {
           </Text>
         )}
       </SafeAreaView>
+
+      <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Button
+          accessibilityLabel="Filters"
+          tintColor={colors.accent}
+          onPress={() => router.push('/filters')}
+        >
+          <Stack.Toolbar.Icon {...toolbarIcon('line.3.horizontal.decrease', FiltersIcon)} />
+        </Stack.Toolbar.Button>
+      </Stack.Toolbar>
     </View>
   );
 }
@@ -284,6 +340,10 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', gap: 12 },
   emptyTitle: { fontSize: 17, fontWeight: '600' },
   emptyBody: { fontSize: 15 },
+  emptyLink: { fontSize: 16, fontWeight: '600' },
+  filterBar: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14 },
+  filterText: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  filterLabel: { flex: 1, fontSize: 15, fontWeight: '600' },
   footer: { paddingHorizontal: 16, paddingBottom: 16, alignItems: 'center' },
   tryButton: {
     alignSelf: 'stretch',

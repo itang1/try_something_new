@@ -15,7 +15,8 @@ Icons for activities and city icons come from [`icon-mapping.json`](icon-mapping
 
 - **Completions:** an append-only log in SQLite of (activity or icon id, done or undone, time). The current state is the latest event per id, which makes syncing and undo simple.
 - **Place visits:** a second log of the same shape, (place, activity, visited or not, time). Visiting any place checks off its activity, and checking off a city icon logs a visit to its place. Undoing never cascades.
-- **Saved and "Not for me":** lists of ids. Explore skips "Not for me" and done items.
+- **Saved and "Not for me":** lists of ids. Explore skips "Not for me" and done items. "Not for me" items can be brought back from the Filters sheet.
+- **Explore filters:** kind, level, drive time, cost, and time, saved across launches. Until three things are done, Explore leaves out stretches unless you pick a level yourself.
 - **Location:** home, saved across launches, plus the last five places searched or picked.
 - **Trip:** a city and a starting place while traveling. Ending the trip returns to the home location. Without a trip, the city is the one nearest home.
 - **Reflections:** saved from the Done moment: the entry, the place you went, a rating (loved it, fine, not for me), a note, and a photo. Photos are copied into the app's documents folder, so deleting one from the camera roll doesn't break it.
