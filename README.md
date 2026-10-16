@@ -18,7 +18,7 @@ The goal is to reach as many people as possible on iOS and Android, and to expan
 ### Looking good on both platforms
 
 - **Native where it matters:** tabs and sheets use the real platform components. Animations run on the UI thread with Reanimated, with Skia for effects and haptics on key actions.
-- **One icon set on both platforms** (Phosphor or Material Symbols, whichever covers more activities). SF Symbols are licensed for Apple platforms only. Each icon sits in a circle colored by subcategory, the same in lists, pins, and widgets.
+- **One icon set on both platforms:** Material Symbols. It has a specific icon for 166 of 177 activities, against 150 for Phosphor (see [`design/icon-mapping.json`](design/icon-mapping.json)). The gaps are mostly crafts, which will get custom icons in the same style. SF Symbols are licensed for Apple platforms only. Each icon sits in a circle colored by subcategory, the same in lists, pins, and widgets.
 - **Map:** Apple Maps on iOS and Google Maps on Android, with custom pins. Tapping a pin glides the camera and slides up a card, rather than animating the pin itself.
 
 ### Data at scale
