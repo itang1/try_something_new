@@ -2,7 +2,7 @@
 
 A local-activity checklist and random suggester. Explore picks a random activity, and Checklist tracks what you've done in each city, with drive times from your home address.
 
-Today it's a native iOS app (SwiftUI and SwiftData, no backend) with 177 activities in 11 subcategories, covering Los Angeles, Columbus, and activities you can do anywhere. See [TODO.md](TODO.md) for what's next.
+Today it's a native iOS app (SwiftUI and SwiftData, no backend) with 177 activities in 11 subcategories, covering Los Angeles, Columbus, and activities you can do anywhere. See [TODO.md](TODO.md) for what's next. The SwiftUI version, with screenshots, is saved on the [`native-ios`](../../tree/native-ios) branch.
 
 ## Design choices
 
@@ -24,4 +24,4 @@ The goal is to reach as many people as possible on iOS and Android, and to expan
 ### Data at scale
 
 - **Catalog:** versioned per-city files on a CDN, cached on the device so the app works offline.
-- **User state:** completions and notes stay on the device first, then sync to a backend (likely Convex).
+- **User state:** completions and notes stay on the device first, then sync to a backend (Convex, Supabase, or Firestore, chosen when sync is built).
