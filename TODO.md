@@ -11,6 +11,5 @@
 
 - [ ] **Tablet layout**: use sidebar navigation on larger screens (iPad and Android tablets).
 - [ ] **Real drive time estimates** — Replace the haversine/50 km/h approximation with a routing API for real driving ETAs (with caching), since MKDirections is iOS-only.
-- [ ] **User-added activities** — Let users create custom activities beyond the seed data.
 - [ ] **Sync**: sync visited status and notes across devices through the backend (Convex, Supabase, or Firestore), since iCloud is Apple-only.
 - [ ] **Demo video** — Make one with brag (a coworker's tip).

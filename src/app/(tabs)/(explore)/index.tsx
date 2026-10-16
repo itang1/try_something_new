@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import FiltersIcon from '@expo/material-symbols/tune.xml';
 import * as Haptics from 'expo-haptics';
-import { entriesForCity, findEntry, LEVELS, type Entry } from '@/data/catalog';
+import { LEVELS, type Entry } from '@/data/catalog';
 import { addDays, dayKey, formatDay } from '@/data/days';
 import { formatMinutes, placesByDistance } from '@/data/drive';
 import { describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
@@ -27,7 +27,7 @@ function randomItem<T>(items: T[]): T {
 export default function ExploreScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { city, home, origin, isDone, savedIds, toggleSaved, hiddenIds, hide, plans, filters, setFilters } = useAppState();
+  const { city, entries, findEntry, home, origin, isDone, savedIds, toggleSaved, hiddenIds, hide, plans, filters, setFilters } = useAppState();
   const markDone = useMarkDone();
   const toast = useToast();
   // The pick remembers its city, so switching cities clears it without an effect.
@@ -40,8 +40,7 @@ export default function ExploreScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const entries = entriesForCity(city.id);
-  const activity = pick?.city === city.id ? findEntry(city.id, pick.id) : undefined;
+  const activity = pick?.city === city.id ? findEntry(pick.id) : undefined;
 
   const showAnother = (exclude?: string) => {
     const current = exclude ?? activity?.id;
@@ -66,7 +65,7 @@ export default function ExploreScreen() {
   const soonPlan = [...plans.values()]
     .filter((p) => soonDays.includes(p.day) && !isDone(p.entryId))
     .sort((x, y) => x.day.localeCompare(y.day))[0];
-  const soonEntry = soonPlan && findEntry(city.id, soonPlan.entryId);
+  const soonEntry = soonPlan && findEntry(soonPlan.entryId);
   const soonPlace = soonEntry?.places.find((p) => p.id === soonPlan?.placeId);
 
   const activeFilters = describeFilters(filters, (id) => subcategory(id).label);

@@ -4,6 +4,7 @@ import columbus from '../../data/cities/columbus.json';
 import iconMapping from '../../design/icon-mapping.json';
 import { haversineKm, type Coordinate } from './drive';
 import type { IconName } from '@/icons/paths';
+import { subcategory } from '@/theme';
 
 export type Place = {
   id: string;
@@ -54,7 +55,15 @@ export type Entry = {
   level: Level;
   activityId: string;
   places: Place[];
+  /** Added by the user, so it has no places and can be deleted. */
+  custom: boolean;
 };
+
+/** Something the user added to a city's list themselves. */
+export type CustomActivity = { id: string; cityId: string; name: string; subcategory: string; duration: string; cost: string };
+
+export const DURATIONS = ['1 hour', '1-2 hours', '2-3 hours', 'Half day', 'Full day'];
+export const COSTS = ['Free', '$', '$$', '$$$'];
 
 export const CITIES = [losAngeles, columbus] as City[];
 
@@ -85,6 +94,25 @@ function entry(base: Activity | CityIcon, kind: Entry['kind'], activityId: strin
     level: base.level ?? ACTIVITIES.get(activityId)?.level ?? 'medium',
     activityId,
     places,
+    custom: false,
+  };
+}
+
+export function customEntry(c: CustomActivity): Entry {
+  return {
+    id: c.id,
+    kind: 'activity',
+    name: c.name,
+    icon: subcategory(c.subcategory).icon,
+    subcategory: c.subcategory,
+    duration: c.duration,
+    cost: c.cost,
+    durationMinutes: DURATION_MINUTES[c.duration] ?? 0,
+    costLevel: COST_LEVEL[c.cost] ?? 0,
+    level: 'medium',
+    activityId: c.id,
+    places: [],
+    custom: true,
   };
 }
 
@@ -136,6 +164,7 @@ export function placeNames(entry: Entry): string {
 
 /** The row's second line: an icon names the activity it counts toward, an activity lists its places. */
 export function entryHint(entry: Entry): string {
+  if (entry.custom) return 'Added by you';
   if (entry.kind === 'icon') return `Counts toward: ${ACTIVITIES.get(entry.activityId)?.name ?? 'an activity'}`;
   return placeNames(entry);
 }

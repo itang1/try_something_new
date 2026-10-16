@@ -1,5 +1,6 @@
 import { openDatabaseSync } from 'expo-sqlite';
 import Storage from 'expo-sqlite/kv-store';
+import type { CustomActivity } from './catalog';
 
 const db = openDatabaseSync('app.db');
 
@@ -27,6 +28,16 @@ db.execSync(`
     rating TEXT,
     note TEXT,
     photo TEXT,
+    at TEXT NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS custom_activities (
+    id TEXT PRIMARY KEY,
+    city_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    subcategory TEXT NOT NULL,
+    duration TEXT NOT NULL,
+    cost TEXT NOT NULL,
+    deleted INTEGER NOT NULL DEFAULT 0,
     at TEXT NOT NULL
   );
   CREATE TABLE IF NOT EXISTS plans (
@@ -110,6 +121,25 @@ export function loadMemories(): Memory[] {
       AND c.done = 1
     ORDER BY c.at DESC
   `);
+}
+
+export function loadCustomActivities(): CustomActivity[] {
+  return db.getAllSync<CustomActivity>(`
+    SELECT id, city_id AS cityId, name, subcategory, duration, cost FROM custom_activities
+    WHERE deleted = 0 ORDER BY at
+  `);
+}
+
+export function saveCustomActivity(c: CustomActivity): void {
+  db.runSync(
+    'INSERT INTO custom_activities (id, city_id, name, subcategory, duration, cost, at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [c.id, c.cityId, c.name, c.subcategory, c.duration, c.cost, new Date().toISOString()],
+  );
+}
+
+/** Kept as a row so a later sync can tell other devices it was deleted. */
+export function deleteCustomActivity(id: string): void {
+  db.runSync('UPDATE custom_activities SET deleted = 1, at = ? WHERE id = ?', [new Date().toISOString(), id]);
 }
 
 /** A day is a local YYYY-MM-DD key. Activity ids repeat across cities, so plans are kept per city. */

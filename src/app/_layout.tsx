@@ -42,6 +42,15 @@ export default function RootLayout() {
                 }}
               />
               <Stack.Screen
+                name="add"
+                options={{
+                  presentation: 'formSheet',
+                  sheetAllowedDetents: [1],
+                  sheetGrabberVisible: true,
+                  contentStyle: { backgroundColor: colors.background },
+                }}
+              />
+              <Stack.Screen
                 name="filters"
                 options={{
                   presentation: 'formSheet',

@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Image, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
-import { findEntryAnywhere, type Entry } from '@/data/catalog';
+import type { City, Entry } from '@/data/catalog';
 import { keptPhotoUri } from '@/data/photos';
 import { loadMemories, type Memory, type Rating } from '@/data/storage';
+import { useAppState } from '@/state/app-state';
 import { subcategory, useColors } from '@/theme';
 import { FilterChip } from '@/components/chips';
 import { GradientIcon, Icon } from '@/components/icon';
@@ -19,9 +20,11 @@ type Filter = (typeof FILTERS)[number];
 
 type Item = Memory & { entry: Entry; placeName: string | null };
 
-function toItems(memories: Memory[]): Item[] {
+type Finder = (id: string, placeId?: string | null) => { entry: Entry; city: City } | undefined;
+
+function toItems(memories: Memory[], find: Finder): Item[] {
   const items = memories.flatMap((m) => {
-    const found = findEntryAnywhere(m.entryId, m.placeId);
+    const found = find(m.entryId, m.placeId);
     if (!found) return [];
     const placeName = found.city.places.find((p) => p.id === m.placeId)?.name ?? null;
     return [{ ...m, entry: found.entry, placeName }];
@@ -103,7 +106,8 @@ function Tile({ value, label }: { value: number; label: string }) {
 
 export default function MemoriesScreen() {
   const colors = useColors();
-  const [items] = useState(() => toItems(loadMemories()));
+  const { findAnyEntry } = useAppState();
+  const [items] = useState(() => toItems(loadMemories(), findAnyEntry));
   const [filter, setFilter] = useState<Filter>('All');
 
   const shown = items.filter(

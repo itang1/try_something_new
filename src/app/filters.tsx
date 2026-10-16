@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { entriesForCity, LEVELS, type Level } from '@/data/catalog';
+import { LEVELS, type Level } from '@/data/catalog';
 import { formatMinutes } from '@/data/drive';
 import {
   COST_OPTIONS,
@@ -22,8 +22,7 @@ const toggle = <T,>(list: T[], item: T) => (list.includes(item) ? list.filter((x
 export default function FiltersSheet() {
   const colors = useColors();
   const router = useRouter();
-  const { city, origin, filters, setFilters, hiddenIds, unhide, isDone } = useAppState();
-  const entries = entriesForCity(city.id);
+  const { entries, origin, filters, setFilters, hiddenIds, unhide, isDone } = useAppState();
   const subcategories = [...new Set(entries.map((e) => e.subcategory))].sort();
   const hidden = entries.filter((e) => hiddenIds.has(e.id));
   const matchCount = entries.filter(

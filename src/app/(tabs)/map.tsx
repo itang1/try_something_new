@@ -4,7 +4,7 @@ import MapView, { Marker, type Region } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
-import { entriesForCity, nearestCity, type Entry, type Place } from '@/data/catalog';
+import { nearestCity, type Entry, type Place } from '@/data/catalog';
 import { buildIndex, featuresInRegion, zoomToDelta } from '@/data/clusters';
 import { openDirections } from '@/data/directions';
 import { formatMinutes, haversineKm } from '@/data/drive';
@@ -22,7 +22,7 @@ type PinPlace = Place & { entries: Entry[] };
 export default function MapScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { city, origin, doneIds } = useAppState();
+  const { city, entries, origin, doneIds } = useAppState();
   const mapRef = useRef<MapView>(null);
   const [notDoneOnly, setNotDoneOnly] = useState(false);
   // Selection remembers its city, so switching cities clears it without an effect.
@@ -35,7 +35,6 @@ export default function MapScreen() {
   const [region, setRegion] = useState<Region>(initialRegion);
 
   const places = useMemo(() => {
-    const entries = entriesForCity(city.id);
     return city.places.map((p): PinPlace => ({
       ...p,
       // Icons first, so a must-do sets the pin's look.
@@ -43,7 +42,7 @@ export default function MapScreen() {
         .filter((e) => e.places.some((ep) => ep.id === p.id))
         .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'icon' ? -1 : 1)),
     }));
-  }, [city]);
+  }, [city, entries]);
 
   const isPlaceDone = (p: PinPlace) => p.entries.length > 0 && p.entries.every((e) => doneIds.has(e.id));
   const shown = useMemo(

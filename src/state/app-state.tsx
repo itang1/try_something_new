@@ -1,8 +1,20 @@
 import { createContext, use, useCallback, useMemo, useState, type ReactNode } from 'react';
-import { CITIES, cityById, nearestCity, type City, type Entry } from '@/data/catalog';
+import {
+  CITIES,
+  cityById,
+  customEntry,
+  entriesForCity,
+  findEntryAnywhere,
+  nearestCity,
+  type City,
+  type CustomActivity,
+  type Entry,
+} from '@/data/catalog';
 import type { Coordinate } from '@/data/drive';
 import { NO_FILTERS, type Filters } from '@/data/filters';
 import {
+  deleteCustomActivity,
+  loadCustomActivities,
   loadDoneIds,
   loadPlans,
   loadVisitedPlaceIds,
@@ -11,6 +23,7 @@ import {
   recordCompletion,
   recordPlan,
   recordVisit,
+  saveCustomActivity,
   writeSetting,
   type Plan,
 } from '@/data/storage';
@@ -23,6 +36,13 @@ export type Trip = { cityId: string; start: HomeLocation | null };
 type AppState = {
   /** The trip's city, or else the city nearest home. */
   city: City;
+  /** The city's list: its activities and icons, plus any the user added. */
+  entries: Entry[];
+  findEntry: (id: string) => Entry | undefined;
+  /** Looks in every city, for history that may come from another one. */
+  findAnyEntry: (id: string, placeId?: string | null) => { entry: Entry; city: City } | undefined;
+  addCustom: (activity: Omit<CustomActivity, 'id' | 'cityId'>) => Entry;
+  removeCustom: (id: string) => void;
   home: HomeLocation | null;
   trip: Trip | null;
   /** Where drive times start. */
@@ -82,12 +102,47 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [saved, setSaved] = usePersistedState<string[]>('savedIds', []);
   const [hidden, setHidden] = usePersistedState<string[]>('hiddenIds', []);
   const [allPlans, setAllPlans] = useState(loadPlans);
+  const [customs, setCustoms] = useState(loadCustomActivities);
   const [filters, setFilters] = usePersistedState<Filters>('exploreFilters', NO_FILTERS);
   const savedIds = useMemo(() => new Set(saved), [saved]);
   const hiddenIds = useMemo(() => new Set(hidden), [hidden]);
 
   const city = (trip && cityById(trip.cityId)) || (home ? nearestCity(home).city : CITIES[0]);
   const origin = trip ? trip.start : home;
+  const entries = useMemo(
+    () =>
+      [...entriesForCity(city.id), ...customs.filter((c) => c.cityId === city.id).map(customEntry)].sort((a, b) =>
+        a.name.localeCompare(b.name),
+      ),
+    [city.id, customs],
+  );
+  const findEntry = useCallback((id: string) => entries.find((e) => e.id === id), [entries]);
+  const findAnyEntry = useCallback(
+    (id: string, placeId?: string | null) => {
+      const found = findEntryAnywhere(id, placeId);
+      if (found) return found;
+      const custom = customs.find((c) => c.id === id);
+      const customCity = custom && cityById(custom.cityId);
+      return custom && customCity ? { entry: customEntry(custom), city: customCity } : undefined;
+    },
+    [customs],
+  );
+  const addCustom = useCallback(
+    (activity: Omit<CustomActivity, 'id' | 'cityId'>) => {
+      const created = { ...activity, id: `custom-${Date.now().toString(36)}`, cityId: city.id };
+      saveCustomActivity(created);
+      setCustoms([...customs, created]);
+      return customEntry(created);
+    },
+    [city.id, customs],
+  );
+  const removeCustom = useCallback(
+    (id: string) => {
+      deleteCustomActivity(id);
+      setCustoms(customs.filter((c) => c.id !== id));
+    },
+    [customs],
+  );
   const plans = useMemo(
     () => new Map([...allPlans.values()].filter((p) => p.cityId === city.id).map((p) => [p.entryId, p])),
     [allPlans, city.id],
@@ -180,6 +235,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     <AppStateContext
       value={{
         city,
+        entries,
+        findEntry,
+        findAnyEntry,
+        addCustom,
+        removeCustom,
         home,
         trip,
         origin,

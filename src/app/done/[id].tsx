@@ -3,7 +3,6 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { entriesForCity, findEntry } from '@/data/catalog';
 import { placesByDistance } from '@/data/drive';
 import { pickAndKeepPhoto } from '@/data/photos';
 import { recordReflection, type Rating } from '@/data/storage';
@@ -34,8 +33,8 @@ export default function DoneSheet() {
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { city, origin, doneIds, visitedPlaceIds, toggleVisited, plans } = useAppState();
-  const entry = findEntry(city.id, id);
+  const { city, origin, doneIds, visitedPlaceIds, toggleVisited, plans, entries, findEntry } = useAppState();
+  const entry = findEntry(id);
   const places = entry ? placesByDistance(entry, origin) : [];
   const [placeId, setPlaceId] = useState<string | null>(
     plans.get(id)?.placeId ?? places[0]?.place.id ?? null,
@@ -46,7 +45,7 @@ export default function DoneSheet() {
 
   if (!entry) return null;
 
-  const all = entriesForCity(city.id);
+  const all = entries;
   const triedCount = all.filter((e) => doneIds.has(e.id)).length;
   const milestone = milestoneReached(triedCount, all.length, entry.kind === 'icon' ? 2 : 1);
 

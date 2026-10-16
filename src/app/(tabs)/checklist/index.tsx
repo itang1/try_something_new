@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, type ComponentType } from 'react';
-import { ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import type { SFSymbol } from 'expo-symbols';
 import NativeSegmentedControl, {
@@ -7,7 +7,7 @@ import NativeSegmentedControl, {
 } from '@react-native-segmented-control/segmented-control';
 import MemoriesIcon from '@expo/material-symbols/photo_library.xml';
 import SortIcon from '@expo/material-symbols/swap_vert.xml';
-import { entriesForCity, entryHint, LEVELS, type Entry } from '@/data/catalog';
+import { entryHint, LEVELS, type Entry } from '@/data/catalog';
 import { formatDay } from '@/data/days';
 import { driveMinutes } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
@@ -39,7 +39,7 @@ type Row = { activity: Entry; minutes: number | null; progress: PlaceProgress | 
 export default function ChecklistScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { city, origin, doneIds, savedIds, visitedPlaceIds, plans } = useAppState();
+  const { city, entries, origin, doneIds, savedIds, visitedPlaceIds, plans } = useAppState();
   const toggleDone = useToggleWithUndo();
   const [status, setStatus] = useState<Status>('All');
   const [sort, setSort] = useState<Sort>('Name');
@@ -48,7 +48,7 @@ export default function ChecklistScreen() {
   const [chip, setChip] = useState<{ city: string; sub: string } | null>(null);
   const selectedSub = chip?.city === city.id ? chip.sub : null;
 
-  const cityActivities = useMemo(() => entriesForCity(city.id), [city.id]);
+  const cityActivities = entries;
   const subcategories = useMemo(
     () => [...new Set(cityActivities.map((a) => a.subcategory))].sort(),
     [cityActivities],
@@ -176,6 +176,16 @@ export default function ChecklistScreen() {
         )}
         stickySectionHeadersEnabled={false}
         ListHeaderComponent={header}
+        ListFooterComponent={
+          <Pressable
+            onPress={() => router.push('/add')}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.add, { borderColor: colors.separator, opacity: pressed ? 0.6 : 1 }]}
+          >
+            <Icon name="add" size={20} color={colors.accent} />
+            <Text style={[styles.addText, { color: colors.accent }]}>Add your own</Text>
+          </Pressable>
+        }
         ListEmptyComponent={
           <View style={styles.empty}>
             <Icon name={status === 'Saved' ? 'bookmark' : 'search'} size={44} color={colors.tertiary} />
@@ -237,5 +247,17 @@ const styles = StyleSheet.create({
   section: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase', marginTop: 12, marginLeft: 4 },
   chips: { gap: 8, paddingVertical: 2 },
   empty: { alignItems: 'center', gap: 8, paddingTop: 48 },
+  add: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    minHeight: 50,
+    marginTop: 16,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+  },
+  addText: { fontSize: 16, fontWeight: '600' },
   emptyTitle: { fontSize: 20, fontWeight: '700' },
 });

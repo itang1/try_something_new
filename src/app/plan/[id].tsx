@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { findEntry } from '@/data/catalog';
 import { addToCalendar } from '@/data/calendar';
 import { inviteFriend } from '@/data/invite';
 import { dayKey, formatDay, isWeekend, nextWeekendDay, upcomingDays } from '@/data/days';
@@ -18,8 +17,8 @@ export default function PlanSheet() {
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { city, origin, plans, setPlan } = useAppState();
-  const entry = findEntry(city.id, id);
+  const { city, origin, plans, setPlan, findEntry } = useAppState();
+  const entry = findEntry(id);
   const existing = plans.get(id);
   const days = upcomingDays(DAYS_AHEAD);
   const keys = days.map(dayKey);
