@@ -1,5 +1,6 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { useColorScheme } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppStateProvider } from '@/state/app-state';
 import { useColors } from '@/theme';
 
@@ -14,21 +15,32 @@ export default function RootLayout() {
   };
 
   return (
-    <ThemeProvider value={theme}>
-      <AppStateProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen
-            name="location"
-            options={{
-              presentation: 'formSheet',
-              sheetAllowedDetents: [0.5, 1],
-              sheetGrabberVisible: true,
-              contentStyle: { backgroundColor: colors.background },
-            }}
-          />
-        </Stack>
-      </AppStateProvider>
-    </ThemeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider value={theme}>
+        <AppStateProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen
+              name="location"
+              options={{
+                presentation: 'formSheet',
+                sheetAllowedDetents: [0.5, 1],
+                sheetGrabberVisible: true,
+                contentStyle: { backgroundColor: colors.background },
+              }}
+            />
+            <Stack.Screen
+              name="activity/[id]"
+              options={{
+                presentation: 'formSheet',
+                sheetAllowedDetents: [0.75, 1],
+                sheetGrabberVisible: true,
+                contentStyle: { backgroundColor: colors.background },
+              }}
+            />
+          </Stack>
+        </AppStateProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

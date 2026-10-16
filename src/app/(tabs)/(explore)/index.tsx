@@ -1,43 +1,44 @@
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Animated, { withSpring, withTiming } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { entriesForCity, findEntry, placeNames } from '@/data/catalog';
-import { driveMinutes, formatMinutes } from '@/data/drive';
+import { entriesForCity, findEntry, type Entry } from '@/data/catalog';
+import { formatMinutes, placesByDistance } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
 import { subcategory, useColors } from '@/theme';
 import { GradientIcon, Icon } from '@/components/icon';
 import { MetadataTag } from '@/components/chips';
 import { LocationControl } from '@/components/location-control';
+import { SwipeCard } from '@/components/swipe-card';
+import type { IconName } from '@/icons/paths';
 
-function cardEntering() {
-  'worklet';
-  return {
-    initialValues: { opacity: 0, transform: [{ scale: 0.9 }] },
-    animations: {
-      opacity: withTiming(1, { duration: 250 }),
-      transform: [{ scale: withSpring(1, { duration: 400, dampingRatio: 0.75 }) }],
-    },
-  };
+function randomItem<T>(items: T[]): T {
+  return items[Math.floor(Math.random() * items.length)];
 }
 
 export default function ExploreScreen() {
   const colors = useColors();
-  const { city, origin, isDone, toggleDone } = useAppState();
+  const router = useRouter();
+  const { city, origin, isDone, toggleDone, savedIds, toggleSaved, hiddenIds, hide } = useAppState();
   // The pick remembers its city, so switching cities clears it without an effect.
   const [pick, setPick] = useState<{ id: string; city: string; n: number } | null>(null);
 
-  const cityActivities = entriesForCity(city.id);
+  const entries = entriesForCity(city.id);
   const activity = pick?.city === city.id ? findEntry(city.id, pick.id) : undefined;
-  const minutes = activity ? driveMinutes(activity, origin) : null;
-  const hint = activity && placeNames(activity);
-  const done = activity ? isDone(activity.id) : false;
 
-  const trySomething = () => {
-    const next = cityActivities[Math.floor(Math.random() * cityActivities.length)];
+  const showAnother = (exclude?: string) => {
+    const current = exclude ?? activity?.id;
+    const fresh = entries.filter((e) => e.id !== current && !hiddenIds.has(e.id) && !isDone(e.id));
+    const pool = fresh.length ? fresh : entries.filter((e) => e.id !== current);
+    if (!pool.length) return;
+    const next = randomItem(pool);
     Haptics.selectionAsync();
     setPick({ id: next.id, city: city.id, n: (pick?.n ?? 0) + 1 });
+  };
+
+  const save = (entry: Entry) => {
+    if (!savedIds.has(entry.id)) toggleSaved(entry.id);
   };
 
   return (
@@ -48,54 +49,34 @@ export default function ExploreScreen() {
 
         <View style={styles.middle}>
           {activity ? (
-            <Animated.View key={pick?.n} entering={cardEntering} style={styles.card}>
-              <GradientIcon
-                icon={activity.icon}
-                subcategoryId={activity.subcategory}
-                size={200}
-                shape="circle"
-                style={[styles.bigIcon, { boxShadow: `0 10px 20px ${subcategory(activity.subcategory).color}66` }]}
-              />
-              <Text style={[styles.title, { color: colors.label }]}>{activity.name}</Text>
-              <Text
-                style={[
-                  styles.pill,
-                  {
-                    color: subcategory(activity.subcategory).color,
-                    backgroundColor: `${subcategory(activity.subcategory).color}26`,
-                  },
-                ]}
-              >
-                {subcategory(activity.subcategory).label}
-              </Text>
-              {!!hint && <Text style={[styles.hint, { color: colors.secondary }]}>Try it at: {hint}</Text>}
-              <View style={styles.tags}>
-                <MetadataTag icon="schedule" text={activity.duration} />
-                <MetadataTag icon="payments" text={activity.cost} />
-                {minutes != null && <MetadataTag icon="directions_car" text={formatMinutes(minutes)} />}
-              </View>
-              <Pressable
-                onPress={() => {
+            <SwipeCard
+              key={pick?.n}
+              onSwipeLeft={() => showAnother(activity.id)}
+              onSwipeRight={() => {
+                save(activity);
+                showAnother(activity.id);
+              }}
+            >
+              <ActivityCard
+                entry={activity}
+                origin={origin}
+                done={isDone(activity.id)}
+                saved={savedIds.has(activity.id)}
+                onOpen={() => router.push(`/activity/${activity.id}`)}
+                onNotForMe={() => {
+                  hide(activity.id);
+                  showAnother(activity.id);
+                }}
+                onSave={() => {
+                  Haptics.selectionAsync();
+                  toggleSaved(activity.id);
+                }}
+                onDone={() => {
                   Haptics.selectionAsync();
                   toggleDone(activity.id);
                 }}
-                accessibilityRole="checkbox"
-                accessibilityState={{ checked: done }}
-                style={({ pressed }) => [
-                  styles.doneButton,
-                  { backgroundColor: done ? `${colors.done}26` : colors.fill, opacity: pressed ? 0.7 : 1 },
-                ]}
-              >
-                <Icon
-                  name={done ? 'check_circle' : 'radio_button_unchecked'}
-                  size={18}
-                  color={done ? colors.done : colors.secondary}
-                />
-                <Text style={[styles.doneText, { color: done ? colors.done : colors.secondary }]}>
-                  {done ? 'Done!' : 'Mark as Done'}
-                </Text>
-              </Pressable>
-            </Animated.View>
+              />
+            </SwipeCard>
           ) : (
             <View style={styles.empty}>
               <Icon name="help" size={60} color={colors.tertiary} />
@@ -108,24 +89,128 @@ export default function ExploreScreen() {
 
       <SafeAreaView edges={['bottom']} style={styles.footer}>
         <Pressable
-          onPress={trySomething}
-          disabled={cityActivities.length === 0}
+          onPress={() => showAnother()}
+          disabled={entries.length === 0}
           style={({ pressed }) => [styles.tryButton, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
         >
-          <Text style={styles.tryText}>Try something!</Text>
+          <Icon name="shuffle" size={22} color="white" />
+          <Text style={styles.tryText}>{activity ? 'Show me another' : 'Show me something'}</Text>
         </Pressable>
+        {activity && (
+          <Text style={[styles.swipeHint, { color: colors.secondary }]}>
+            or swipe the card: left to skip, right to save
+          </Text>
+        )}
       </SafeAreaView>
     </View>
   );
 }
 
+type CardProps = {
+  entry: Entry;
+  origin: Parameters<typeof placesByDistance>[1];
+  done: boolean;
+  saved: boolean;
+  onOpen: () => void;
+  onNotForMe: () => void;
+  onSave: () => void;
+  onDone: () => void;
+};
+
+function ActivityCard({ entry, origin, done, saved, onOpen, onNotForMe, onSave, onDone }: CardProps) {
+  const colors = useColors();
+  const sub = subcategory(entry.subcategory);
+  const [nearest, ...others] = placesByDistance(entry, origin);
+  const placeLine = [
+    nearest?.minutes != null && `${formatMinutes(nearest.minutes)} away`,
+    others.length > 0 && `${others.length} more ${others.length === 1 ? 'place' : 'places'}`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  return (
+    <View style={[styles.card, { backgroundColor: colors.card }]}>
+      <GradientIcon
+        icon={entry.icon}
+        subcategoryId={entry.subcategory}
+        size={112}
+        shape="circle"
+        style={{ boxShadow: `0 10px 20px ${sub.color}59` }}
+      />
+      <Text style={[styles.title, { color: colors.label }]}>{entry.name}</Text>
+      <Text style={[styles.pill, { color: sub.color, backgroundColor: `${sub.color}26` }]}>{sub.label}</Text>
+
+      {nearest && (
+        <Pressable
+          onPress={onOpen}
+          accessibilityRole="button"
+          accessibilityHint="Shows every place and directions"
+          style={({ pressed }) => [styles.place, { backgroundColor: colors.background, opacity: pressed ? 0.7 : 1 }]}
+        >
+          <Icon name="location_on" size={22} color={colors.accent} />
+          <View style={styles.grow}>
+            <Text style={[styles.placeName, { color: colors.label }]} numberOfLines={1}>
+              {nearest.place.name}
+            </Text>
+            {!!placeLine && <Text style={[styles.placeLine, { color: colors.secondary }]}>{placeLine}</Text>}
+          </View>
+          <Icon name="chevron_right" size={20} color={colors.tertiary} />
+        </Pressable>
+      )}
+
+      <View style={styles.tags}>
+        <MetadataTag icon="schedule" text={entry.duration} />
+        <MetadataTag icon="payments" text={entry.cost} />
+      </View>
+
+      <View style={styles.actions}>
+        <CardAction icon="block" label="Not for me" onPress={onNotForMe} />
+        <CardAction
+          icon="bookmark"
+          label={saved ? 'Saved' : 'Save'}
+          onPress={onSave}
+          tint={saved ? colors.accent : undefined}
+          selected={saved}
+        />
+        <CardAction
+          icon={done ? 'check_circle' : 'radio_button_unchecked'}
+          label={done ? 'Done!' : 'Done'}
+          onPress={onDone}
+          tint={done ? colors.done : undefined}
+          selected={done}
+        />
+      </View>
+    </View>
+  );
+}
+
+type ActionProps = { icon: IconName; label: string; onPress: () => void; tint?: string; selected?: boolean };
+
+function CardAction({ icon, label, onPress, tint, selected }: ActionProps) {
+  const colors = useColors();
+  const color = tint ?? colors.secondary;
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      style={({ pressed }) => [
+        styles.action,
+        { backgroundColor: tint ? `${tint}26` : colors.fill, opacity: pressed ? 0.7 : 1 },
+      ]}
+    >
+      <Icon name={icon} size={18} color={color} />
+      <Text style={[styles.actionText, { color }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  content: { flexGrow: 1, padding: 16, gap: 24 },
+  content: { flexGrow: 1, padding: 16, gap: 16 },
   middle: { flex: 1, justifyContent: 'center' },
-  card: { alignItems: 'center', gap: 16 },
-  bigIcon: { marginBottom: 8 },
-  title: { fontSize: 28, fontWeight: '700', textAlign: 'center' },
+  card: { borderRadius: 24, padding: 20, paddingTop: 24, alignItems: 'center', gap: 12 },
+  title: { fontSize: 26, fontWeight: '700', textAlign: 'center' },
   pill: {
     fontSize: 12,
     fontWeight: '700',
@@ -134,21 +219,35 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     overflow: 'hidden',
   },
-  hint: { fontSize: 17, textAlign: 'center', paddingHorizontal: 24 },
+  place: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 14 },
+  placeName: { fontSize: 15, fontWeight: '600' },
+  placeLine: { fontSize: 13, marginTop: 2 },
+  grow: { flex: 1 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
-  doneButton: {
+  actions: { alignSelf: 'stretch', flexDirection: 'row', gap: 8, marginTop: 4 },
+  action: {
+    flex: 1,
+    minHeight: 44,
+    borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
   },
-  doneText: { fontSize: 15, fontWeight: '600' },
+  actionText: { fontSize: 14, fontWeight: '600' },
   empty: { alignItems: 'center', gap: 12 },
   emptyTitle: { fontSize: 17, fontWeight: '600' },
   emptyBody: { fontSize: 15 },
-  footer: { paddingHorizontal: 16, paddingBottom: 16 },
-  tryButton: { alignSelf: 'stretch', borderRadius: 999, paddingVertical: 16, alignItems: 'center' },
+  footer: { paddingHorizontal: 16, paddingBottom: 16, alignItems: 'center' },
+  tryButton: {
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    gap: 8,
+    borderRadius: 999,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   tryText: { color: 'white', fontSize: 17, fontWeight: '600' },
+  swipeHint: { fontSize: 13, marginTop: 8 },
 });

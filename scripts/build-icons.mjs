@@ -3,10 +3,11 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 
 const UI_ICONS = [
-  'account_balance', 'beach_access', 'check', 'check_circle', 'close', 'content_cut',
+  'account_balance', 'beach_access', 'block', 'bookmark', 'check', 'check_circle',
+  'chevron_right', 'close', 'content_cut', 'directions',
   'directions_car', 'directions_run', 'eco', 'flight', 'grid_view', 'help', 'hiking', 'history',
   'keyboard_arrow_down', 'location_city', 'location_on', 'my_location', 'payments',
-  'radio_button_unchecked', 'restaurant', 'schedule', 'search', 'shopping_bag', 'star', 'trophy',
+  'radio_button_unchecked', 'restaurant', 'schedule', 'search', 'shopping_bag', 'shuffle', 'star', 'trophy',
 ];
 
 const mapping = JSON.parse(readFileSync('design/icon-mapping.json', 'utf8'));

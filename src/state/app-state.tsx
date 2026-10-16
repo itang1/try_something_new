@@ -1,4 +1,4 @@
-import { createContext, use, useCallback, useState, type ReactNode } from 'react';
+import { createContext, use, useCallback, useMemo, useState, type ReactNode } from 'react';
 import { CITIES, cityById, nearestCity, type City } from '@/data/catalog';
 import type { Coordinate } from '@/data/drive';
 import { loadDoneIds, readSetting, recordCompletion, writeSetting } from '@/data/storage';
@@ -23,6 +23,11 @@ type AppState = {
   doneIds: Set<string>;
   isDone: (activityId: string) => boolean;
   toggleDone: (activityId: string) => void;
+  savedIds: Set<string>;
+  toggleSaved: (id: string) => void;
+  /** Marked "Not for me", so Explore stops suggesting them. */
+  hiddenIds: Set<string>;
+  hide: (id: string) => void;
 };
 
 const AppStateContext = createContext<AppState | null>(null);
@@ -46,6 +51,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [trip, setTrip] = usePersistedState<Trip | null>('trip', null);
   const [recentPlaces, setRecentPlaces] = usePersistedState<HomeLocation[]>('recentPlaces', []);
   const [doneIds, setDoneIds] = useState(loadDoneIds);
+  const [saved, setSaved] = usePersistedState<string[]>('savedIds', []);
+  const [hidden, setHidden] = usePersistedState<string[]>('hiddenIds', []);
+  const savedIds = useMemo(() => new Set(saved), [saved]);
+  const hiddenIds = useMemo(() => new Set(hidden), [hidden]);
 
   const city = (trip && cityById(trip.cityId)) || (home ? nearestCity(home).city : CITIES[0]);
   const origin = trip ? trip.start : home;
@@ -78,6 +87,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const isDone = useCallback((activityId: string) => doneIds.has(activityId), [doneIds]);
 
+  const toggleSaved = useCallback(
+    (id: string) => setSaved(saved.includes(id) ? saved.filter((s) => s !== id) : [...saved, id]),
+    [saved, setSaved],
+  );
+  const hide = useCallback((id: string) => setHidden([...new Set([...hidden, id])]), [hidden, setHidden]);
+
   return (
     <AppStateContext
       value={{
@@ -92,6 +107,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         doneIds,
         isDone,
         toggleDone,
+        savedIds,
+        toggleSaved,
+        hiddenIds,
+        hide,
       }}
     >
       {children}

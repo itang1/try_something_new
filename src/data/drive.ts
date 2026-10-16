@@ -1,4 +1,4 @@
-import type { Entry } from './catalog';
+import type { Entry, Place } from './catalog';
 
 export type Coordinate = { latitude: number; longitude: number };
 
@@ -16,6 +16,15 @@ export function driveMinutes(entry: Entry, from: Coordinate | null): number | nu
   if (!from || !entry.places.length) return null;
   const km = Math.min(...entry.places.map((p) => haversineKm(from, p.lat, p.lng)));
   return Math.max(1, Math.floor((km / 50) * 60));
+}
+
+/** Places sorted nearest first, with drive minutes when there's an origin. */
+export function placesByDistance(entry: Entry, from: Coordinate | null): { place: Place; minutes: number | null }[] {
+  const rows = entry.places.map((place) => ({
+    place,
+    minutes: from ? Math.max(1, Math.floor((haversineKm(from, place.lat, place.lng) / 50) * 60)) : null,
+  }));
+  return from ? rows.sort((a, b) => a.minutes! - b.minutes!) : rows;
 }
 
 export function formatMinutes(minutes: number): string {
