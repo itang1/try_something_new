@@ -1,7 +1,7 @@
 import { memo, useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Marker } from 'react-native-maps';
-import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Circle, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
 import { subcategory } from '@/theme';
 import type { IconName } from '@/icons/paths';
 import { Icon } from './icon';
@@ -44,14 +44,19 @@ export const PlacePin = memo(function PlacePin({
       onPress={onPress}
       zIndex={selected ? 2 : 1}
     >
-      <LinearGradient
-        colors={gradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.pin, { width: size, height: size, borderRadius: size / 2, opacity: done ? 0.55 : 1 }]}
-      >
+      <View style={[styles.pin, { width: size, height: size, borderRadius: size / 2, opacity: done ? 0.55 : 1 }]}>
+        {/* An SVG gradient, because expo-linear-gradient inside a marker swallows the tap on iOS. */}
+        <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
+          <Defs>
+            <SvgGradient id="fill" x1="0" y1="0" x2="1" y2="1">
+              <Stop offset="0" stopColor={gradient[0]} />
+              <Stop offset="1" stopColor={gradient[1]} />
+            </SvgGradient>
+          </Defs>
+          <Circle cx={size / 2} cy={size / 2} r={size / 2 - 1.25} fill="url(#fill)" stroke="white" strokeWidth={2.5} />
+        </Svg>
         <Icon name={done ? 'check' : icon} size={size * 0.55} color="white" />
-      </LinearGradient>
+      </View>
     </Marker>
   );
 });
@@ -89,7 +94,7 @@ const shadow = {
 };
 
 const styles = StyleSheet.create({
-  pin: { alignItems: 'center', justifyContent: 'center', borderWidth: 2.5, borderColor: 'white', ...shadow },
+  pin: { alignItems: 'center', justifyContent: 'center', ...shadow },
   cluster: { alignItems: 'center', justifyContent: 'center', backgroundColor: 'white', ...shadow },
   count: { fontSize: 15, fontWeight: '700' },
 });
