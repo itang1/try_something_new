@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
@@ -8,6 +8,7 @@ import { entriesForCity, findEntry, LEVELS, type Entry } from '@/data/catalog';
 import { addDays, dayKey, formatDay } from '@/data/days';
 import { formatMinutes, placesByDistance } from '@/data/drive';
 import { describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
+import { readSetting } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
 import { subcategory, useColors } from '@/theme';
 import { toolbarIcon } from '@/components/header-items';
@@ -26,12 +27,18 @@ function randomItem<T>(items: T[]): T {
 export default function ExploreScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { city, origin, isDone, savedIds, toggleSaved, hiddenIds, hide, plans, filters, setFilters } = useAppState();
+  const { city, home, origin, isDone, savedIds, toggleSaved, hiddenIds, hide, plans, filters, setFilters } = useAppState();
   const markDone = useMarkDone();
   const toast = useToast();
   // The pick remembers its city, so switching cities clears it without an effect.
   const [pick, setPick] = useState<{ id: string; city: string; n: number } | null>(null);
   const [noMatch, setNoMatch] = useState(false);
+
+  useEffect(() => {
+    if (!home && !readSetting('onboarded', false)) router.push('/welcome');
+    // Only on first mount: later changes to home shouldn't bring the welcome back.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const entries = entriesForCity(city.id);
   const activity = pick?.city === city.id ? findEntry(city.id, pick.id) : undefined;

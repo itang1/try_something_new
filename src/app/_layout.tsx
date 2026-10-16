@@ -22,6 +22,7 @@ export default function RootLayout() {
           <ToastProvider>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(tabs)" />
+              <Stack.Screen name="welcome" options={{ presentation: 'fullScreenModal' }} />
               <Stack.Screen
                 name="location"
                 options={{
