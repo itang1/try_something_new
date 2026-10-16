@@ -137,7 +137,7 @@
   "stargazing-at-mount-wilson": {"name": "Stargazing at Mount Wilson", "sfSymbol": "moon.stars.fill", "material": "moon_stars", "materialSpecific": true, "phosphor": "moon-stars", "phosphorSpecific": true},
   "la-galaxy-game": {"name": "LA Galaxy Game", "sfSymbol": "figure.soccer", "material": "sports_soccer", "materialSpecific": true, "phosphor": "soccer-ball", "phosphorSpecific": true},
   "comedy-night-at-largo": {"name": "Comedy Night at Largo", "sfSymbol": "face.smiling", "material": "theater_comedy", "materialSpecific": true, "phosphor": "mask-happy", "phosphorSpecific": true},
-  "drive-in-movie-at-the-vineland": {"name": "Drive-In Movie at the Vineland", "sfSymbol": "film.fill", "material": "local_movies", "materialSpecific": true, "phosphor": "popcorn", "phosphorSpecific": true},
+  "drive-in-movie-at-the-vineland": {"name": "Drive-In Movie at the Vineland", "sfSymbol": "film.fill", "material": "movie", "materialSpecific": true, "phosphor": "popcorn", "phosphorSpecific": true},
   "hike-malibu-creek-state-park": {"name": "Hike Malibu Creek State Park", "sfSymbol": "mountain.2.fill", "material": "hiking", "materialSpecific": true, "phosphor": "person-simple-hike", "phosphorSpecific": true},
   "sunset-at-griffith-observatory": {"name": "Sunset at Griffith Observatory", "sfSymbol": "sunset.fill", "material": "wb_twilight", "materialSpecific": true, "phosphor": "sun-horizon", "phosphorSpecific": true},
   "bodysurfing-at-the-wedge": {"name": "Bodysurfing at The Wedge", "sfSymbol": "waveform.path", "material": "waves", "materialSpecific": true, "phosphor": "waves", "phosphorSpecific": true},
