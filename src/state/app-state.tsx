@@ -1,17 +1,25 @@
 import { createContext, use, useCallback, useState, type ReactNode } from 'react';
-import { CITIES } from '@/data/catalog';
+import { CITIES, cityById, nearestCity, type City } from '@/data/catalog';
 import type { Coordinate } from '@/data/drive';
 import { loadDoneIds, readSetting, recordCompletion, writeSetting } from '@/data/storage';
 
 export type HomeLocation = Coordinate & { name: string };
 
+/** Visiting another city. Drive times start from where you're staying, once it's set. */
+export type Trip = { cityId: string; start: HomeLocation | null };
+
 type AppState = {
-  city: string;
-  setCity: (city: string) => void;
-  location: HomeLocation | null;
-  /** `remember` adds the place to recent addresses, as typed and picked addresses do. */
+  /** The trip's city, or else the city nearest home. */
+  city: City;
+  home: HomeLocation | null;
+  trip: Trip | null;
+  /** Where drive times start. */
+  origin: HomeLocation | null;
+  /** Sets the trip's starting point during a trip, or home otherwise. Typed and picked places are remembered. */
   setLocation: (location: HomeLocation, options?: { remember?: boolean }) => void;
-  recentAddresses: string[];
+  startTrip: (cityId: string) => void;
+  endTrip: () => void;
+  recentPlaces: HomeLocation[];
   doneIds: Set<string>;
   isDone: (activityId: string) => boolean;
   toggleDone: (activityId: string) => void;
@@ -34,20 +42,27 @@ function usePersistedState<T>(key: string, fallback: T) {
 }
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
-  const [city, setCity] = usePersistedState('selectedCity', CITIES[0].name);
-  const [location, saveLocation] = usePersistedState<HomeLocation | null>('homeLocation', null);
-  const [recentAddresses, setRecentAddresses] = usePersistedState<string[]>('recentAddresses', []);
+  const [home, setHome] = usePersistedState<HomeLocation | null>('homeLocation', null);
+  const [trip, setTrip] = usePersistedState<Trip | null>('trip', null);
+  const [recentPlaces, setRecentPlaces] = usePersistedState<HomeLocation[]>('recentPlaces', []);
   const [doneIds, setDoneIds] = useState(loadDoneIds);
+
+  const city = (trip && cityById(trip.cityId)) || (home ? nearestCity(home).city : CITIES[0]);
+  const origin = trip ? trip.start : home;
 
   const setLocation = useCallback(
     (next: HomeLocation, options?: { remember?: boolean }) => {
-      saveLocation(next);
+      if (trip) setTrip({ ...trip, start: next });
+      else setHome(next);
       if (options?.remember) {
-        setRecentAddresses([next.name, ...recentAddresses.filter((a) => a !== next.name)].slice(0, MAX_RECENT));
+        setRecentPlaces([next, ...recentPlaces.filter((p) => p.name !== next.name)].slice(0, MAX_RECENT));
       }
     },
-    [saveLocation, recentAddresses, setRecentAddresses],
+    [trip, setTrip, setHome, recentPlaces, setRecentPlaces],
   );
+
+  const startTrip = useCallback((cityId: string) => setTrip({ cityId, start: null }), [setTrip]);
+  const endTrip = useCallback(() => setTrip(null), [setTrip]);
 
   const toggleDone = useCallback(
     (activityId: string) => {
@@ -65,7 +80,19 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   return (
     <AppStateContext
-      value={{ city, setCity, location, setLocation, recentAddresses, doneIds, isDone, toggleDone }}
+      value={{
+        city,
+        home,
+        trip,
+        origin,
+        setLocation,
+        startTrip,
+        endTrip,
+        recentPlaces,
+        doneIds,
+        isDone,
+        toggleDone,
+      }}
     >
       {children}
     </AppStateContext>

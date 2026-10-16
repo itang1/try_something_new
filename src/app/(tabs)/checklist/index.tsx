@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useState, type ComponentType } from 'react';
 import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack } from 'expo-router';
 import type { SFSymbol } from 'expo-symbols';
 import NativeSegmentedControl, {
   type SegmentedControlProps,
@@ -13,7 +13,8 @@ import { subcategory, useColors } from '@/theme';
 import { ActivityRow } from '@/components/activity-row';
 import { FilterChip } from '@/components/chips';
 import { Icon } from '@/components/icon';
-import { cityMenu, locationButton, toolbarIcon } from '@/components/header-items';
+import { toolbarIcon } from '@/components/header-items';
+import { LocationControl } from '@/components/location-control';
 
 // The package's class typings predate React 19.3's JSX types; the component itself works.
 const SegmentedControl = NativeSegmentedControl as unknown as ComponentType<SegmentedControlProps>;
@@ -33,16 +34,15 @@ type Row = { activity: Entry; minutes: number | null };
 
 export default function ChecklistScreen() {
   const colors = useColors();
-  const router = useRouter();
-  const { city, setCity, location, doneIds, toggleDone } = useAppState();
+  const { city, origin, doneIds, toggleDone } = useAppState();
   const [status, setStatus] = useState<Status>('All');
   const [sort, setSort] = useState<Sort>('Name');
   const [search, setSearch] = useState('');
   // The chip remembers its city, so switching cities resets it without an effect.
   const [chip, setChip] = useState<{ city: string; sub: string } | null>(null);
-  const selectedSub = chip?.city === city ? chip.sub : null;
+  const selectedSub = chip?.city === city.id ? chip.sub : null;
 
-  const cityActivities = useMemo(() => entriesForCity(city), [city]);
+  const cityActivities = useMemo(() => entriesForCity(city.id), [city.id]);
   const subcategories = useMemo(
     () => [...new Set(cityActivities.map((a) => a.subcategory))].sort(),
     [cityActivities],
@@ -56,7 +56,7 @@ export default function ChecklistScreen() {
       .filter((a) => !selectedSub || a.subcategory === selectedSub)
       .filter((a) => status === 'All' || (status === 'Done') === doneIds.has(a.id))
       .filter((a) => !query || a.name.toLocaleLowerCase().includes(query))
-      .map((a) => ({ activity: a, minutes: driveMinutes(a, location) }));
+      .map((a) => ({ activity: a, minutes: driveMinutes(a, origin) }));
     const byName = (x: Row, y: Row) => x.activity.name.localeCompare(y.activity.name);
     const compare: Record<Sort, (x: Row, y: Row) => number> = {
       Name: byName,
@@ -65,7 +65,7 @@ export default function ChecklistScreen() {
       Cost: (x, y) => x.activity.costLevel - y.activity.costLevel || byName(x, y),
     };
     return result.sort(compare[sort]);
-  }, [cityActivities, selectedSub, status, doneIds, search, location, sort]);
+  }, [cityActivities, selectedSub, status, doneIds, search, origin, sort]);
 
   const renderItem = useCallback(
     ({ item }: { item: Row }) => (
@@ -82,6 +82,7 @@ export default function ChecklistScreen() {
 
   const header = (
     <View style={styles.header}>
+      <LocationControl />
       <View style={[styles.progress, { backgroundColor: colors.accentSoft }]}>
         <View style={styles.progressTop}>
           <Icon name="trophy" size={18} color={colors.accent} />
@@ -93,9 +94,6 @@ export default function ChecklistScreen() {
         <View style={[styles.track, { backgroundColor: colors.fill }]}>
           <View style={[styles.bar, { width: `${fraction * 100}%`, backgroundColor: colors.accent }]} />
         </View>
-        <Text style={[styles.caption, { color: colors.secondary }]}>
-          {location ? `Drive times from ${location.name}` : 'Set your location for drive times'}
-        </Text>
       </View>
 
       <SegmentedControl
@@ -119,7 +117,7 @@ export default function ChecklistScreen() {
             icon={subcategory(sub).icon}
             color={subcategory(sub).color}
             selected={selectedSub === sub}
-            onPress={() => setChip(selectedSub === sub ? null : { city, sub })}
+            onPress={() => setChip(selectedSub === sub ? null : { city: city.id, sub })}
           />
         ))}
       </ScrollView>
@@ -151,10 +149,6 @@ export default function ChecklistScreen() {
         onChangeText={(e) => setSearch(e.nativeEvent.text)}
         onCancelButtonPress={() => setSearch('')}
       />
-      <Stack.Toolbar placement="left">
-        {cityMenu(city, setCity, colors.accent)}
-        {locationButton(location, () => router.push('/location'), colors.accent)}
-      </Stack.Toolbar>
       <Stack.Toolbar placement="right">
         <Stack.Toolbar.Menu accessibilityLabel="Sort" tintColor={colors.accent}>
           <Stack.Toolbar.Icon {...toolbarIcon('arrow.up.arrow.down', SortIcon)} />

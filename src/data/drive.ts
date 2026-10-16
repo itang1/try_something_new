@@ -2,7 +2,7 @@ import type { Entry } from './catalog';
 
 export type Coordinate = { latitude: number; longitude: number };
 
-function haversineKm(a: Coordinate, lat: number, lng: number): number {
+export function haversineKm(a: Coordinate, lat: number, lng: number): number {
   const toRad = (d: number) => (d * Math.PI) / 180;
   const dLat = toRad(lat - a.latitude);
   const dLng = toRad(lng - a.longitude);

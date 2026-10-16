@@ -14,6 +14,6 @@ Icons for activities and city icons come from [`icon-mapping.json`](icon-mapping
 ## User state (on the device, synced later)
 
 - **Completions:** an append-only log in SQLite of (activity or icon id, done or undone, time). The current state is the latest event per id, which makes syncing and undo simple.
-- **Location:** where drive times start, saved across launches, plus the last five searched places.
-- **Trip** (planned): a city and a starting place while traveling. Ending the trip returns to the home location.
+- **Location:** home, saved across launches, plus the last five places searched or picked.
+- **Trip:** a city and a starting place while traveling. Ending the trip returns to the home location. Without a trip, the city is the one nearest home.
 - **Planned with the Done moment:** saved items, the place visited, a rating (loved it, fine, not for me), a note, and a photo.

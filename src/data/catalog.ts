@@ -2,6 +2,7 @@ import activitiesFile from '../../data/activities.json';
 import losAngeles from '../../data/cities/los-angeles.json';
 import columbus from '../../data/cities/columbus.json';
 import iconMapping from '../../design/icon-mapping.json';
+import { haversineKm, type Coordinate } from './drive';
 import type { IconName } from '@/icons/paths';
 
 export type Place = {
@@ -20,7 +21,7 @@ export type Activity = { id: string; name: string; subcategory: string; duration
 /** A city's must-do, tied to one place. Doing it also counts toward its activity. */
 export type CityIcon = Activity & { place: string; activity: string };
 
-type CityFile = {
+export type City = {
   id: string;
   name: string;
   state: string;
@@ -29,8 +30,6 @@ type CityFile = {
   icons: CityIcon[];
   places: Place[];
 };
-
-export type City = CityFile & { icon: IconName };
 
 /** A row in a city's list: an activity with its places there, or a city icon. */
 export type Entry = {
@@ -47,12 +46,7 @@ export type Entry = {
   places: Place[];
 };
 
-const CITY_ICONS: Record<string, IconName> = { 'los-angeles': 'sunny', columbus: 'eco' };
-
-export const CITIES: City[] = ([losAngeles, columbus] as CityFile[]).map((c) => ({
-  ...c,
-  icon: CITY_ICONS[c.id] ?? 'location_city',
-}));
+export const CITIES = [losAngeles, columbus] as City[];
 
 const ACTIVITIES = new Map((activitiesFile.activities as Activity[]).map((a) => [a.id, a]));
 const icons = iconMapping as Record<string, { material: string }>;
@@ -94,14 +88,25 @@ function buildEntries(city: City): Entry[] {
   return [...activities, ...cityIcons].sort((a, b) => a.name.localeCompare(b.name));
 }
 
-const ENTRIES = new Map(CITIES.map((c) => [c.name, buildEntries(c)]));
+const ENTRIES = new Map(CITIES.map((c) => [c.id, buildEntries(c)]));
 
-export function entriesForCity(cityName: string): Entry[] {
-  return ENTRIES.get(cityName) ?? [];
+export function entriesForCity(cityId: string): Entry[] {
+  return ENTRIES.get(cityId) ?? [];
 }
 
-export function findEntry(cityName: string, id: string): Entry | undefined {
-  return entriesForCity(cityName).find((e) => e.id === id);
+export function findEntry(cityId: string, id: string): Entry | undefined {
+  return entriesForCity(cityId).find((e) => e.id === id);
+}
+
+export function cityById(id: string): City | undefined {
+  return CITIES.find((c) => c.id === id);
+}
+
+/** The covered city closest to a point, with its distance from the city center. */
+export function nearestCity(point: Coordinate): { city: City; km: number } {
+  return CITIES.map((city) => ({ city, km: haversineKm(point, city.lat, city.lng) })).reduce((a, b) =>
+    b.km < a.km ? b : a,
+  );
 }
 
 export function placeNames(entry: Entry): string {

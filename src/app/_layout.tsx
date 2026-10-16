@@ -24,7 +24,7 @@ export default function RootLayout() {
               presentation: 'formSheet',
               sheetAllowedDetents: [0.5, 1],
               sheetGrabberVisible: true,
-              contentStyle: { backgroundColor: colors.card },
+              contentStyle: { backgroundColor: colors.background },
             }}
           />
         </Stack>
