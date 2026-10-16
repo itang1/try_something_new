@@ -8,12 +8,12 @@ Today it's a native iOS app (SwiftUI and SwiftData, no backend) with 177 activit
 
 ### Moving from SwiftUI to Expo
 
-The goal is to reach as many people as possible on iOS and Android, and to expand to many cities with thousands of venues. I'm planning to port the app to Expo (React Native).
+The goal is to reach as many people as possible on iOS and Android, and to expand to many cities with thousands of venues. I'm porting the app to Expo (React Native).
 
 - **One codebase.** I can't maintain separate iOS, Android, and web apps alone. Two native apps (SwiftUI and Jetpack Compose) would mean building every feature twice for a small visual gain.
 - **What I give up:** MapKit's built-in pin and cluster animations. Widgets still need small native targets on each platform.
 - **Alternatives I ruled out:** staying SwiftUI-only (no Android), Flutter (draws its own UI, so it feels less native on iOS), and Kotlin Multiplatform (still two UIs).
-- **Before porting**, a map spike has to pass: 5,000 pins in 10 cities on a real iPhone and a mid-range Android phone, at 55 fps or better while panning.
+- **Map spike:** 5,000 clustered pins across 10 cities held 59 fps or better in the iOS Simulator, with the map ready in about half a second. The code and results are on the [`map-spike`](../../tree/map-spike) branch. I'll rerun it on real low-end phones before launch.
 
 ### Looking good on both platforms
 
