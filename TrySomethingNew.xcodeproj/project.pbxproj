@@ -6,8 +6,13 @@
 	objectVersion = 100;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		FCB2EC022F86FF8A006C2A22 /* TODO.md in Resources */ = {isa = PBXBuildFile; fileRef = FCB2EC012F86FF8A006C2A22 /* TODO.md */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		FCA2EEC32EF74E090092ABBD /* TrySomethingNew.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TrySomethingNew.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FCB2EC012F86FF8A006C2A22 /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -32,6 +37,7 @@
 			children = (
 				FCA2EEC52EF74E090092ABBD /* TrySomethingNew */,
 				FCA2EEC42EF74E090092ABBD /* Products */,
+				FCB2EC012F86FF8A006C2A22 /* TODO.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -102,6 +108,7 @@
 		FCA2EEC12EF74E090092ABBD /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			files = (
+				FCB2EC022F86FF8A006C2A22 /* TODO.md in Resources */,
 			);
 		};
 /* End PBXResourcesBuildPhase section */

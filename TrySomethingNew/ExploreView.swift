@@ -46,6 +46,7 @@ struct ExploreView: View {
                         Text(activity.name)
                             .font(.title.bold())
                             .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
 
                         Text(Activity.subcategoryLabel(activity.subcategory))
                             .font(.caption.bold())
@@ -58,9 +59,10 @@ struct ExploreView: View {
                         // Location hint for universal items
                         if let hint = activity.locationHints[selectedCity], !hint.isEmpty {
                             Text("Try it at: \(hint)")
-                                .font(.caption)
+                                .font(.body)
                                 .foregroundStyle(.secondary)
                                 .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
                                 .padding(.horizontal, 24)
                         }
 
@@ -107,8 +109,8 @@ struct ExploreView: View {
 
                 if locationManager.coordinate != nil {
                     Text("Drive times from \(locationManager.displayName)")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
 
                 Button {

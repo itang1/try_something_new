@@ -105,8 +105,8 @@ struct ChecklistView: View {
                     ProgressView(value: cityFilteredAll.isEmpty ? 0 : Double(visitedCount) / Double(cityFilteredAll.count))
                         .tint(.orange)
                     Text(locationManager.coordinate != nil ? "Drive times from \(locationManager.displayName)" : "Set your location for drive times")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
                 .padding()
                 .background(
