@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import Animated, { withSpring, withTiming } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { activitiesForCity, ACTIVITIES } from '@/data/catalog';
+import { entriesForCity, findEntry, placeNames } from '@/data/catalog';
 import { driveMinutes, formatMinutes } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
 import { subcategory, useColors } from '@/theme';
@@ -30,10 +30,10 @@ export default function ExploreScreen() {
   // The pick remembers its city, so switching cities clears it without an effect.
   const [pick, setPick] = useState<{ id: string; city: string; n: number } | null>(null);
 
-  const cityActivities = activitiesForCity(city);
-  const activity = pick?.city === city ? ACTIVITIES.find((a) => a.id === pick.id) : undefined;
-  const minutes = activity ? driveMinutes(activity, location, city) : null;
-  const hint = activity?.hints[city];
+  const cityActivities = entriesForCity(city);
+  const activity = pick?.city === city ? findEntry(city, pick.id) : undefined;
+  const minutes = activity ? driveMinutes(activity, location) : null;
+  const hint = activity && placeNames(activity);
   const done = activity ? isDone(activity.id) : false;
 
   const trySomething = () => {

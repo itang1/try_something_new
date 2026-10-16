@@ -1,48 +1,60 @@
-import raw from '../../data/activities.json';
+import activitiesFile from '../../data/activities.json';
+import losAngeles from '../../data/cities/los-angeles.json';
+import columbus from '../../data/cities/columbus.json';
 import iconMapping from '../../design/icon-mapping.json';
 import type { IconName } from '@/icons/paths';
 
-export type Venue = { id: string; name: string; lat: number; lng: number };
-
-export type City = { id: string; name: string; icon: IconName };
-
-export type Activity = {
+export type Place = {
   id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  activities: string[];
+  duration?: string;
+  cost?: string;
+};
+
+/** Something to try, like archery or an art museum. It's done once, at any of its places. */
+export type Activity = { id: string; name: string; subcategory: string; duration: string; cost: string };
+
+/** A city's must-do, tied to one place. Doing it also counts toward its activity. */
+export type CityIcon = Activity & { place: string; activity: string };
+
+type CityFile = {
+  id: string;
+  name: string;
+  state: string;
+  lat: number;
+  lng: number;
+  icons: CityIcon[];
+  places: Place[];
+};
+
+export type City = CityFile & { icon: IconName };
+
+/** A row in a city's list: an activity with its places there, or a city icon. */
+export type Entry = {
+  id: string;
+  kind: 'activity' | 'icon';
   name: string;
   icon: IconName;
   subcategory: string;
   duration: string;
   cost: string;
-  /** City name, or "Anywhere". */
-  city: string;
-  /** Venues keyed by city name. */
-  venues: Record<string, Venue[]>;
-  /** Venue names keyed by city name, for activities with explicit location hints. */
-  hints: Record<string, string>;
   durationMinutes: number;
   costLevel: number;
-};
-
-type RawLocation = { id?: string; name: string; lat?: number; lng?: number };
-type RawActivity = {
-  id: string;
-  name: string;
-  cityId: string;
-  subcategory: string;
-  duration: string;
-  cost: string;
-  lat?: number;
-  lng?: number;
-  locationHints?: Record<string, { locations: RawLocation[] }>;
+  activityId: string;
+  places: Place[];
 };
 
 const CITY_ICONS: Record<string, IconName> = { 'los-angeles': 'sunny', columbus: 'eco' };
 
-export const CITIES: City[] = raw.cities
-  .filter((c) => c.id !== 'anywhere')
-  .map((c) => ({ id: c.id, name: c.name, icon: CITY_ICONS[c.id] ?? 'location_city' }));
+export const CITIES: City[] = ([losAngeles, columbus] as CityFile[]).map((c) => ({
+  ...c,
+  icon: CITY_ICONS[c.id] ?? 'location_city',
+}));
 
-const cityNameById = Object.fromEntries(raw.cities.map((c) => [c.id, c.name]));
+const ACTIVITIES = new Map((activitiesFile.activities as Activity[]).map((a) => [a.id, a]));
 const icons = iconMapping as Record<string, { material: string }>;
 
 const DURATION_MINUTES: Record<string, number> = {
@@ -55,39 +67,43 @@ const DURATION_MINUTES: Record<string, number> = {
 };
 const COST_LEVEL: Record<string, number> = { Free: 0, $: 1, $$: 2, $$$: 3 };
 
-function toActivity(a: RawActivity): Activity {
-  const city = cityNameById[a.cityId] ?? 'Anywhere';
-  const venues: Record<string, Venue[]> = {};
-  const hints: Record<string, string> = {};
-  if (a.locationHints) {
-    for (const [cityId, group] of Object.entries(a.locationHints)) {
-      hints[cityNameById[cityId] ?? cityId] = group.locations.map((l) => l.name).join(', ');
-      venues[cityNameById[cityId] ?? cityId] = group.locations
-        .filter((l): l is Required<RawLocation> => l.lat != null && l.lng != null && l.id != null)
-        .map(({ id, name, lat, lng }) => ({ id, name, lat, lng }));
-    }
-  } else if (a.lat != null && a.lng != null) {
-    venues[city] = [{ id: a.id, name: a.name, lat: a.lat, lng: a.lng }];
-  }
+function entry(base: Activity, kind: Entry['kind'], activityId: string, places: Place[]): Entry {
   return {
-    id: a.id,
-    name: a.name,
-    icon: icons[a.id].material as IconName,
-    subcategory: a.subcategory,
-    duration: a.duration,
-    cost: a.cost,
-    city,
-    venues,
-    hints,
-    durationMinutes: DURATION_MINUTES[a.duration] ?? 0,
-    costLevel: COST_LEVEL[a.cost] ?? 0,
+    id: base.id,
+    kind,
+    name: base.name,
+    icon: icons[base.id].material as IconName,
+    subcategory: base.subcategory,
+    duration: base.duration,
+    cost: base.cost,
+    durationMinutes: DURATION_MINUTES[base.duration] ?? 0,
+    costLevel: COST_LEVEL[base.cost] ?? 0,
+    activityId,
+    places,
   };
 }
 
-export const ACTIVITIES: Activity[] = (raw.activities as RawActivity[])
-  .map(toActivity)
-  .sort((a, b) => a.name.localeCompare(b.name));
+function buildEntries(city: City): Entry[] {
+  const placesByActivity = new Map<string, Place[]>();
+  for (const p of city.places) {
+    for (const id of p.activities) placesByActivity.set(id, [...(placesByActivity.get(id) ?? []), p]);
+  }
+  const placeById = new Map(city.places.map((p) => [p.id, p]));
+  const activities = [...placesByActivity].map(([id, places]) => entry(ACTIVITIES.get(id)!, 'activity', id, places));
+  const cityIcons = city.icons.map((i) => entry(i, 'icon', i.activity, [placeById.get(i.place)!]));
+  return [...activities, ...cityIcons].sort((a, b) => a.name.localeCompare(b.name));
+}
 
-export function activitiesForCity(cityName: string): Activity[] {
-  return ACTIVITIES.filter((a) => a.city === cityName || a.city === 'Anywhere');
+const ENTRIES = new Map(CITIES.map((c) => [c.name, buildEntries(c)]));
+
+export function entriesForCity(cityName: string): Entry[] {
+  return ENTRIES.get(cityName) ?? [];
+}
+
+export function findEntry(cityName: string, id: string): Entry | undefined {
+  return entriesForCity(cityName).find((e) => e.id === id);
+}
+
+export function placeNames(entry: Entry): string {
+  return entry.places.map((p) => p.name).join(', ');
 }

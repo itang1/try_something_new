@@ -6,7 +6,7 @@ import NativeSegmentedControl, {
   type SegmentedControlProps,
 } from '@react-native-segmented-control/segmented-control';
 import SortIcon from '@expo/material-symbols/swap_vert.xml';
-import { activitiesForCity, type Activity } from '@/data/catalog';
+import { entriesForCity, placeNames, type Entry } from '@/data/catalog';
 import { driveMinutes } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
 import { subcategory, useColors } from '@/theme';
@@ -29,7 +29,7 @@ const SORTS: { label: Sort; sf: SFSymbol }[] = [
   { label: 'Cost', sf: 'dollarsign.circle' },
 ];
 
-type Row = { activity: Activity; minutes: number | null };
+type Row = { activity: Entry; minutes: number | null };
 
 export default function ChecklistScreen() {
   const colors = useColors();
@@ -42,7 +42,7 @@ export default function ChecklistScreen() {
   const [chip, setChip] = useState<{ city: string; sub: string } | null>(null);
   const selectedSub = chip?.city === city ? chip.sub : null;
 
-  const cityActivities = useMemo(() => activitiesForCity(city), [city]);
+  const cityActivities = useMemo(() => entriesForCity(city), [city]);
   const subcategories = useMemo(
     () => [...new Set(cityActivities.map((a) => a.subcategory))].sort(),
     [cityActivities],
@@ -56,7 +56,7 @@ export default function ChecklistScreen() {
       .filter((a) => !selectedSub || a.subcategory === selectedSub)
       .filter((a) => status === 'All' || (status === 'Done') === doneIds.has(a.id))
       .filter((a) => !query || a.name.toLocaleLowerCase().includes(query))
-      .map((a) => ({ activity: a, minutes: driveMinutes(a, location, city) }));
+      .map((a) => ({ activity: a, minutes: driveMinutes(a, location) }));
     const byName = (x: Row, y: Row) => x.activity.name.localeCompare(y.activity.name);
     const compare: Record<Sort, (x: Row, y: Row) => number> = {
       Name: byName,
@@ -65,7 +65,7 @@ export default function ChecklistScreen() {
       Cost: (x, y) => x.activity.costLevel - y.activity.costLevel || byName(x, y),
     };
     return result.sort(compare[sort]);
-  }, [cityActivities, selectedSub, status, doneIds, search, location, city, sort]);
+  }, [cityActivities, selectedSub, status, doneIds, search, location, sort]);
 
   const renderItem = useCallback(
     ({ item }: { item: Row }) => (
@@ -73,11 +73,11 @@ export default function ChecklistScreen() {
         activity={item.activity}
         done={doneIds.has(item.activity.id)}
         minutes={item.minutes}
-        hint={item.activity.hints[city] ?? ''}
+        hint={placeNames(item.activity)}
         onToggle={toggleDone}
       />
     ),
-    [doneIds, city, toggleDone],
+    [doneIds, toggleDone],
   );
 
   const header = (

@@ -2,7 +2,7 @@ import { memo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import type { Activity } from '@/data/catalog';
+import type { Entry } from '@/data/catalog';
 import { formatMinutes } from '@/data/drive';
 import { useColors } from '@/theme';
 import { GradientIcon, Icon } from './icon';
@@ -14,7 +14,7 @@ export const ActivityRow = memo(function ActivityRow({
   hint,
   onToggle,
 }: {
-  activity: Activity;
+  activity: Entry;
   done: boolean;
   minutes: number | null;
   hint: string;
