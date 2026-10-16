@@ -51,3 +51,10 @@ node_modules/
 .expo/
 /ios/
 /android/
+
+# Expo extras
+expo-env.d.ts
+dist/
+.kotlin/
+.metro-health-check*
+*.jks
