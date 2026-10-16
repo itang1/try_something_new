@@ -9,6 +9,10 @@ export default function TabLayout() {
         <NativeTabs.Trigger.Icon sf="sparkle.magnifyingglass" md="travel_explore" />
         <NativeTabs.Trigger.Label>Explore</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="map">
+        <NativeTabs.Trigger.Icon sf="map" md="map" />
+        <NativeTabs.Trigger.Label>Map</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="checklist">
         <NativeTabs.Trigger.Icon sf="checklist" md="checklist" />
         <NativeTabs.Trigger.Label>Checklist</NativeTabs.Trigger.Label>
