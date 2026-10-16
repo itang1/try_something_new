@@ -11,6 +11,7 @@ import { GradientIcon, Icon } from '@/components/icon';
 import { MetadataTag } from '@/components/chips';
 import { LocationControl } from '@/components/location-control';
 import { SwipeCard } from '@/components/swipe-card';
+import { useMarkDone } from '@/state/use-mark-done';
 import type { IconName } from '@/icons/paths';
 
 function randomItem<T>(items: T[]): T {
@@ -20,7 +21,8 @@ function randomItem<T>(items: T[]): T {
 export default function ExploreScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { city, origin, isDone, toggleDone, savedIds, toggleSaved, hiddenIds, hide } = useAppState();
+  const { city, origin, isDone, savedIds, toggleSaved, hiddenIds, hide } = useAppState();
+  const markDone = useMarkDone();
   // The pick remembers its city, so switching cities clears it without an effect.
   const [pick, setPick] = useState<{ id: string; city: string; n: number } | null>(null);
 
@@ -73,7 +75,7 @@ export default function ExploreScreen() {
                 }}
                 onDone={() => {
                   Haptics.selectionAsync();
-                  toggleDone(activity);
+                  markDone(activity);
                 }}
               />
             </SwipeCard>

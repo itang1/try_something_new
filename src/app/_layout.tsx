@@ -30,6 +30,15 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
+              name="done/[id]"
+              options={{
+                presentation: 'formSheet',
+                sheetAllowedDetents: [1],
+                sheetGrabberVisible: true,
+                contentStyle: { backgroundColor: colors.card },
+              }}
+            />
+            <Stack.Screen
               name="activity/[id]"
               options={{
                 presentation: 'formSheet',

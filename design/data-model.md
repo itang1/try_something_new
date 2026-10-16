@@ -18,4 +18,4 @@ Icons for activities and city icons come from [`icon-mapping.json`](icon-mapping
 - **Saved and "Not for me":** lists of ids. Explore skips "Not for me" and done items.
 - **Location:** home, saved across launches, plus the last five places searched or picked.
 - **Trip:** a city and a starting place while traveling. Ending the trip returns to the home location. Without a trip, the city is the one nearest home.
-- **Planned with the Done moment:** a rating (loved it, fine, not for me), a note, and a photo.
+- **Reflections:** saved from the Done moment: the entry, the place you went, a rating (loved it, fine, not for me), a note, and a photo. Photos are copied into the app's documents folder, so deleting one from the camera roll doesn't break it.

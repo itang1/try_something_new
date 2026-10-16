@@ -5,6 +5,7 @@ import { findEntry } from '@/data/catalog';
 import { openDirections } from '@/data/directions';
 import { formatMinutes, placesByDistance } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
+import { useMarkDone } from '@/state/use-mark-done';
 import { subcategory, useColors } from '@/theme';
 import { GradientIcon, Icon } from '@/components/icon';
 
@@ -12,7 +13,8 @@ export default function ActivitySheet() {
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { city, origin, isDone, toggleDone, savedIds, toggleSaved, visitedPlaceIds, toggleVisited } = useAppState();
+  const { city, origin, isDone, savedIds, toggleSaved, visitedPlaceIds, toggleVisited } = useAppState();
+  const markDone = useMarkDone();
   const entry = findEntry(city.id, id);
 
   if (!entry) {
@@ -125,7 +127,7 @@ export default function ActivitySheet() {
         <Pressable
           onPress={() => {
             Haptics.selectionAsync();
-            toggleDone(entry);
+            markDone(entry);
           }}
           accessibilityState={{ checked: done }}
           style={({ pressed }) => [

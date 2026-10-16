@@ -33,23 +33,25 @@ export function SwipeCard({ children, onSwipeLeft, onSwipeRight }: Props) {
     activeOffsetX: [-15, 15],
     failOffsetY: [-12, 12],
     onUpdate: (e) => {
-      x.value = e.translationX;
+      x.set(e.translationX);
     },
     onDeactivate: (e) => {
       const flung = Math.abs(e.translationX) > SWIPE_DISTANCE || Math.abs(e.velocityX) > SWIPE_VELOCITY;
       if (!flung) {
-        x.value = withSpring(0, { dampingRatio: 0.8 });
+        x.set(withSpring(0, { dampingRatio: 0.8 }));
         return;
       }
       const right = (e.velocityX || e.translationX) > 0;
-      x.value = withTiming(right ? width * 1.2 : -width * 1.2, { duration: 220 }, (finished) => {
-        if (finished) scheduleOnRN(right ? onSwipeRight : onSwipeLeft);
-      });
+      x.set(
+        withTiming(right ? width * 1.2 : -width * 1.2, { duration: 220 }, (finished) => {
+          if (finished) scheduleOnRN(right ? onSwipeRight : onSwipeLeft);
+        }),
+      );
     },
   });
 
   const style = useAnimatedStyle(() => ({
-    transform: [{ translateX: x.value }, { rotate: `${(x.value / width) * 12}deg` }],
+    transform: [{ translateX: x.get() }, { rotate: `${(x.get() / width) * 12}deg` }],
   }));
 
   return (

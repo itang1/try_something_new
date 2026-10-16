@@ -20,6 +20,15 @@ db.execSync(`
     at TEXT NOT NULL
   );
   CREATE INDEX IF NOT EXISTS place_visits_place ON place_visits (place_id, id);
+  CREATE TABLE IF NOT EXISTS reflections (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry_id TEXT NOT NULL,
+    place_id TEXT,
+    rating TEXT,
+    note TEXT,
+    photo TEXT,
+    at TEXT NOT NULL
+  );
 `);
 
 export function loadDoneIds(): Set<string> {
@@ -54,6 +63,21 @@ export function recordVisit(placeId: string, activityId: string, visited: boolea
     placeId,
     activityId,
     visited ? 1 : 0,
+    new Date().toISOString(),
+  ]);
+}
+
+export type Rating = 'loved' | 'fine' | 'not-for-me';
+
+export type Reflection = { entryId: string; placeId: string | null; rating: Rating | null; note: string; photo: string | null };
+
+export function recordReflection(r: Reflection): void {
+  db.runSync('INSERT INTO reflections (entry_id, place_id, rating, note, photo, at) VALUES (?, ?, ?, ?, ?, ?)', [
+    r.entryId,
+    r.placeId,
+    r.rating,
+    r.note || null,
+    r.photo,
     new Date().toISOString(),
   ]);
 }
