@@ -16,10 +16,19 @@ export type Place = {
 };
 
 /** Something to try, like archery or an art museum. It's done once, at any of its places. */
-export type Activity = { id: string; name: string; subcategory: string; duration: string; cost: string };
+export type Activity = { id: string; name: string; subcategory: string; duration: string; cost: string; level: Level };
 
-/** A city's must-do, tied to one place. Doing it also counts toward its activity. */
-export type CityIcon = Activity & { place: string; activity: string };
+/** How far outside a comfort zone it is. Starting easy and building up keeps people going. */
+export type Level = 'easy' | 'medium' | 'stretch';
+
+export const LEVELS: Record<Level, { label: string; icon: IconName; rank: number }> = {
+  easy: { label: 'Easy', icon: 'eco', rank: 0 },
+  medium: { label: 'A bit new', icon: 'trending_up', rank: 1 },
+  stretch: { label: 'Stretch', icon: 'bolt', rank: 2 },
+};
+
+/** A city's must-do, tied to one place. Doing it also counts toward its activity, and shares its level unless set. */
+export type CityIcon = Omit<Activity, 'level'> & { level?: Level; place: string; activity: string };
 
 export type City = {
   id: string;
@@ -42,6 +51,7 @@ export type Entry = {
   cost: string;
   durationMinutes: number;
   costLevel: number;
+  level: Level;
   activityId: string;
   places: Place[];
 };
@@ -61,7 +71,7 @@ const DURATION_MINUTES: Record<string, number> = {
 };
 const COST_LEVEL: Record<string, number> = { Free: 0, $: 1, $$: 2, $$$: 3 };
 
-function entry(base: Activity, kind: Entry['kind'], activityId: string, places: Place[]): Entry {
+function entry(base: Activity | CityIcon, kind: Entry['kind'], activityId: string, places: Place[]): Entry {
   return {
     id: base.id,
     kind,
@@ -72,6 +82,7 @@ function entry(base: Activity, kind: Entry['kind'], activityId: string, places: 
     cost: base.cost,
     durationMinutes: DURATION_MINUTES[base.duration] ?? 0,
     costLevel: COST_LEVEL[base.cost] ?? 0,
+    level: base.level ?? ACTIVITIES.get(activityId)?.level ?? 'medium',
     activityId,
     places,
   };

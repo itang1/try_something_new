@@ -7,7 +7,7 @@ import NativeSegmentedControl, {
 } from '@react-native-segmented-control/segmented-control';
 import MemoriesIcon from '@expo/material-symbols/photo_library.xml';
 import SortIcon from '@expo/material-symbols/swap_vert.xml';
-import { entriesForCity, entryHint, type Entry } from '@/data/catalog';
+import { entriesForCity, entryHint, LEVELS, type Entry } from '@/data/catalog';
 import { formatDay } from '@/data/days';
 import { driveMinutes } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
@@ -24,12 +24,13 @@ const SegmentedControl = NativeSegmentedControl as unknown as ComponentType<Segm
 const STATUSES = ['All', 'Not Done', 'Done', 'Saved'] as const;
 type Status = (typeof STATUSES)[number];
 
-type Sort = 'Name' | 'Distance' | 'Duration' | 'Cost';
+type Sort = 'Name' | 'Distance' | 'Duration' | 'Cost' | 'Level';
 const SORTS: { label: Sort; sf: SFSymbol }[] = [
   { label: 'Name', sf: 'textformat' },
   { label: 'Distance', sf: 'car.fill' },
   { label: 'Duration', sf: 'clock' },
   { label: 'Cost', sf: 'dollarsign.circle' },
+  { label: 'Level', sf: 'chart.bar' },
 ];
 
 type Row = { activity: Entry; minutes: number | null; progress: PlaceProgress | null };
@@ -79,6 +80,7 @@ export default function ChecklistScreen() {
       Distance: (x, y) => (x.minutes ?? Infinity) - (y.minutes ?? Infinity) || byName(x, y),
       Duration: (x, y) => x.activity.durationMinutes - y.activity.durationMinutes || byName(x, y),
       Cost: (x, y) => x.activity.costLevel - y.activity.costLevel || byName(x, y),
+      Level: (x, y) => LEVELS[x.activity.level].rank - LEVELS[y.activity.level].rank || byName(x, y),
     };
     result.sort(compare[sort]);
     // Planned and not yet done rows move up into their own section, soonest first.

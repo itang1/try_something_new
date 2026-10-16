@@ -2,10 +2,10 @@
 
 ## Catalog (read-only, shipped with the app, later served per city from a CDN)
 
-- **Activity** ([`data/activities.json`](../data/activities.json)): something to try, like archery or an art museum. It has a name, subcategory, typical duration, and cost. It isn't tied to a city.
+- **Activity** ([`data/activities.json`](../data/activities.json)): something to try, like archery or an art museum. It has a name, subcategory, typical duration, cost, and level (easy, a bit new, or stretch). It isn't tied to a city.
 - **City** ([`data/cities/<id>.json`](../data/cities)): a name, a center point, its places, and its icons. One file per city, so a city can be added or updated on its own.
 - **Place:** a real location in a city, with coordinates and the activities you can do there. A place can serve several activities (a beach for surfing and for beach yoga). It can override the activity's duration or cost when it differs, like a full day at Universal Studios.
-- **City icon:** a hand-picked must-do in one city, like the Getty or Sunset at Griffith Observatory. It points to one place and one activity, and doing it also counts toward that activity.
+- **City icon:** a hand-picked must-do in one city, like the Getty or Sunset at Griffith Observatory. It points to one place and one activity, and doing it also counts toward that activity. It shares the activity's level unless it sets its own.
 
 A city's list is every activity that has a place there, plus that city's icons. Places will come from the Overture Maps pipeline. Activities and icons stay hand-picked and small.
 

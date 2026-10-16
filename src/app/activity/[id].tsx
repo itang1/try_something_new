@@ -1,7 +1,7 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { findEntry } from '@/data/catalog';
+import { findEntry, LEVELS } from '@/data/catalog';
 import { formatDay } from '@/data/days';
 import { openDirections } from '@/data/directions';
 import { formatMinutes, placesByDistance } from '@/data/drive';
@@ -42,7 +42,7 @@ export default function ActivitySheet() {
           <View style={styles.grow}>
             <Text style={[styles.title, { color: colors.label }]}>{entry.name}</Text>
             <Text style={[styles.meta, { color: colors.secondary }]}>
-              {sub.label} · {entry.duration} · {entry.cost}
+              {sub.label} · {entry.duration} · {entry.cost} · {LEVELS[entry.level].label}
             </Text>
           </View>
           <Pressable

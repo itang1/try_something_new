@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { entriesForCity, findEntry, type Entry } from '@/data/catalog';
+import { entriesForCity, findEntry, LEVELS, type Entry } from '@/data/catalog';
 import { addDays, dayKey, formatDay } from '@/data/days';
 import { formatMinutes, placesByDistance } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
@@ -33,7 +33,10 @@ export default function ExploreScreen() {
   const showAnother = (exclude?: string) => {
     const current = exclude ?? activity?.id;
     const fresh = entries.filter((e) => e.id !== current && !hiddenIds.has(e.id) && !isDone(e.id));
-    const pool = fresh.length ? fresh : entries.filter((e) => e.id !== current);
+    // Early on, skip the stretches so the first few tries are easy wins.
+    const warmingUp = entries.filter((e) => isDone(e.id)).length < 3;
+    const gentle = warmingUp ? fresh.filter((e) => e.level !== 'stretch') : fresh;
+    const pool = gentle.length ? gentle : fresh.length ? fresh : entries.filter((e) => e.id !== current);
     if (!pool.length) return;
     const next = randomItem(pool);
     Haptics.selectionAsync();
@@ -193,6 +196,7 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onN
       <View style={styles.tags}>
         <MetadataTag icon="schedule" text={entry.duration} />
         <MetadataTag icon="payments" text={entry.cost} />
+        <MetadataTag icon={LEVELS[entry.level].icon} text={LEVELS[entry.level].label} />
       </View>
 
       <View style={styles.actions}>
