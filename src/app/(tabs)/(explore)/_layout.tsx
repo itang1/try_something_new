@@ -8,6 +8,8 @@ export default function ExploreLayout() {
       screenOptions={{
         headerLargeTitle: true,
         headerTintColor: colors.accent,
+        headerTitleStyle: { color: colors.label },
+        headerLargeTitleStyle: { color: colors.label },
         headerLargeTitleShadowVisible: false,
         headerShadowVisible: false,
         contentStyle: { backgroundColor: colors.background },

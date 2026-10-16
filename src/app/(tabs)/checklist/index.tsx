@@ -147,15 +147,16 @@ export default function ChecklistScreen() {
       />
       <Stack.SearchBar
         placeholder="Search activities & places"
+        hideWhenScrolling={false}
         onChangeText={(e) => setSearch(e.nativeEvent.text)}
         onCancelButtonPress={() => setSearch('')}
       />
       <Stack.Toolbar placement="left">
-        {cityMenu(city, setCity)}
-        {locationButton(location, () => router.push('/location'))}
+        {cityMenu(city, setCity, colors.accent)}
+        {locationButton(location, () => router.push('/location'), colors.accent)}
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Menu accessibilityLabel="Sort">
+        <Stack.Toolbar.Menu accessibilityLabel="Sort" tintColor={colors.accent}>
           <Stack.Toolbar.Icon {...toolbarIcon('arrow.up.arrow.down', SortIcon)} />
           {SORTS.map((s) => (
             <Stack.Toolbar.MenuAction

@@ -22,17 +22,19 @@ function cityIcon(name: string) {
   return toolbarIcon(icon.sf, icon.android);
 }
 
+const IOS = process.env.EXPO_OS === 'ios';
+
 // These return toolbar elements rather than being components, because Stack.Toolbar
 // expects its menu and button items as direct children.
-export function cityMenu(city: string, setCity: (city: string) => void) {
+// iOS hides a label whenever an icon is set, and Android hides labels, so each platform gets one.
+export function cityMenu(city: string, setCity: (city: string) => void, tint: string) {
   return (
-    <Stack.Toolbar.Menu key="city" accessibilityLabel="Choose city">
-      <Stack.Toolbar.Icon {...cityIcon(city)} />
-      <Stack.Toolbar.Label>{city}</Stack.Toolbar.Label>
+    <Stack.Toolbar.Menu key="city" accessibilityLabel="Choose city" tintColor={tint}>
+      {IOS ? <Stack.Toolbar.Label>{city}</Stack.Toolbar.Label> : <Stack.Toolbar.Icon {...cityIcon(city)} />}
       {CITIES.map((c) => (
         <Stack.Toolbar.MenuAction
           key={c.id}
-          icon={process.env.EXPO_OS === 'ios' ? CITY_ICONS[c.name]?.sf : CITY_ICONS[c.name]?.android}
+          icon={IOS ? CITY_ICONS[c.name]?.sf : CITY_ICONS[c.name]?.android}
           isOn={c.name === city}
           onPress={() => setCity(c.name)}
         >
@@ -43,11 +45,14 @@ export function cityMenu(city: string, setCity: (city: string) => void) {
   );
 }
 
-export function locationButton(location: HomeLocation | null, onPress: () => void) {
+export function locationButton(location: HomeLocation | null, onPress: () => void, tint: string) {
   return (
-    <Stack.Toolbar.Button key="location" onPress={onPress} accessibilityLabel="Set your location">
-      <Stack.Toolbar.Icon {...toolbarIcon(location ? 'location.fill' : 'location', LocationIcon)} />
-      <Stack.Toolbar.Label>{location?.name ?? 'Set Location'}</Stack.Toolbar.Label>
+    <Stack.Toolbar.Button key="location" onPress={onPress} accessibilityLabel="Set your location" tintColor={tint}>
+      {IOS ? (
+        <Stack.Toolbar.Label>{location?.name ?? 'Set Location'}</Stack.Toolbar.Label>
+      ) : (
+        <Stack.Toolbar.Icon {...toolbarIcon('location', LocationIcon)} />
+      )}
     </Stack.Toolbar.Button>
   );
 }
