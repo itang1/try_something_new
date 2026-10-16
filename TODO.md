@@ -5,7 +5,6 @@
 
 ## Medium Impact — UX Polish
 
-- [ ] **Statistics view** — A section showing insights: activities per subcategory, total completed this month, streaks, etc.
 - [ ] **Widget** — A home screen widget that shows a daily random activity suggestion. Needs a small native target on each platform (WidgetKit on iOS, Glance on Android).
 
 ## Lower Priority — Technical & Platform

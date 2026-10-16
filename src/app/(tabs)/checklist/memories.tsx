@@ -3,7 +3,7 @@ import { Image, ScrollView, SectionList, StyleSheet, Text, View } from 'react-na
 import { findEntryAnywhere, type Entry } from '@/data/catalog';
 import { keptPhotoUri } from '@/data/photos';
 import { loadMemories, type Memory, type Rating } from '@/data/storage';
-import { useColors } from '@/theme';
+import { subcategory, useColors } from '@/theme';
 import { FilterChip } from '@/components/chips';
 import { GradientIcon, Icon } from '@/components/icon';
 import type { IconName } from '@/icons/paths';
@@ -38,6 +38,69 @@ function toItems(memories: Memory[]): Item[] {
   );
 }
 
+/** Monday-based week number since the epoch, for counting distinct weeks. */
+function weekOf(iso: string): number {
+  const d = new Date(iso);
+  const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7));
+  return Math.round(monday.getTime() / (7 * 86_400_000));
+}
+
+function Stats({ items }: { items: Item[] }) {
+  const colors = useColors();
+  const now = new Date();
+  const thisMonth = items.filter((i) => {
+    const d = new Date(i.at);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).length;
+  const loved = items.filter((i) => i.rating === 'loved').length;
+  // A running count of weeks, not a streak, so a quiet week never resets anything.
+  const weeks = new Set(items.map((i) => weekOf(i.at))).size;
+  const counts = new Map<string, number>();
+  for (const i of items) counts.set(i.entry.subcategory, (counts.get(i.entry.subcategory) ?? 0) + 1);
+  const kinds = [...counts]
+    .map(([id, count]) => ({ id, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5);
+  const most = kinds[0]?.count ?? 1;
+
+  return (
+    <View style={styles.stats}>
+      <View style={styles.tiles}>
+        <Tile value={thisMonth} label="This month" />
+        <Tile value={loved} label="Loved" />
+        <Tile value={weeks} label={weeks === 1 ? 'Week out' : 'Weeks out'} />
+      </View>
+      {kinds.length > 1 && (
+        <View style={[styles.kinds, { backgroundColor: colors.card }]}>
+          {kinds.map(({ id, count }) => (
+            <View key={id} style={styles.kindRow}>
+              <Text style={[styles.kindLabel, { color: colors.label }]} numberOfLines={1}>
+                {subcategory(id).label}
+              </Text>
+              <View style={[styles.kindTrack, { backgroundColor: colors.fill }]}>
+                <View
+                  style={[styles.kindBar, { width: `${(count / most) * 100}%`, backgroundColor: subcategory(id).color }]}
+                />
+              </View>
+              <Text style={[styles.kindCount, { color: colors.secondary }]}>{count}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+function Tile({ value, label }: { value: number; label: string }) {
+  const colors = useColors();
+  return (
+    <View style={[styles.tile, { backgroundColor: colors.card }]}>
+      <Text style={[styles.tileValue, { color: colors.accent }]}>{value}</Text>
+      <Text style={[styles.tileLabel, { color: colors.secondary }]}>{label}</Text>
+    </View>
+  );
+}
+
 export default function MemoriesScreen() {
   const colors = useColors();
   const [items] = useState(() => toItems(loadMemories()));
@@ -53,7 +116,6 @@ export default function MemoriesScreen() {
     if (last?.title === title) last.data.push(item);
     else sections.push({ title, data: [item] });
   }
-  const loved = items.filter((i) => i.rating === 'loved').length;
 
   return (
     <SectionList
@@ -68,8 +130,8 @@ export default function MemoriesScreen() {
           <View style={styles.header}>
             <Text style={[styles.summary, { color: colors.secondary }]}>
               {items.length} {items.length === 1 ? 'thing' : 'things'} tried
-              {loved > 0 ? ` · ${loved} loved` : ''}
             </Text>
+            <Stats items={items} />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
               {FILTERS.map((f) => (
                 <FilterChip
@@ -143,6 +205,17 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: 16, paddingBottom: 32, gap: 10 },
   header: { gap: 12, paddingTop: 4 },
   summary: { fontSize: 15, fontWeight: '600' },
+  stats: { gap: 10 },
+  tiles: { flexDirection: 'row', gap: 10 },
+  tile: { flex: 1, borderRadius: 16, paddingVertical: 14, alignItems: 'center', gap: 2 },
+  tileValue: { fontSize: 26, fontWeight: '800' },
+  tileLabel: { fontSize: 13, fontWeight: '600' },
+  kinds: { borderRadius: 16, padding: 14, gap: 10 },
+  kindRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  kindLabel: { width: 110, fontSize: 14, fontWeight: '600' },
+  kindTrack: { flex: 1, height: 8, borderRadius: 4, overflow: 'hidden' },
+  kindBar: { height: 8, borderRadius: 4 },
+  kindCount: { width: 24, fontSize: 14, textAlign: 'right' },
   chips: { gap: 8, paddingVertical: 2 },
   section: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase', marginTop: 14, marginLeft: 4 },
   card: { borderRadius: 18, padding: 14, gap: 10 },
