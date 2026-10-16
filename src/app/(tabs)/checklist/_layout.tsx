@@ -16,6 +16,7 @@ export default function ChecklistLayout() {
       }}
     >
       <Stack.Screen name="index" options={{ title: 'Checklist' }} />
+      <Stack.Screen name="memories" options={{ title: 'Memories', headerBackTitle: 'Checklist' }} />
     </Stack>
   );
 }

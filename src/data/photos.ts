@@ -1,6 +1,11 @@
 import { Directory, File, Paths } from 'expo-file-system';
 import * as ImagePicker from 'expo-image-picker';
 
+/** iOS moves the app's folder on updates, so a kept photo is found again by its file name. */
+export function keptPhotoUri(stored: string): string {
+  return new File(Paths.document, 'photos', stored.split('/').pop() ?? '').uri;
+}
+
 /** Lets the user pick a photo, then copies it into the app so it survives being deleted from the camera roll. */
 export async function pickAndKeepPhoto(): Promise<string | null> {
   const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.8 });

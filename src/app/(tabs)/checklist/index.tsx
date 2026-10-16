@@ -5,6 +5,7 @@ import type { SFSymbol } from 'expo-symbols';
 import NativeSegmentedControl, {
   type SegmentedControlProps,
 } from '@react-native-segmented-control/segmented-control';
+import MemoriesIcon from '@expo/material-symbols/photo_library.xml';
 import SortIcon from '@expo/material-symbols/swap_vert.xml';
 import { entriesForCity, entryHint, type Entry } from '@/data/catalog';
 import { formatDay } from '@/data/days';
@@ -188,6 +189,13 @@ export default function ChecklistScreen() {
         onCancelButtonPress={() => setSearch('')}
       />
       <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Button
+          accessibilityLabel="Memories"
+          tintColor={colors.accent}
+          onPress={() => router.push('/checklist/memories')}
+        >
+          <Stack.Toolbar.Icon {...toolbarIcon('photo.on.rectangle', MemoriesIcon)} />
+        </Stack.Toolbar.Button>
         <Stack.Toolbar.Menu accessibilityLabel="Sort" tintColor={colors.accent}>
           <Stack.Toolbar.Icon {...toolbarIcon('arrow.up.arrow.down', SortIcon)} />
           {SORTS.map((s) => (

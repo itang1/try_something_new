@@ -109,6 +109,16 @@ export function nearestCity(point: Coordinate): { city: City; km: number } {
   );
 }
 
+/** Finds an entry in any city, using the place to pick the city when ids repeat across cities. */
+export function findEntryAnywhere(id: string, placeId?: string | null): { entry: Entry; city: City } | undefined {
+  const byPlace = placeId ? CITIES.find((c) => c.places.some((p) => p.id === placeId)) : undefined;
+  for (const city of byPlace ? [byPlace, ...CITIES] : CITIES) {
+    const found = findEntry(city.id, id);
+    if (found) return { entry: found, city };
+  }
+  return undefined;
+}
+
 export function placeNames(entry: Entry): string {
   return entry.places.map((p) => p.name).join(', ');
 }

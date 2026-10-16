@@ -91,6 +91,27 @@ export function recordReflection(r: Reflection): void {
   ]);
 }
 
+export type Memory = {
+  entryId: string;
+  at: string;
+  placeId: string | null;
+  rating: Rating | null;
+  note: string | null;
+  photo: string | null;
+};
+
+/** Everything currently done, newest first, with its latest reflection if there is one. */
+export function loadMemories(): Memory[] {
+  return db.getAllSync<Memory>(`
+    SELECT c.activity_id AS entryId, c.at, r.place_id AS placeId, r.rating, r.note, r.photo
+    FROM completion_events c
+    LEFT JOIN reflections r ON r.id = (SELECT MAX(id) FROM reflections WHERE entry_id = c.activity_id)
+    WHERE c.id = (SELECT MAX(id) FROM completion_events WHERE activity_id = c.activity_id)
+      AND c.done = 1
+    ORDER BY c.at DESC
+  `);
+}
+
 /** A day is a local YYYY-MM-DD key. Activity ids repeat across cities, so plans are kept per city. */
 export type Plan = { entryId: string; cityId: string; placeId: string | null; day: string };
 
