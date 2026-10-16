@@ -26,6 +26,17 @@ I ported the app from SwiftUI to Expo (React Native), with Expo Router for navig
 - **Color:** each subcategory has a color and a two-color gradient, defined in [`src/theme.ts`](src/theme.ts) from the iOS system palette. Each icon sits in a circle or tile with that gradient, the same in lists, pins, and widgets.
 - **Map:** Apple Maps on iOS and Google Maps on Android, with custom pins. Tapping a pin glides the camera and slides up a card, rather than animating the pin itself.
 
+### Why this works
+
+The app is built on a few findings from psychology. The evidence varies, so the app says "linked to," never "treats."
+
+- **Novelty and mood:** a 2020 study that tracked people by GPS found that days with more varied places were linked to more positive mood. That's the core premise.
+- **Experiences over things:** spending on experiences tends to bring more lasting happiness than buying possessions (Van Boven and Gilovich, 2003, and later studies).
+- **One suggestion at a time:** a long list can stall a decision, so Explore shows one card, and "Not for me" keeps you in control.
+- **Progress you can finish:** people speed up as a goal gets closer, so progress counts activities tried, not every place in the city. Collecting every place stays optional.
+- **Planned next:** picking a day and place for an activity, which reliably raises follow-through (implementation intentions), and reflecting afterward with a rating and a note.
+- **What I avoid:** streaks that punish a missed week, and health claims.
+
 ### Data at scale
 
 - **Venues:** will come from [Overture Maps](https://overturemaps.org), a free, open dataset of places worldwide (name, category, address, website, phone) that allows commercial use with attribution. Each activity maps to Overture categories, so adding a city means running the pipeline, not writing a list. Opening hours, ratings, and photos aren't in it, so the design doesn't depend on them.

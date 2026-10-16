@@ -2,7 +2,7 @@
 
 ## High Impact — Features
 
-- [ ] **Activity detail view** — Tapping a row in the Checklist currently just toggles "done." Add a dedicated detail sheet with full info, a mini map of venue locations, and a button to open directions in the phone's maps app (Apple Maps or Google Maps).
+- [ ] **Plan it**: a "Pick a day" button on the card and detail sheet that adds a calendar event or reminder for a chosen day and place. Deciding when and where is one of the strongest ways to make people follow through.
 - [ ] **Smarter random picker** — Add filter controls to the Explore tab (subcategory, max drive time, max cost) so users get tailored suggestions instead of pure random.
 - [ ] **Map tab or map view** — Display activity venue locations on a Map so users can visually browse what's nearby. Tapping a pin opens the detail view.
 - [ ] **Notes & photos on activities** — Let users attach a personal note or photo to a visited activity to journal their experience.
