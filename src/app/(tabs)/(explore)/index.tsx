@@ -45,8 +45,8 @@ export default function ExploreScreen() {
   return (
     // The native safe area includes the header and tab bar, so the button stays above the tabs.
     <SafeAreaView edges={['top', 'bottom']} style={[styles.content, { backgroundColor: colors.background }]}>
-      <Stack.Toolbar placement="left">{cityMenu(city, setCity)}</Stack.Toolbar>
-      <Stack.Toolbar placement="right">{locationButton(location, () => router.push('/location'))}</Stack.Toolbar>
+      <Stack.Toolbar placement="left">{cityMenu(city, setCity, colors.accent)}</Stack.Toolbar>
+      <Stack.Toolbar placement="right">{locationButton(location, () => router.push('/location'), colors.accent)}</Stack.Toolbar>
 
       <View style={styles.middle}>
         {activity ? (
