@@ -1,4 +1,4 @@
-import raw from '../../TrySomethingNew/activities.json';
+import raw from '../../data/activities.json';
 import iconMapping from '../../design/icon-mapping.json';
 import type { IconName } from '@/icons/paths';
 
