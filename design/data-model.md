@@ -1,0 +1,19 @@
+# Data model
+
+## Catalog (read-only, shipped with the app, later served per city from a CDN)
+
+- **Activity** ([`data/activities.json`](../data/activities.json)): something to try, like archery or an art museum. It has a name, subcategory, typical duration, and cost. It isn't tied to a city.
+- **City** ([`data/cities/<id>.json`](../data/cities)): a name, a center point, its places, and its icons. One file per city, so a city can be added or updated on its own.
+- **Place:** a real location in a city, with coordinates and the activities you can do there. A place can serve several activities (a beach for surfing and for beach yoga). It can override the activity's duration or cost when it differs, like a full day at Universal Studios.
+- **City icon:** a hand-picked must-do in one city, like the Getty or Sunset at Griffith Observatory. It points to one place and one activity, and doing it also counts toward that activity.
+
+A city's list is every activity that has a place there, plus that city's icons. Places will come from the Overture Maps pipeline. Activities and icons stay hand-picked and small.
+
+Icons for activities and city icons come from [`icon-mapping.json`](icon-mapping.json), keyed by the same ids.
+
+## User state (on the device, synced later)
+
+- **Completions:** an append-only log in SQLite of (activity or icon id, done or undone, time). The current state is the latest event per id, which makes syncing and undo simple.
+- **Location:** where drive times start, saved across launches, plus the last five searched places.
+- **Trip** (planned): a city and a starting place while traveling. Ending the trip returns to the home location.
+- **Planned with the Done moment:** saved items, the place visited, a rating (loved it, fine, not for me), a note, and a photo.

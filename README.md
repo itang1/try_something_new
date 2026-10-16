@@ -2,7 +2,7 @@
 
 A local-activity checklist and random suggester. Explore picks a random activity, and Checklist tracks what you've done in each city, with drive times from your home address.
 
-Today it's an Expo (React Native) app for iOS and Android, with no backend, and 177 activities in 11 subcategories, covering Los Angeles, Columbus, and activities you can do anywhere. See [TODO.md](TODO.md) for what's next. [design/PROCESS.md](design/PROCESS.md) covers how it gets built, from spike to mockup to code. The SwiftUI version, with screenshots, is saved on the [`native-ios`](../../tree/native-ios) branch.
+Today it's an Expo (React Native) app for iOS and Android, with no backend, and 68 activities in 11 subcategories, plus city icons and 262 places across Los Angeles and Columbus (see [design/data-model.md](design/data-model.md)). See [TODO.md](TODO.md) for what's next. [design/PROCESS.md](design/PROCESS.md) covers how it gets built, from spike to mockup to code. The SwiftUI version, with screenshots, is saved on the [`native-ios`](../../tree/native-ios) branch.
 
 ## Design choices
 
@@ -21,7 +21,7 @@ I ported the app from SwiftUI to Expo (React Native), with Expo Router for navig
 
 - **Native where it matters:** tabs, sheets, menus, and the search bar are the real platform components. Header buttons use SF Symbols on iOS and Material Symbols on Android.
 - **Motion:** animations run on the UI thread with Reanimated, with haptics (`expo-haptics`) on key actions. Skia is planned for effects.
-- **One icon set:** Material Symbols. It has a specific icon for 166 of 177 activities, against 150 for Phosphor. SF Symbols are licensed for Apple platforms only. The gaps are mostly crafts, which will get custom icons in the same style.
+- **One icon set:** Material Symbols. When I chose it, it had a specific icon for 166 of 177 activities, against 150 for Phosphor. SF Symbols are licensed for Apple platforms only. The gaps are mostly crafts, which will get custom icons in the same style.
 - **Icon pipeline:** [`design/icon-mapping.json`](design/icon-mapping.json) picks an icon per activity. `npm run icons` copies their shapes from `@material-symbols/svg-400` into `src/icons/paths.ts`, so only the icons in use ship, drawn with `react-native-svg`.
 - **Color:** each subcategory has a color and a two-color gradient, defined in [`src/theme.ts`](src/theme.ts) from the iOS system palette. Each icon sits in a circle or tile with that gradient, the same in lists, pins, and widgets.
 - **Map:** Apple Maps on iOS and Google Maps on Android, with custom pins. Tapping a pin glides the camera and slides up a card, rather than animating the pin itself.
