@@ -5,7 +5,6 @@
 
 ## Medium Impact — UX Polish
 
-- [ ] **Celebration animation** — Show confetti or a fun animation when the user marks an activity as done (especially milestone completions like 10, 25, 50%).
 - [ ] **Undo toast** — After toggling "done," show a brief snackbar with an Undo button to prevent accidental taps.
 - [ ] **Onboarding screen** — A brief first-launch walkthrough explaining the app and prompting city/location selection.
 - [ ] **Statistics view** — A section showing insights: activities per subcategory, total completed this month, streaks, etc.

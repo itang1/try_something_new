@@ -13,6 +13,17 @@ import { Icon } from '@/components/icon';
 import { Confetti } from '@/components/confetti';
 import type { IconName } from '@/icons/paths';
 
+const MILESTONES = [5, 10, 25, 50, 75, 100, 150, 200];
+
+/** The milestone this completion just reached, if any. An icon checks off two entries at once. */
+function milestoneReached(tried: number, total: number, step: number): string | null {
+  const crossed = (m: number) => tried >= m && tried - step < m;
+  if (crossed(total)) return 'You tried everything here!';
+  if (total >= 10 && crossed(Math.ceil(total / 2))) return 'Halfway there!';
+  const m = MILESTONES.find(crossed);
+  return m ? `${m} things tried!` : null;
+}
+
 const RATINGS: { id: Rating; label: string; icon: IconName }[] = [
   { id: 'loved', label: 'Loved it', icon: 'favorite' },
   { id: 'fine', label: 'It was fine', icon: 'remove' },
@@ -37,6 +48,7 @@ export default function DoneSheet() {
 
   const all = entriesForCity(city.id);
   const triedCount = all.filter((e) => doneIds.has(e.id)).length;
+  const milestone = milestoneReached(triedCount, all.length, entry.kind === 'icon' ? 2 : 1);
 
   const save = () => {
     if (placeId && entry.kind === 'activity' && !visitedPlaceIds.has(placeId)) toggleVisited(placeId, entry.activityId);
@@ -55,6 +67,15 @@ export default function DoneSheet() {
           <Icon name="check" size={52} color="white" />
         </Animated.View>
       </View>
+      {milestone && (
+        <Animated.View
+          entering={ZoomIn.delay(500).springify().damping(10)}
+          style={[styles.milestone, { backgroundColor: colors.accentSoft }]}
+        >
+          <Icon name="trophy" size={18} color={colors.accent} />
+          <Text style={[styles.milestoneText, { color: colors.accent }]}>{milestone}</Text>
+        </Animated.View>
+      )}
       <Text style={[styles.title, { color: colors.label }]}>You did it!</Text>
       <Text style={[styles.name, { color: colors.label }]}>{entry.name}</Text>
       <Text style={[styles.progress, { color: colors.secondary }]}>
@@ -157,6 +178,16 @@ export default function DoneSheet() {
 }
 
 const styles = StyleSheet.create({
+  milestone: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    alignSelf: 'center',
+  },
+  milestoneText: { fontSize: 15, fontWeight: '700' },
   content: { padding: 20, paddingTop: 32, paddingBottom: 40, gap: 8 },
   hero: { height: 140, alignItems: 'center', justifyContent: 'center' },
   check: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center' },
