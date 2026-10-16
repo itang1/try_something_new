@@ -125,7 +125,7 @@ export default function ExploreScreen() {
           </Pressable>
         )}
 
-        <View style={styles.middle}>
+        <View style={[styles.middle, activity && styles.top]}>
           {activity ? (
             <SwipeCard
               key={pick?.n}
@@ -234,7 +234,7 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onN
       <GradientIcon
         icon={entry.icon}
         subcategoryId={entry.subcategory}
-        size={112}
+        size={88}
         shape="circle"
         style={{ boxShadow: `0 10px 20px ${sub.color}59` }}
       />
@@ -320,8 +320,10 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   content: { flexGrow: 1, padding: 16, gap: 16 },
   middle: { flex: 1, justifyContent: 'center' },
-  card: { borderRadius: 24, padding: 20, paddingTop: 24, alignItems: 'center', gap: 12 },
-  title: { fontSize: 26, fontWeight: '700', textAlign: 'center' },
+  // The scroll view runs behind the footer, so a centered card would slip under it.
+  top: { justifyContent: 'flex-start' },
+  card: { borderRadius: 24, padding: 16, paddingTop: 20, alignItems: 'center', gap: 10 },
+  title: { fontSize: 24, fontWeight: '700', textAlign: 'center' },
   pill: {
     fontSize: 12,
     fontWeight: '700',
@@ -338,7 +340,7 @@ const styles = StyleSheet.create({
   actions: { alignSelf: 'stretch', flexDirection: 'row', gap: 8, marginTop: 4 },
   action: {
     flex: 1,
-    minHeight: 56,
+    minHeight: 52,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
