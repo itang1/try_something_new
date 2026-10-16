@@ -36,7 +36,10 @@ type AppState = {
   isDone: (activityId: string) => boolean;
   /** Checking off a city icon also logs a visit to its place and checks off its activity. */
   toggleDone: (entry: Entry) => void;
+  /** Sets entries done or not, with no cascading. Used to undo. */
+  setDone: (ids: string[], done: boolean) => void;
   visitedPlaceIds: Set<string>;
+  setVisited: (placeId: string, activityId: string, visited: boolean) => void;
   /** Visiting any place also checks off the activity. */
   toggleVisited: (placeId: string, activityId: string) => void;
   savedIds: Set<string>;
@@ -187,7 +190,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         doneIds,
         isDone,
         toggleDone,
+        setDone: markDone,
         visitedPlaceIds,
+        setVisited,
         toggleVisited,
         savedIds,
         toggleSaved,

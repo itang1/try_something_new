@@ -11,6 +11,7 @@ import { entriesForCity, entryHint, LEVELS, type Entry } from '@/data/catalog';
 import { formatDay } from '@/data/days';
 import { driveMinutes } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
+import { useToggleWithUndo } from '@/state/use-toggle-with-undo';
 import { subcategory, useColors } from '@/theme';
 import { ActivityRow, type PlaceProgress } from '@/components/activity-row';
 import { FilterChip } from '@/components/chips';
@@ -38,7 +39,8 @@ type Row = { activity: Entry; minutes: number | null; progress: PlaceProgress | 
 export default function ChecklistScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { city, origin, doneIds, toggleDone, savedIds, visitedPlaceIds, plans } = useAppState();
+  const { city, origin, doneIds, savedIds, visitedPlaceIds, plans } = useAppState();
+  const toggleDone = useToggleWithUndo();
   const [status, setStatus] = useState<Status>('All');
   const [sort, setSort] = useState<Sort>('Name');
   const [search, setSearch] = useState('');

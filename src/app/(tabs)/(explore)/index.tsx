@@ -16,6 +16,7 @@ import { MetadataTag } from '@/components/chips';
 import { LocationControl } from '@/components/location-control';
 import { SwipeCard } from '@/components/swipe-card';
 import { useMarkDone } from '@/state/use-mark-done';
+import { useToast } from '@/state/toast';
 import type { IconName } from '@/icons/paths';
 
 function randomItem<T>(items: T[]): T {
@@ -27,6 +28,7 @@ export default function ExploreScreen() {
   const router = useRouter();
   const { city, origin, isDone, savedIds, toggleSaved, hiddenIds, hide, plans, filters, setFilters } = useAppState();
   const markDone = useMarkDone();
+  const toast = useToast();
   // The pick remembers its city, so switching cities clears it without an effect.
   const [pick, setPick] = useState<{ id: string; city: string; n: number } | null>(null);
   const [noMatch, setNoMatch] = useState(false);
@@ -136,6 +138,7 @@ export default function ExploreScreen() {
                 onOpen={() => router.push(`/activity/${activity.id}`)}
                 onNotForMe={() => {
                   hide(activity.id);
+                  toast(`Hid ${activity.name}`, { type: 'hide', id: activity.id });
                   showAnother(activity.id);
                 }}
                 onSave={() => {

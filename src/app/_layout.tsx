@@ -2,6 +2,7 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppStateProvider } from '@/state/app-state';
+import { ToastProvider } from '@/state/toast';
 import { useColors } from '@/theme';
 
 export default function RootLayout() {
@@ -18,54 +19,56 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={theme}>
         <AppStateProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen
-              name="location"
-              options={{
-                presentation: 'formSheet',
-                sheetAllowedDetents: [0.5, 1],
-                sheetGrabberVisible: true,
-                contentStyle: { backgroundColor: colors.background },
-              }}
-            />
-            <Stack.Screen
-              name="done/[id]"
-              options={{
-                presentation: 'formSheet',
-                sheetAllowedDetents: [1],
-                sheetGrabberVisible: true,
-                contentStyle: { backgroundColor: colors.card },
-              }}
-            />
-            <Stack.Screen
-              name="filters"
-              options={{
-                presentation: 'formSheet',
-                sheetAllowedDetents: [0.75, 1],
-                sheetGrabberVisible: true,
-                contentStyle: { backgroundColor: colors.background },
-              }}
-            />
-            <Stack.Screen
-              name="plan/[id]"
-              options={{
-                presentation: 'formSheet',
-                sheetAllowedDetents: [0.75, 1],
-                sheetGrabberVisible: true,
-                contentStyle: { backgroundColor: colors.background },
-              }}
-            />
-            <Stack.Screen
-              name="activity/[id]"
-              options={{
-                presentation: 'formSheet',
-                sheetAllowedDetents: [0.75, 1],
-                sheetGrabberVisible: true,
-                contentStyle: { backgroundColor: colors.background },
-              }}
-            />
-          </Stack>
+          <ToastProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen
+                name="location"
+                options={{
+                  presentation: 'formSheet',
+                  sheetAllowedDetents: [0.5, 1],
+                  sheetGrabberVisible: true,
+                  contentStyle: { backgroundColor: colors.background },
+                }}
+              />
+              <Stack.Screen
+                name="done/[id]"
+                options={{
+                  presentation: 'formSheet',
+                  sheetAllowedDetents: [1],
+                  sheetGrabberVisible: true,
+                  contentStyle: { backgroundColor: colors.card },
+                }}
+              />
+              <Stack.Screen
+                name="filters"
+                options={{
+                  presentation: 'formSheet',
+                  sheetAllowedDetents: [0.75, 1],
+                  sheetGrabberVisible: true,
+                  contentStyle: { backgroundColor: colors.background },
+                }}
+              />
+              <Stack.Screen
+                name="plan/[id]"
+                options={{
+                  presentation: 'formSheet',
+                  sheetAllowedDetents: [0.75, 1],
+                  sheetGrabberVisible: true,
+                  contentStyle: { backgroundColor: colors.background },
+                }}
+              />
+              <Stack.Screen
+                name="activity/[id]"
+                options={{
+                  presentation: 'formSheet',
+                  sheetAllowedDetents: [0.75, 1],
+                  sheetGrabberVisible: true,
+                  contentStyle: { backgroundColor: colors.background },
+                }}
+              />
+            </Stack>
+          </ToastProvider>
         </AppStateProvider>
       </ThemeProvider>
     </GestureHandlerRootView>
