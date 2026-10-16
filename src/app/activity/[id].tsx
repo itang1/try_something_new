@@ -4,6 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { findEntry, LEVELS } from '@/data/catalog';
 import { formatDay } from '@/data/days';
 import { openDirections } from '@/data/directions';
+import { inviteFriend } from '@/data/invite';
 import { formatMinutes, placesByDistance } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
 import { useMarkDone } from '@/state/use-mark-done';
@@ -45,6 +46,14 @@ export default function ActivitySheet() {
               {sub.label} · {entry.duration} · {entry.cost} · {LEVELS[entry.level].label}
             </Text>
           </View>
+          <Pressable
+            onPress={() => inviteFriend(entry, planPlace ?? places[0]?.place ?? null, plan?.day ?? null)}
+            hitSlop={8}
+            accessibilityLabel="Invite a friend"
+            style={[styles.close, { backgroundColor: colors.fill }]}
+          >
+            <Icon name={process.env.EXPO_OS === 'ios' ? 'ios_share' : 'share'} size={18} color={colors.secondary} />
+          </Pressable>
           <Pressable
             onPress={() => router.back()}
             hitSlop={8}

@@ -4,7 +4,6 @@
 
 - [ ] **Smarter random picker** — Add filter controls to the Explore tab (subcategory, max drive time, max cost) so users get tailored suggestions instead of pure random.
 - [ ] **Notes & photos on activities** — Let users attach a personal note or photo to a visited activity to journal their experience.
-- [ ] **Share sheet** — Add a share button so users can send an activity suggestion to friends via Messages, etc.
 
 ## Medium Impact — UX Polish
 

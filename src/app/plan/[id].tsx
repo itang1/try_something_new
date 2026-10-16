@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { findEntry } from '@/data/catalog';
 import { addToCalendar } from '@/data/calendar';
+import { inviteFriend } from '@/data/invite';
 import { dayKey, formatDay, isWeekend, nextWeekendDay, upcomingDays } from '@/data/days';
 import { placesByDistance } from '@/data/drive';
 import { readSetting, writeSetting } from '@/data/storage';
@@ -125,11 +126,24 @@ export default function PlanSheet() {
           </>
         )}
 
-        <View style={[styles.toggle, { backgroundColor: colors.card }]}>
+        <Pressable
+          onPress={() => inviteFriend(entry, places.find((p) => p.place.id === placeId)?.place ?? null, day)}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.toggle, { backgroundColor: colors.card, opacity: pressed ? 0.7 : 1 }]}
+        >
+          <Icon name="person_add" size={22} color={colors.accent} />
+          <View style={styles.grow}>
+            <Text style={[styles.toggleTitle, { color: colors.label }]}>Invite a friend</Text>
+            <Text style={[styles.meta, { color: colors.secondary }]}>Plans with someone are easier to keep</Text>
+          </View>
+          <Icon name="chevron_right" size={20} color={colors.tertiary} />
+        </Pressable>
+
+        <View style={[styles.toggle, styles.flush, { backgroundColor: colors.card }]}>
           <Icon name="calendar_month" size={22} color={colors.accent} />
           <View style={styles.grow}>
             <Text style={[styles.toggleTitle, { color: colors.label }]}>Add to my calendar</Text>
-            <Text style={[styles.meta, { color: colors.secondary }]}>You can set a time and an alert there</Text>
+            <Text style={[styles.meta, { color: colors.secondary }]}>Set a time and an alert there</Text>
           </View>
           <Switch
             value={calendar}
@@ -189,6 +203,7 @@ const styles = StyleSheet.create({
   chip: { minHeight: 36, paddingHorizontal: 12, borderRadius: 18, justifyContent: 'center' },
   chipText: { fontSize: 14, fontWeight: '600' },
   toggle: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, marginTop: 12 },
+  flush: { marginTop: 0 },
   toggleTitle: { fontSize: 16, fontWeight: '600' },
   footer: { flexDirection: 'row', gap: 8, padding: 16, paddingBottom: 32, borderTopWidth: StyleSheet.hairlineWidth },
   button: {

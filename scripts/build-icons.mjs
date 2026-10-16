@@ -5,9 +5,9 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 const UI_ICONS = [
   'account_balance', 'beach_access', 'block', 'bolt', 'bookmark', 'calendar_month', 'check', 'check_circle',
   'chevron_right', 'close', 'content_cut', 'directions',
-  'directions_car', 'directions_run', 'eco', 'favorite', 'flight', 'grid_view', 'help', 'hiking', 'history',
-  'keyboard_arrow_down', 'location_city', 'location_on', 'my_location', 'payments', 'photo_camera',
-  'radio_button_unchecked', 'remove', 'restaurant', 'schedule', 'search', 'shopping_bag', 'shuffle', 'star', 'trending_up', 'trophy',
+  'directions_car', 'directions_run', 'eco', 'favorite', 'flight', 'grid_view', 'help', 'hiking', 'history', 'ios_share',
+  'keyboard_arrow_down', 'location_city', 'location_on', 'my_location', 'payments', 'person_add', 'photo_camera',
+  'radio_button_unchecked', 'remove', 'restaurant', 'schedule', 'search', 'share', 'shopping_bag', 'shuffle', 'star', 'trending_up', 'trophy',
 ];
 
 const mapping = JSON.parse(readFileSync('design/icon-mapping.json', 'utf8'));
