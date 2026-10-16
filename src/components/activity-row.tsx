@@ -39,7 +39,17 @@ export const ActivityRow = memo(function ActivityRow({
     <Pressable
       onPress={() => onOpen(activity.id)}
       accessibilityRole="button"
-      accessibilityLabel={activity.name}
+      accessibilityLabel={[
+        activity.name,
+        done && 'done',
+        planned && `planned for ${planned}`,
+        activity.cost,
+        activity.duration,
+        minutes != null && `${formatMinutes(minutes)} drive`,
+        progress && `${progress.visited} of ${progress.total} places`,
+      ]
+        .filter(Boolean)
+        .join(', ')}
       accessibilityHint="Shows places and directions"
       style={({ pressed }) => [
         styles.row,

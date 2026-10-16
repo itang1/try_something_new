@@ -1,5 +1,5 @@
 import { createContext, use, useEffect, useState, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { AccessibilityInfo, Pressable, StyleSheet, Text } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -23,7 +23,10 @@ const TAB_BAR_SPACE = 92;
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<Toast | null>(null);
-  const show = (message: string, undo?: UndoAction) => setToast({ message, undo, key: Date.now() });
+  const show = (message: string, undo?: UndoAction) => {
+    setToast({ message, undo, key: Date.now() });
+    AccessibilityInfo.announceForAccessibility(undo ? `${message}. Undo available.` : message);
+  };
 
   useEffect(() => {
     if (!toast) return;

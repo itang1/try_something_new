@@ -6,7 +6,13 @@ import { subcategory } from '@/theme';
 
 export function Icon({ name, size = 20, color }: { name: IconName; size?: number; color: string }) {
   return (
-    <Svg width={size} height={size} viewBox="0 -960 960 960">
+    <Svg
+      width={size}
+      height={size}
+      viewBox="0 -960 960 960"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
       <Path d={ICON_PATHS[name]} fill={color} />
     </Svg>
   );
@@ -29,6 +35,8 @@ export function GradientIcon({
   const sub = subcategory(subcategoryId);
   return (
     <LinearGradient
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
       colors={sub.gradient}
       start={{ x: 0, y: 0 }}
       end={{ x: 1, y: 1 }}

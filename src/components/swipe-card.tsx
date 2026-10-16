@@ -56,7 +56,16 @@ export function SwipeCard({ children, onSwipeLeft, onSwipeRight }: Props) {
 
   return (
     <GestureDetector gesture={pan}>
-      <Animated.View entering={cardEntering} style={[styles.card, style]}>
+      {/* Screen reader users can't swipe, so the same choices are offered as actions. */}
+      <Animated.View
+        entering={cardEntering}
+        style={[styles.card, style]}
+        accessibilityActions={[
+          { name: 'skip', label: 'Skip' },
+          { name: 'save', label: 'Save and show another' },
+        ]}
+        onAccessibilityAction={(e) => (e.nativeEvent.actionName === 'save' ? onSwipeRight() : onSwipeLeft())}
+      >
         {children}
       </Animated.View>
     </GestureDetector>

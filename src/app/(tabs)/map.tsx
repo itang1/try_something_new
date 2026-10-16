@@ -116,6 +116,7 @@ export default function MapScreen() {
               subcategoryId={lead.subcategory}
               done={isPlaceDone(place)}
               selected={isSelected}
+              label={isPlaceDone(place) ? `${place.name}, done` : place.name}
               onPress={() => select(place)}
             />
           );

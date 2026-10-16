@@ -116,7 +116,13 @@ export default function ChecklistScreen() {
   const header = (
     <View style={styles.header}>
       <LocationControl />
-      <View style={[styles.progress, { backgroundColor: colors.accentSoft }]}>
+      <View
+        style={[styles.progress, { backgroundColor: colors.accentSoft }]}
+        accessible
+        accessibilityRole="progressbar"
+        accessibilityLabel={`${doneCount} of ${cityActivities.length} tried`}
+        accessibilityValue={{ min: 0, max: cityActivities.length, now: doneCount }}
+      >
         <View style={styles.progressTop}>
           <Icon name="trophy" size={18} color={colors.accent} />
           <Text style={[styles.progressText, styles.grow, { color: colors.label }]}>

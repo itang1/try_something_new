@@ -24,6 +24,7 @@ export const PlacePin = memo(function PlacePin({
   subcategoryId,
   done,
   selected,
+  label,
   onPress,
 }: {
   latitude: number;
@@ -32,6 +33,7 @@ export const PlacePin = memo(function PlacePin({
   subcategoryId: string;
   done: boolean;
   selected: boolean;
+  label: string;
   onPress: () => void;
 }) {
   const tracking = useBriefTracking();
@@ -42,6 +44,7 @@ export const PlacePin = memo(function PlacePin({
       coordinate={{ latitude, longitude }}
       tracksViewChanges={tracking}
       onPress={onPress}
+      accessibilityLabel={label}
       zIndex={selected ? 2 : 1}
     >
       <View style={[styles.pin, { width: size, height: size, borderRadius: size / 2, opacity: done ? 0.55 : 1 }]}>
@@ -77,7 +80,12 @@ export const ClusterPin = memo(function ClusterPin({
   const tracking = useBriefTracking();
   const size = count < 10 ? 38 : count < 100 ? 46 : 56;
   return (
-    <Marker coordinate={{ latitude, longitude }} tracksViewChanges={tracking} onPress={onPress}>
+    <Marker
+      coordinate={{ latitude, longitude }}
+      tracksViewChanges={tracking}
+      onPress={onPress}
+      accessibilityLabel={`${count} places, zoom in`}
+    >
       <View style={[styles.cluster, { width: size, height: size, borderRadius: size / 2 }]}>
         <Text style={[styles.count, { color }]}>{count}</Text>
       </View>
