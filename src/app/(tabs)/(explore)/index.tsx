@@ -73,7 +73,7 @@ export default function ExploreScreen() {
                 }}
                 onDone={() => {
                   Haptics.selectionAsync();
-                  toggleDone(activity.id);
+                  toggleDone(activity);
                 }}
               />
             </SwipeCard>

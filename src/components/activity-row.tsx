@@ -4,32 +4,39 @@ import Animated, { ZoomIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import type { Entry } from '@/data/catalog';
 import { formatMinutes } from '@/data/drive';
-import { useColors } from '@/theme';
+import { subcategory, useColors } from '@/theme';
 import { GradientIcon, Icon } from './icon';
+
+export type PlaceProgress = { visited: number; total: number; names: string };
 
 export const ActivityRow = memo(function ActivityRow({
   activity,
   done,
+  saved,
   minutes,
   hint,
+  progress,
   onToggle,
+  onOpen,
 }: {
   activity: Entry;
   done: boolean;
+  saved: boolean;
   minutes: number | null;
   hint: string;
-  onToggle: (id: string) => void;
+  /** Shown once you've visited one of several places. */
+  progress: PlaceProgress | null;
+  onToggle: (entry: Entry) => void;
+  onOpen: (id: string) => void;
 }) {
   const colors = useColors();
+  const tint = subcategory(activity.subcategory).color;
   return (
     <Pressable
-      onPress={() => {
-        Haptics.selectionAsync();
-        onToggle(activity.id);
-      }}
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked: done }}
+      onPress={() => onOpen(activity.id)}
+      accessibilityRole="button"
       accessibilityLabel={activity.name}
+      accessibilityHint="Shows places and directions"
       style={({ pressed }) => [
         styles.row,
         { backgroundColor: done ? colors.doneSoft : colors.card, opacity: pressed ? 0.75 : 1 },
@@ -38,34 +45,61 @@ export const ActivityRow = memo(function ActivityRow({
       <GradientIcon icon={activity.icon} subcategoryId={activity.subcategory} size={40} shape="tile" />
 
       <View style={styles.text}>
-        <Text
-          style={[
-            styles.name,
-            { color: colors.label },
-            done && { textDecorationLine: 'line-through', color: colors.secondary },
-          ]}
-        >
-          {activity.name}
-        </Text>
+        <View style={styles.titleLine}>
+          <Text
+            style={[
+              styles.name,
+              { color: colors.label },
+              done && { textDecorationLine: 'line-through', color: colors.secondary },
+            ]}
+          >
+            {activity.name}
+          </Text>
+          {saved && <Icon name="bookmark" size={14} color={colors.accent} />}
+        </View>
         <View style={styles.meta}>
           <Meta icon="payments" text={activity.cost} color={colors.secondary} />
           <Meta icon="schedule" text={activity.duration} color={colors.secondary} />
           {minutes != null && <Meta icon="directions_car" text={formatMinutes(minutes)} color={colors.secondary} />}
         </View>
-        {!!hint && (
-          <Text style={[styles.hint, { color: colors.tertiary }]} numberOfLines={1}>
-            {hint}
-          </Text>
+        {progress ? (
+          <>
+            <Text style={[styles.hint, { color: colors.secondary }]} numberOfLines={1}>
+              {progress.visited} of {progress.total} places · {progress.names}
+            </Text>
+            <View style={[styles.track, { backgroundColor: colors.fill }]}>
+              <View
+                style={[styles.bar, { width: `${(progress.visited / progress.total) * 100}%`, backgroundColor: tint }]}
+              />
+            </View>
+          </>
+        ) : (
+          !!hint && (
+            <Text style={[styles.hint, { color: colors.tertiary }]} numberOfLines={1}>
+              {hint}
+            </Text>
+          )
         )}
       </View>
 
-      <Animated.View key={done ? 'done' : 'todo'} entering={ZoomIn.springify().damping(14)}>
-        <Icon
-          name={done ? 'check_circle' : 'radio_button_unchecked'}
-          size={24}
-          color={done ? colors.done : colors.tertiary}
-        />
-      </Animated.View>
+      <Pressable
+        onPress={() => {
+          Haptics.selectionAsync();
+          onToggle(activity);
+        }}
+        hitSlop={10}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: done }}
+        accessibilityLabel={`${activity.name} done`}
+      >
+        <Animated.View key={done ? 'done' : 'todo'} entering={ZoomIn.springify().damping(14)}>
+          <Icon
+            name={done ? 'check_circle' : 'radio_button_unchecked'}
+            size={26}
+            color={done ? colors.done : colors.tertiary}
+          />
+        </Animated.View>
+      </Pressable>
     </Pressable>
   );
 });
@@ -91,9 +125,12 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
   },
   text: { flex: 1, gap: 4 },
-  name: { fontSize: 15, fontWeight: '600' },
+  titleLine: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  name: { fontSize: 15, fontWeight: '600', flexShrink: 1 },
   meta: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 10, rowGap: 2 },
   metaItem: { flexDirection: 'row', alignItems: 'center', gap: 3 },
   metaText: { fontSize: 13 },
   hint: { fontSize: 12 },
+  track: { height: 3, borderRadius: 2, overflow: 'hidden', marginTop: 2 },
+  bar: { height: 3, borderRadius: 2 },
 });

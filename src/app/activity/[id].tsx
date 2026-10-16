@@ -12,7 +12,7 @@ export default function ActivitySheet() {
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { city, origin, isDone, toggleDone, savedIds, toggleSaved } = useAppState();
+  const { city, origin, isDone, toggleDone, savedIds, toggleSaved, visitedPlaceIds, toggleVisited } = useAppState();
   const entry = findEntry(city.id, id);
 
   if (!entry) {
@@ -27,6 +27,7 @@ export default function ActivitySheet() {
   const places = placesByDistance(entry, origin);
   const done = isDone(entry.id);
   const saved = savedIds.has(entry.id);
+  const visitedCount = places.filter(({ place }) => visitedPlaceIds.has(place.id)).length;
 
   return (
     <View style={styles.screen}>
@@ -51,35 +52,55 @@ export default function ActivitySheet() {
 
         <Text style={[styles.section, { color: colors.secondary }]}>
           {places.length} {places.length === 1 ? 'place' : 'places'} in {city.name}
+          {visitedCount > 0 && places.length > 1 ? ` · ${visitedCount} visited` : ''}
         </Text>
         <View style={[styles.list, { backgroundColor: colors.card }]}>
-          {places.map(({ place, minutes }, i) => (
-            <View
-              key={place.id}
-              style={[
-                styles.row,
-                i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
-              ]}
-            >
-              <View style={styles.grow}>
-                <Text style={[styles.placeName, { color: colors.label }]}>{place.name}</Text>
-                {minutes != null && (
-                  <Text style={[styles.meta, { color: colors.secondary }]}>{formatMinutes(minutes)} away</Text>
-                )}
-              </View>
-              <Pressable
-                onPress={() => openDirections(place)}
-                accessibilityLabel={`Directions to ${place.name}`}
-                style={({ pressed }) => [
-                  styles.go,
-                  { backgroundColor: colors.accentSoft, opacity: pressed ? 0.6 : 1 },
+          {places.map(({ place, minutes }, i) => {
+            const visited = visitedPlaceIds.has(place.id);
+            return (
+              <View
+                key={place.id}
+                style={[
+                  styles.row,
+                  i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
                 ]}
               >
-                <Icon name="directions" size={18} color={colors.accent} />
-                <Text style={[styles.goText, { color: colors.accent }]}>Go</Text>
-              </Pressable>
-            </View>
-          ))}
+                <Pressable
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    toggleVisited(place.id, entry.activityId);
+                  }}
+                  hitSlop={10}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: visited }}
+                  accessibilityLabel={`Been to ${place.name}`}
+                >
+                  <Icon
+                    name={visited ? 'check_circle' : 'radio_button_unchecked'}
+                    size={24}
+                    color={visited ? colors.done : colors.tertiary}
+                  />
+                </Pressable>
+                <View style={styles.grow}>
+                  <Text style={[styles.placeName, { color: colors.label }]}>{place.name}</Text>
+                  {minutes != null && (
+                    <Text style={[styles.meta, { color: colors.secondary }]}>{formatMinutes(minutes)} away</Text>
+                  )}
+                </View>
+                <Pressable
+                  onPress={() => openDirections(place)}
+                  accessibilityLabel={`Directions to ${place.name}`}
+                  style={({ pressed }) => [
+                    styles.go,
+                    { backgroundColor: colors.accentSoft, opacity: pressed ? 0.6 : 1 },
+                  ]}
+                >
+                  <Icon name="directions" size={18} color={colors.accent} />
+                  <Text style={[styles.goText, { color: colors.accent }]}>Go</Text>
+                </Pressable>
+              </View>
+            );
+          })}
         </View>
       </ScrollView>
 
@@ -104,7 +125,7 @@ export default function ActivitySheet() {
         <Pressable
           onPress={() => {
             Haptics.selectionAsync();
-            toggleDone(entry.id);
+            toggleDone(entry);
           }}
           accessibilityState={{ checked: done }}
           style={({ pressed }) => [

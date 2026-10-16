@@ -1,16 +1,16 @@
 import { useCallback, useMemo, useState, type ComponentType } from 'react';
-import { FlatList, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Stack } from 'expo-router';
+import { ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
 import type { SFSymbol } from 'expo-symbols';
 import NativeSegmentedControl, {
   type SegmentedControlProps,
 } from '@react-native-segmented-control/segmented-control';
 import SortIcon from '@expo/material-symbols/swap_vert.xml';
-import { entriesForCity, placeNames, type Entry } from '@/data/catalog';
+import { entriesForCity, entryHint, type Entry } from '@/data/catalog';
 import { driveMinutes } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
 import { subcategory, useColors } from '@/theme';
-import { ActivityRow } from '@/components/activity-row';
+import { ActivityRow, type PlaceProgress } from '@/components/activity-row';
 import { FilterChip } from '@/components/chips';
 import { Icon } from '@/components/icon';
 import { toolbarIcon } from '@/components/header-items';
@@ -19,7 +19,7 @@ import { LocationControl } from '@/components/location-control';
 // The package's class typings predate React 19.3's JSX types; the component itself works.
 const SegmentedControl = NativeSegmentedControl as unknown as ComponentType<SegmentedControlProps>;
 
-const STATUSES = ['All', 'Not Done', 'Done'] as const;
+const STATUSES = ['All', 'Not Done', 'Done', 'Saved'] as const;
 type Status = (typeof STATUSES)[number];
 
 type Sort = 'Name' | 'Distance' | 'Duration' | 'Cost';
@@ -30,11 +30,12 @@ const SORTS: { label: Sort; sf: SFSymbol }[] = [
   { label: 'Cost', sf: 'dollarsign.circle' },
 ];
 
-type Row = { activity: Entry; minutes: number | null };
+type Row = { activity: Entry; minutes: number | null; progress: PlaceProgress | null };
 
 export default function ChecklistScreen() {
   const colors = useColors();
-  const { city, origin, doneIds, toggleDone } = useAppState();
+  const router = useRouter();
+  const { city, origin, doneIds, toggleDone, savedIds, visitedPlaceIds } = useAppState();
   const [status, setStatus] = useState<Status>('All');
   const [sort, setSort] = useState<Sort>('Name');
   const [search, setSearch] = useState('');
@@ -50,13 +51,26 @@ export default function ChecklistScreen() {
   const doneCount = cityActivities.filter((a) => doneIds.has(a.id)).length;
   const fraction = cityActivities.length ? doneCount / cityActivities.length : 0;
 
-  const rows = useMemo(() => {
+  const sections = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
+    const matchesStatus = (a: Entry) =>
+      status === 'All' ||
+      (status === 'Saved' ? savedIds.has(a.id) : (status === 'Done') === doneIds.has(a.id));
+    const matchesQuery = (a: Entry) =>
+      !query ||
+      a.name.toLocaleLowerCase().includes(query) ||
+      a.places.some((p) => p.name.toLocaleLowerCase().includes(query));
+    const progressOf = (a: Entry): PlaceProgress | null => {
+      if (a.kind !== 'activity' || a.places.length < 2) return null;
+      const visited = a.places.filter((p) => visitedPlaceIds.has(p.id));
+      if (!visited.length) return null;
+      return { visited: visited.length, total: a.places.length, names: visited.map((p) => p.name).join(', ') };
+    };
     const result: Row[] = cityActivities
       .filter((a) => !selectedSub || a.subcategory === selectedSub)
-      .filter((a) => status === 'All' || (status === 'Done') === doneIds.has(a.id))
-      .filter((a) => !query || a.name.toLocaleLowerCase().includes(query))
-      .map((a) => ({ activity: a, minutes: driveMinutes(a, origin) }));
+      .filter(matchesStatus)
+      .filter(matchesQuery)
+      .map((a) => ({ activity: a, minutes: driveMinutes(a, origin), progress: progressOf(a) }));
     const byName = (x: Row, y: Row) => x.activity.name.localeCompare(y.activity.name);
     const compare: Record<Sort, (x: Row, y: Row) => number> = {
       Name: byName,
@@ -64,20 +78,27 @@ export default function ChecklistScreen() {
       Duration: (x, y) => x.activity.durationMinutes - y.activity.durationMinutes || byName(x, y),
       Cost: (x, y) => x.activity.costLevel - y.activity.costLevel || byName(x, y),
     };
-    return result.sort(compare[sort]);
-  }, [cityActivities, selectedSub, status, doneIds, search, origin, sort]);
+    result.sort(compare[sort]);
+    return [
+      { title: `${city.name} icons`, data: result.filter((r) => r.activity.kind === 'icon') },
+      { title: 'Activities', data: result.filter((r) => r.activity.kind === 'activity') },
+    ].filter((section) => section.data.length > 0);
+  }, [cityActivities, selectedSub, status, doneIds, savedIds, visitedPlaceIds, search, origin, sort, city.name]);
 
   const renderItem = useCallback(
     ({ item }: { item: Row }) => (
       <ActivityRow
         activity={item.activity}
         done={doneIds.has(item.activity.id)}
+        saved={savedIds.has(item.activity.id)}
         minutes={item.minutes}
-        hint={placeNames(item.activity)}
+        hint={entryHint(item.activity)}
+        progress={item.progress}
         onToggle={toggleDone}
+        onOpen={(id) => router.push(`/activity/${id}`)}
       />
     ),
-    [doneIds, toggleDone],
+    [doneIds, savedIds, toggleDone, router],
   );
 
   const header = (
@@ -87,7 +108,7 @@ export default function ChecklistScreen() {
         <View style={styles.progressTop}>
           <Icon name="trophy" size={18} color={colors.accent} />
           <Text style={[styles.progressText, styles.grow, { color: colors.label }]}>
-            {doneCount} of {cityActivities.length} completed
+            {doneCount} of {cityActivities.length} tried
           </Text>
           <Text style={[styles.progressText, { color: colors.accent }]}>{Math.floor(fraction * 100)}%</Text>
         </View>
@@ -126,22 +147,32 @@ export default function ChecklistScreen() {
 
   return (
     <>
-      <FlatList
-      data={rows}
-      keyExtractor={(row) => row.activity.id}
-      renderItem={renderItem}
-      ListHeaderComponent={header}
-      ListEmptyComponent={
-        <View style={styles.empty}>
-          <Icon name="search" size={44} color={colors.tertiary} />
-          <Text style={[styles.emptyTitle, { color: colors.label }]}>No matches</Text>
-          <Text style={[styles.caption, { color: colors.secondary }]}>Try adjusting your filters.</Text>
-        </View>
-      }
-      contentInsetAdjustmentBehavior="automatic"
-      keyboardDismissMode="on-drag"
-      contentContainerStyle={styles.list}
-      style={{ backgroundColor: colors.background }}
+      <SectionList
+        sections={sections}
+        keyExtractor={(row) => row.activity.id}
+        renderItem={renderItem}
+        renderSectionHeader={({ section }) => (
+          <Text style={[styles.section, { color: colors.secondary, backgroundColor: colors.background }]}>
+            {section.title}
+          </Text>
+        )}
+        stickySectionHeadersEnabled={false}
+        ListHeaderComponent={header}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Icon name={status === 'Saved' ? 'bookmark' : 'search'} size={44} color={colors.tertiary} />
+            <Text style={[styles.emptyTitle, { color: colors.label }]}>
+              {status === 'Saved' ? 'Nothing saved yet' : 'No matches'}
+            </Text>
+            <Text style={[styles.caption, { color: colors.secondary }]}>
+              {status === 'Saved' ? 'Swipe right on an Explore card to save it.' : 'Try adjusting your filters.'}
+            </Text>
+          </View>
+        }
+        contentInsetAdjustmentBehavior="automatic"
+        keyboardDismissMode="on-drag"
+        contentContainerStyle={styles.list}
+        style={{ backgroundColor: colors.background }}
       />
       <Stack.SearchBar
         placeholder="Search activities & places"
@@ -177,7 +208,8 @@ const styles = StyleSheet.create({
   grow: { flex: 1 },
   track: { height: 4, borderRadius: 2, overflow: 'hidden' },
   bar: { height: 4, borderRadius: 2 },
-  caption: { fontSize: 13 },
+  caption: { fontSize: 13, textAlign: 'center' },
+  section: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase', marginTop: 12, marginLeft: 4 },
   chips: { gap: 8, paddingVertical: 2 },
   empty: { alignItems: 'center', gap: 8, paddingTop: 48 },
   emptyTitle: { fontSize: 20, fontWeight: '700' },

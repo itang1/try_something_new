@@ -1,7 +1,14 @@
 import { createContext, use, useCallback, useMemo, useState, type ReactNode } from 'react';
-import { CITIES, cityById, nearestCity, type City } from '@/data/catalog';
+import { CITIES, cityById, nearestCity, type City, type Entry } from '@/data/catalog';
 import type { Coordinate } from '@/data/drive';
-import { loadDoneIds, readSetting, recordCompletion, writeSetting } from '@/data/storage';
+import {
+  loadDoneIds,
+  loadVisitedPlaceIds,
+  readSetting,
+  recordCompletion,
+  recordVisit,
+  writeSetting,
+} from '@/data/storage';
 
 export type HomeLocation = Coordinate & { name: string };
 
@@ -22,7 +29,11 @@ type AppState = {
   recentPlaces: HomeLocation[];
   doneIds: Set<string>;
   isDone: (activityId: string) => boolean;
-  toggleDone: (activityId: string) => void;
+  /** Checking off a city icon also logs a visit to its place and checks off its activity. */
+  toggleDone: (entry: Entry) => void;
+  visitedPlaceIds: Set<string>;
+  /** Visiting any place also checks off the activity. */
+  toggleVisited: (placeId: string, activityId: string) => void;
   savedIds: Set<string>;
   toggleSaved: (id: string) => void;
   /** Marked "Not for me", so Explore stops suggesting them. */
@@ -51,6 +62,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [trip, setTrip] = usePersistedState<Trip | null>('trip', null);
   const [recentPlaces, setRecentPlaces] = usePersistedState<HomeLocation[]>('recentPlaces', []);
   const [doneIds, setDoneIds] = useState(loadDoneIds);
+  const [visitedPlaceIds, setVisitedPlaceIds] = useState(loadVisitedPlaceIds);
   const [saved, setSaved] = usePersistedState<string[]>('savedIds', []);
   const [hidden, setHidden] = usePersistedState<string[]>('hiddenIds', []);
   const savedIds = useMemo(() => new Set(saved), [saved]);
@@ -73,16 +85,53 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const startTrip = useCallback((cityId: string) => setTrip({ cityId, start: null }), [setTrip]);
   const endTrip = useCallback(() => setTrip(null), [setTrip]);
 
-  const toggleDone = useCallback(
-    (activityId: string) => {
-      const done = !doneIds.has(activityId);
-      recordCompletion(activityId, done);
+  // Undoing never cascades: unchecking an icon or a place leaves the activity checked off.
+  const markDone = useCallback(
+    (ids: string[], done: boolean) => {
       const next = new Set(doneIds);
-      if (done) next.add(activityId);
-      else next.delete(activityId);
+      for (const id of ids) {
+        if (next.has(id) === done) continue;
+        recordCompletion(id, done);
+        if (done) next.add(id);
+        else next.delete(id);
+      }
       setDoneIds(next);
     },
     [doneIds],
+  );
+
+  const setVisited = useCallback(
+    (placeId: string, activityId: string, visited: boolean) => {
+      if (visitedPlaceIds.has(placeId) === visited) return;
+      recordVisit(placeId, activityId, visited);
+      const next = new Set(visitedPlaceIds);
+      if (visited) next.add(placeId);
+      else next.delete(placeId);
+      setVisitedPlaceIds(next);
+    },
+    [visitedPlaceIds],
+  );
+
+  const toggleDone = useCallback(
+    (entry: Entry) => {
+      const done = !doneIds.has(entry.id);
+      if (entry.kind === 'icon') {
+        markDone(done ? [entry.id, entry.activityId] : [entry.id], done);
+        setVisited(entry.places[0].id, entry.activityId, done);
+      } else {
+        markDone([entry.id], done);
+      }
+    },
+    [doneIds, markDone, setVisited],
+  );
+
+  const toggleVisited = useCallback(
+    (placeId: string, activityId: string) => {
+      const visited = !visitedPlaceIds.has(placeId);
+      setVisited(placeId, activityId, visited);
+      if (visited) markDone([activityId], true);
+    },
+    [visitedPlaceIds, setVisited, markDone],
   );
 
   const isDone = useCallback((activityId: string) => doneIds.has(activityId), [doneIds]);
@@ -107,6 +156,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         doneIds,
         isDone,
         toggleDone,
+        visitedPlaceIds,
+        toggleVisited,
         savedIds,
         toggleSaved,
         hiddenIds,

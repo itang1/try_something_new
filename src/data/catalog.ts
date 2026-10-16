@@ -112,3 +112,9 @@ export function nearestCity(point: Coordinate): { city: City; km: number } {
 export function placeNames(entry: Entry): string {
   return entry.places.map((p) => p.name).join(', ');
 }
+
+/** The row's second line: an icon names the activity it counts toward, an activity lists its places. */
+export function entryHint(entry: Entry): string {
+  if (entry.kind === 'icon') return `Counts toward: ${ACTIVITIES.get(entry.activityId)?.name ?? 'an activity'}`;
+  return placeNames(entry);
+}
