@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import type { Entry } from '@/data/catalog';
 import { formatMinutes } from '@/data/drive';
 import { subcategory, useColors } from '@/theme';
+import type { IconName } from '@/icons/paths';
 import { GradientIcon, Icon } from './icon';
 
 export type PlaceProgress = { visited: number; total: number; names: string };
@@ -16,6 +17,7 @@ export const ActivityRow = memo(function ActivityRow({
   minutes,
   hint,
   progress,
+  planned,
   onToggle,
   onOpen,
 }: {
@@ -26,6 +28,8 @@ export const ActivityRow = memo(function ActivityRow({
   hint: string;
   /** Shown once you've visited one of several places. */
   progress: PlaceProgress | null;
+  /** The planned day, already formatted. */
+  planned?: string;
   onToggle: (entry: Entry) => void;
   onOpen: (id: string) => void;
 }) {
@@ -61,6 +65,7 @@ export const ActivityRow = memo(function ActivityRow({
           <Meta icon="payments" text={activity.cost} color={colors.secondary} />
           <Meta icon="schedule" text={activity.duration} color={colors.secondary} />
           {minutes != null && <Meta icon="directions_car" text={formatMinutes(minutes)} color={colors.secondary} />}
+          {planned && <Meta icon="calendar_month" text={planned} color={colors.accent} />}
         </View>
         {progress ? (
           <>
@@ -104,7 +109,7 @@ export const ActivityRow = memo(function ActivityRow({
   );
 });
 
-function Meta({ icon, text, color }: { icon: 'payments' | 'schedule' | 'directions_car'; text: string; color: string }) {
+function Meta({ icon, text, color }: { icon: IconName; text: string; color: string }) {
   return (
     <View style={styles.metaItem}>
       <Icon name={icon} size={13} color={color} />

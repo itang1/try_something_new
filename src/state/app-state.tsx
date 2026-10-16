@@ -3,11 +3,15 @@ import { CITIES, cityById, nearestCity, type City, type Entry } from '@/data/cat
 import type { Coordinate } from '@/data/drive';
 import {
   loadDoneIds,
+  loadPlans,
   loadVisitedPlaceIds,
+  planKey,
   readSetting,
   recordCompletion,
+  recordPlan,
   recordVisit,
   writeSetting,
+  type Plan,
 } from '@/data/storage';
 
 export type HomeLocation = Coordinate & { name: string };
@@ -39,6 +43,10 @@ type AppState = {
   /** Marked "Not for me", so Explore stops suggesting them. */
   hiddenIds: Set<string>;
   hide: (id: string) => void;
+  /** Plans in the current city, by entry id. */
+  plans: Map<string, Plan>;
+  /** Pass null to clear the plan. */
+  setPlan: (entryId: string, plan: Pick<Plan, 'placeId' | 'day'> | null) => void;
 };
 
 const AppStateContext = createContext<AppState | null>(null);
@@ -65,11 +73,27 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [visitedPlaceIds, setVisitedPlaceIds] = useState(loadVisitedPlaceIds);
   const [saved, setSaved] = usePersistedState<string[]>('savedIds', []);
   const [hidden, setHidden] = usePersistedState<string[]>('hiddenIds', []);
+  const [allPlans, setAllPlans] = useState(loadPlans);
   const savedIds = useMemo(() => new Set(saved), [saved]);
   const hiddenIds = useMemo(() => new Set(hidden), [hidden]);
 
   const city = (trip && cityById(trip.cityId)) || (home ? nearestCity(home).city : CITIES[0]);
   const origin = trip ? trip.start : home;
+  const plans = useMemo(
+    () => new Map([...allPlans.values()].filter((p) => p.cityId === city.id).map((p) => [p.entryId, p])),
+    [allPlans, city.id],
+  );
+
+  const setPlan = useCallback(
+    (entryId: string, plan: Pick<Plan, 'placeId' | 'day'> | null) => {
+      recordPlan(city.id, entryId, plan);
+      const next = new Map(allPlans);
+      if (plan) next.set(planKey(city.id, entryId), { entryId, cityId: city.id, ...plan });
+      else next.delete(planKey(city.id, entryId));
+      setAllPlans(next);
+    },
+    [allPlans, city.id],
+  );
 
   const setLocation = useCallback(
     (next: HomeLocation, options?: { remember?: boolean }) => {
@@ -162,6 +186,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         toggleSaved,
         hiddenIds,
         hide,
+        plans,
+        setPlan,
       }}
     >
       {children}

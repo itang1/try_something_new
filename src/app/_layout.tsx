@@ -39,6 +39,15 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
+              name="plan/[id]"
+              options={{
+                presentation: 'formSheet',
+                sheetAllowedDetents: [0.75, 1],
+                sheetGrabberVisible: true,
+                contentStyle: { backgroundColor: colors.background },
+              }}
+            />
+            <Stack.Screen
               name="activity/[id]"
               options={{
                 presentation: 'formSheet',

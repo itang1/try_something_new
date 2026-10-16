@@ -29,6 +29,15 @@ db.execSync(`
     photo TEXT,
     at TEXT NOT NULL
   );
+  CREATE TABLE IF NOT EXISTS plans (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entry_id TEXT NOT NULL,
+    city_id TEXT NOT NULL,
+    place_id TEXT,
+    day TEXT,
+    at TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS plans_entry ON plans (city_id, entry_id, id);
 `);
 
 export function loadDoneIds(): Set<string> {
@@ -78,6 +87,36 @@ export function recordReflection(r: Reflection): void {
     r.rating,
     r.note || null,
     r.photo,
+    new Date().toISOString(),
+  ]);
+}
+
+/** A day is a local YYYY-MM-DD key. Activity ids repeat across cities, so plans are kept per city. */
+export type Plan = { entryId: string; cityId: string; placeId: string | null; day: string };
+
+export const planKey = (cityId: string, entryId: string) => `${cityId}/${entryId}`;
+
+export function loadPlans(): Map<string, Plan> {
+  const rows = db.getAllSync<{ entry_id: string; city_id: string; place_id: string | null; day: string }>(`
+    SELECT p.entry_id, p.city_id, p.place_id, p.day FROM plans p
+    WHERE p.id = (SELECT MAX(id) FROM plans WHERE city_id = p.city_id AND entry_id = p.entry_id)
+      AND p.day IS NOT NULL
+  `);
+  return new Map(
+    rows.map((r) => [
+      planKey(r.city_id, r.entry_id),
+      { entryId: r.entry_id, cityId: r.city_id, placeId: r.place_id, day: r.day },
+    ]),
+  );
+}
+
+/** Append-only like the other logs. A row with no day clears the plan. */
+export function recordPlan(cityId: string, entryId: string, plan: Pick<Plan, 'placeId' | 'day'> | null): void {
+  db.runSync('INSERT INTO plans (entry_id, city_id, place_id, day, at) VALUES (?, ?, ?, ?, ?)', [
+    entryId,
+    cityId,
+    plan?.placeId ?? null,
+    plan?.day ?? null,
     new Date().toISOString(),
   ]);
 }

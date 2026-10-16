@@ -19,3 +19,4 @@ Icons for activities and city icons come from [`icon-mapping.json`](icon-mapping
 - **Location:** home, saved across launches, plus the last five places searched or picked.
 - **Trip:** a city and a starting place while traveling. Ending the trip returns to the home location. Without a trip, the city is the one nearest home.
 - **Reflections:** saved from the Done moment: the entry, the place you went, a rating (loved it, fine, not for me), a note, and a photo. Photos are copied into the app's documents folder, so deleting one from the camera roll doesn't break it.
+- **Plans:** a log of (city, entry, place, day), where a row with no day clears the plan. Days are local dates, not times, so a plan stays on the same day if you travel. Activity ids repeat across cities, so each plan belongs to one city. Adding it to the calendar uses the system's own event form, which needs no calendar permission.

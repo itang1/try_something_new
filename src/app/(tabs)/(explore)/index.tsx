@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { entriesForCity, findEntry, type Entry } from '@/data/catalog';
+import { addDays, dayKey, formatDay } from '@/data/days';
 import { formatMinutes, placesByDistance } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
 import { subcategory, useColors } from '@/theme';
@@ -21,7 +22,7 @@ function randomItem<T>(items: T[]): T {
 export default function ExploreScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { city, origin, isDone, savedIds, toggleSaved, hiddenIds, hide } = useAppState();
+  const { city, origin, isDone, savedIds, toggleSaved, hiddenIds, hide, plans } = useAppState();
   const markDone = useMarkDone();
   // The pick remembers its city, so switching cities clears it without an effect.
   const [pick, setPick] = useState<{ id: string; city: string; n: number } | null>(null);
@@ -39,6 +40,14 @@ export default function ExploreScreen() {
     setPick({ id: next.id, city: city.id, n: (pick?.n ?? 0) + 1 });
   };
 
+  // A gentle nudge for a plan that's today or tomorrow. Missed plans just drop off.
+  const soonDays = [dayKey(new Date()), dayKey(addDays(new Date(), 1))];
+  const soonPlan = [...plans.values()]
+    .filter((p) => soonDays.includes(p.day) && !isDone(p.entryId))
+    .sort((x, y) => x.day.localeCompare(y.day))[0];
+  const soonEntry = soonPlan && findEntry(city.id, soonPlan.entryId);
+  const soonPlace = soonEntry?.places.find((p) => p.id === soonPlan?.placeId);
+
   const save = (entry: Entry) => {
     if (!savedIds.has(entry.id)) toggleSaved(entry.id);
   };
@@ -48,6 +57,23 @@ export default function ExploreScreen() {
       {/* A scroll view lets the large title lay out natively; the button sits outside it, above the tabs. */}
       <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
         <LocationControl />
+
+        {soonPlan && soonEntry && (
+          <Pressable
+            onPress={() => router.push(`/activity/${soonEntry.id}`)}
+            accessibilityRole="button"
+            style={({ pressed }) => [styles.soon, { backgroundColor: colors.accentSoft, opacity: pressed ? 0.7 : 1 }]}
+          >
+            <GradientIcon icon={soonEntry.icon} subcategoryId={soonEntry.subcategory} size={40} shape="tile" />
+            <View style={styles.grow}>
+              <Text style={[styles.soonDay, { color: colors.accent }]}>{formatDay(soonPlan.day)}</Text>
+              <Text style={[styles.placeName, { color: colors.label }]} numberOfLines={2}>
+                {soonPlace ? `${soonEntry.name} at ${soonPlace.name}` : soonEntry.name}
+              </Text>
+            </View>
+            <Icon name="chevron_right" size={20} color={colors.tertiary} />
+          </Pressable>
+        )}
 
         <View style={styles.middle}>
           {activity ? (
@@ -64,6 +90,8 @@ export default function ExploreScreen() {
                 origin={origin}
                 done={isDone(activity.id)}
                 saved={savedIds.has(activity.id)}
+                planned={plans.has(activity.id)}
+                onPlan={() => router.push(`/plan/${activity.id}`)}
                 onOpen={() => router.push(`/activity/${activity.id}`)}
                 onNotForMe={() => {
                   hide(activity.id);
@@ -113,13 +141,15 @@ type CardProps = {
   origin: Parameters<typeof placesByDistance>[1];
   done: boolean;
   saved: boolean;
+  planned: boolean;
+  onPlan: () => void;
   onOpen: () => void;
   onNotForMe: () => void;
   onSave: () => void;
   onDone: () => void;
 };
 
-function ActivityCard({ entry, origin, done, saved, onOpen, onNotForMe, onSave, onDone }: CardProps) {
+function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onNotForMe, onSave, onDone }: CardProps) {
   const colors = useColors();
   const sub = subcategory(entry.subcategory);
   const [nearest, ...others] = placesByDistance(entry, origin);
@@ -175,6 +205,13 @@ function ActivityCard({ entry, origin, done, saved, onOpen, onNotForMe, onSave, 
           selected={saved}
         />
         <CardAction
+          icon="calendar_month"
+          label={planned ? 'Planned' : 'Plan'}
+          onPress={onPlan}
+          tint={planned ? colors.accent : undefined}
+          selected={planned}
+        />
+        <CardAction
           icon={done ? 'check_circle' : 'radio_button_unchecked'}
           label={done ? 'Done!' : 'Done'}
           onPress={onDone}
@@ -201,8 +238,10 @@ function CardAction({ icon, label, onPress, tint, selected }: ActionProps) {
         { backgroundColor: tint ? `${tint}26` : colors.fill, opacity: pressed ? 0.7 : 1 },
       ]}
     >
-      <Icon name={icon} size={18} color={color} />
-      <Text style={[styles.actionText, { color }]}>{label}</Text>
+      <Icon name={icon} size={20} color={color} />
+      <Text style={[styles.actionText, { color }]} numberOfLines={1}>
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -229,14 +268,15 @@ const styles = StyleSheet.create({
   actions: { alignSelf: 'stretch', flexDirection: 'row', gap: 8, marginTop: 4 },
   action: {
     flex: 1,
-    minHeight: 44,
+    minHeight: 56,
     borderRadius: 12,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 3,
   },
-  actionText: { fontSize: 14, fontWeight: '600' },
+  actionText: { fontSize: 12, fontWeight: '600' },
+  soon: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 16 },
+  soonDay: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
   empty: { alignItems: 'center', gap: 12 },
   emptyTitle: { fontSize: 17, fontWeight: '600' },
   emptyBody: { fontSize: 15 },

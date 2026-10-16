@@ -2,7 +2,6 @@
 
 ## High Impact — Features
 
-- [ ] **Plan it**: a "Pick a day" button on the card and detail sheet that adds a calendar event or reminder for a chosen day and place. Deciding when and where is one of the strongest ways to make people follow through.
 - [ ] **Smarter random picker** — Add filter controls to the Explore tab (subcategory, max drive time, max cost) so users get tailored suggestions instead of pure random.
 - [ ] **Notes & photos on activities** — Let users attach a personal note or photo to a visited activity to journal their experience.
 - [ ] **Share sheet** — Add a share button so users can send an activity suggestion to friends via Messages, etc.

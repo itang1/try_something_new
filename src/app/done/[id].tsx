@@ -23,10 +23,12 @@ export default function DoneSheet() {
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { city, origin, doneIds, visitedPlaceIds, toggleVisited } = useAppState();
+  const { city, origin, doneIds, visitedPlaceIds, toggleVisited, plans } = useAppState();
   const entry = findEntry(city.id, id);
   const places = entry ? placesByDistance(entry, origin) : [];
-  const [placeId, setPlaceId] = useState<string | null>(places[0]?.place.id ?? null);
+  const [placeId, setPlaceId] = useState<string | null>(
+    plans.get(id)?.placeId ?? places[0]?.place.id ?? null,
+  );
   const [rating, setRating] = useState<Rating | null>(null);
   const [note, setNote] = useState('');
   const [photo, setPhoto] = useState<string | null>(null);

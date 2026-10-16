@@ -7,6 +7,7 @@ import NativeSegmentedControl, {
 } from '@react-native-segmented-control/segmented-control';
 import SortIcon from '@expo/material-symbols/swap_vert.xml';
 import { entriesForCity, entryHint, type Entry } from '@/data/catalog';
+import { formatDay } from '@/data/days';
 import { driveMinutes } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
 import { subcategory, useColors } from '@/theme';
@@ -35,7 +36,7 @@ type Row = { activity: Entry; minutes: number | null; progress: PlaceProgress | 
 export default function ChecklistScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { city, origin, doneIds, toggleDone, savedIds, visitedPlaceIds } = useAppState();
+  const { city, origin, doneIds, toggleDone, savedIds, visitedPlaceIds, plans } = useAppState();
   const [status, setStatus] = useState<Status>('All');
   const [sort, setSort] = useState<Sort>('Name');
   const [search, setSearch] = useState('');
@@ -79,11 +80,16 @@ export default function ChecklistScreen() {
       Cost: (x, y) => x.activity.costLevel - y.activity.costLevel || byName(x, y),
     };
     result.sort(compare[sort]);
+    // Planned and not yet done rows move up into their own section, soonest first.
+    const isUpcoming = (r: Row) => plans.has(r.activity.id) && !doneIds.has(r.activity.id);
+    const day = (r: Row) => plans.get(r.activity.id)?.day ?? '';
+    const rest = result.filter((r) => !isUpcoming(r));
     return [
-      { title: `${city.name} icons`, data: result.filter((r) => r.activity.kind === 'icon') },
-      { title: 'Activities', data: result.filter((r) => r.activity.kind === 'activity') },
+      { title: 'Coming up', data: result.filter(isUpcoming).sort((x, y) => day(x).localeCompare(day(y))) },
+      { title: `${city.name} icons`, data: rest.filter((r) => r.activity.kind === 'icon') },
+      { title: 'Activities', data: rest.filter((r) => r.activity.kind === 'activity') },
     ].filter((section) => section.data.length > 0);
-  }, [cityActivities, selectedSub, status, doneIds, savedIds, visitedPlaceIds, search, origin, sort, city.name]);
+  }, [cityActivities, selectedSub, status, doneIds, savedIds, visitedPlaceIds, search, origin, sort, city.name, plans]);
 
   const renderItem = useCallback(
     ({ item }: { item: Row }) => (
@@ -94,11 +100,12 @@ export default function ChecklistScreen() {
         minutes={item.minutes}
         hint={entryHint(item.activity)}
         progress={item.progress}
+        planned={plans.has(item.activity.id) ? formatDay(plans.get(item.activity.id)!.day) : undefined}
         onToggle={toggleDone}
         onOpen={(id) => router.push(`/activity/${id}`)}
       />
     ),
-    [doneIds, savedIds, toggleDone, router],
+    [doneIds, savedIds, toggleDone, router, plans],
   );
 
   const header = (

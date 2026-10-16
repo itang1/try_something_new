@@ -2,6 +2,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { findEntry } from '@/data/catalog';
+import { formatDay } from '@/data/days';
 import { openDirections } from '@/data/directions';
 import { formatMinutes, placesByDistance } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
@@ -13,7 +14,7 @@ export default function ActivitySheet() {
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { city, origin, isDone, savedIds, toggleSaved, visitedPlaceIds, toggleVisited } = useAppState();
+  const { city, origin, isDone, savedIds, toggleSaved, visitedPlaceIds, toggleVisited, plans } = useAppState();
   const markDone = useMarkDone();
   const entry = findEntry(city.id, id);
 
@@ -30,6 +31,8 @@ export default function ActivitySheet() {
   const done = isDone(entry.id);
   const saved = savedIds.has(entry.id);
   const visitedCount = places.filter(({ place }) => visitedPlaceIds.has(place.id)).length;
+  const plan = plans.get(entry.id);
+  const planPlace = plan && places.find(({ place }) => place.id === plan.placeId)?.place;
 
   return (
     <View style={styles.screen}>
@@ -51,6 +54,23 @@ export default function ActivitySheet() {
             <Icon name="close" size={18} color={colors.secondary} />
           </Pressable>
         </View>
+
+        <Pressable
+          onPress={() => router.push(`/plan/${entry.id}`)}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.plan, { backgroundColor: colors.card, opacity: pressed ? 0.7 : 1 }]}
+        >
+          <Icon name="calendar_month" size={22} color={colors.accent} />
+          <View style={styles.grow}>
+            <Text style={[styles.placeName, { color: colors.label }]}>
+              {plan ? `Planned for ${formatDay(plan.day)}` : 'Pick a day'}
+            </Text>
+            <Text style={[styles.meta, { color: colors.secondary }]} numberOfLines={1}>
+              {plan ? (planPlace?.name ?? 'Tap to change') : 'Deciding when makes it easier to follow through'}
+            </Text>
+          </View>
+          <Icon name="chevron_right" size={20} color={colors.tertiary} />
+        </Pressable>
 
         <Text style={[styles.section, { color: colors.secondary }]}>
           {places.length} {places.length === 1 ? 'place' : 'places'} in {city.name}
@@ -157,6 +177,7 @@ const styles = StyleSheet.create({
   close: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   section: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase', marginLeft: 4 },
   list: { borderRadius: 16, overflow: 'hidden' },
+  plan: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, marginBottom: 8 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12, paddingHorizontal: 14 },
   placeName: { fontSize: 16, fontWeight: '600' },
   go: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 36, paddingHorizontal: 12, borderRadius: 18 },
