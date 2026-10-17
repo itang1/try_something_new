@@ -1,10 +1,10 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { writeSetting } from '@/data/storage';
 import { readable, useColors } from '@/theme';
-import { GradientIcon, Icon } from '@/components/icon';
+import { Icon } from '@/components/icon';
 import type { IconName } from '@/icons/paths';
 
 const POINTS: { icon: IconName; title: string; body: string }[] = [
@@ -27,7 +27,7 @@ export default function WelcomeScreen() {
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]}>
       <View style={styles.top}>
         <Animated.View entering={ZoomIn.springify().damping(12)}>
-          <GradientIcon icon="explore" subcategoryId="outdoor" size={96} shape="circle" />
+          <Image source={require('../../assets/images/icon.png')} style={styles.logo} accessibilityIgnoresInvertColors />
         </Animated.View>
         <Animated.Text entering={FadeInDown.delay(150)} style={[styles.title, { color: colors.label }]}>
           Try Something New
@@ -69,6 +69,7 @@ export default function WelcomeScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, paddingHorizontal: 24 },
+  logo: { width: 96, height: 96, borderRadius: 22, borderCurve: 'continuous' },
   top: { ...readable, maxWidth: 480, flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14 },
   title: { fontSize: 32, fontWeight: '800', textAlign: 'center', marginTop: 8 },
   subtitle: { fontSize: 17, textAlign: 'center', lineHeight: 23 },
