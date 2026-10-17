@@ -44,7 +44,10 @@ export default function ActivitySheet() {
           <View style={styles.grow}>
             <Text style={[styles.title, { color: colors.label }]}>{entry.name}</Text>
             <Text style={[styles.meta, { color: colors.secondary }]}>
-              {sub.label} · {entry.duration} · {entry.cost} · {LEVELS[entry.level].label}
+              {/* Line breaking allows a break inside "$$", so the cost gets word joiners and each part keeps its spaces. */}
+              {[sub.label, entry.duration, entry.cost.split('').join('⁠'), LEVELS[entry.level].label]
+                .map((part) => part.replaceAll(' ', ' '))
+                .join(' · ')}
             </Text>
           </View>
           <Pressable
