@@ -83,6 +83,20 @@ if (version < 1) {
   }
   db.execSync('PRAGMA user_version = 1');
 }
+if (version < 2) {
+  const renamed: Record<string, string> = { skiing: 'snow-sports', snowboarding: 'snow-sports', 'korean-bbq': 'new-cuisine' };
+  for (const [from, to] of Object.entries(renamed)) {
+    db.runSync('UPDATE completion_events SET activity_id = ? WHERE activity_id = ?', [to, from]);
+    db.runSync('UPDATE place_visits SET activity_id = ? WHERE activity_id = ?', [to, from]);
+    db.runSync('UPDATE reflections SET entry_id = ? WHERE entry_id = ?', [to, from]);
+    db.runSync('UPDATE plans SET entry_id = ? WHERE entry_id = ?', [to, from]);
+  }
+  for (const key of ['savedIds', 'hiddenIds']) {
+    const ids = readSetting<string[]>(key, []);
+    writeSetting(key, [...new Set(ids.map((id) => renamed[id] ?? id))]);
+  }
+  db.execSync('PRAGMA user_version = 2');
+}
 
 export function loadDoneIds(): Set<string> {
   const rows = db.getAllSync<{ activity_id: string }>(`

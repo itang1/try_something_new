@@ -6,13 +6,20 @@ import { readFileSync, writeFileSync } from 'node:fs';
 const [cityId, bbox, saved] = process.argv.slice(2);
 if (!cityId || !bbox) throw new Error('Usage: node scripts/import-osm.mjs <city> <south,west,north,east> [saved.json]');
 
+// Cuisines most people haven't tried yet. Common ones like Italian or Mexican don't count as new.
+const CUISINES =
+  'afghan|brazilian|burmese|caribbean|colombian|cuban|eritrean|ethiopian|filipino|georgian|haitian|indonesian|jamaican|' +
+  'korean|lebanese|malaysian|moroccan|nepalese|nigerian|persian|peruvian|senegalese|somali|sri_lankan|taiwanese|turkish|' +
+  'ukrainian|uzbek|venezuelan|vietnamese|west_african';
+const NEW_CUISINE = new RegExp(`\\b(${CUISINES})\\b`);
+
 const QUERY = `[out:json][timeout:90];
 (
  nwr["leisure"~"^(bowling_alley|escape_game|golf_course|ice_rink|horse_riding|fishing|nature_reserve|stadium|dance|park|garden|water_park|sports_centre|fitness_centre|swimming_pool|pitch)$"]["name"](BBOX);
  nwr["tourism"~"^(museum|gallery|zoo|aquarium|theme_park|attraction)$"]["name"](BBOX);
  nwr["amenity"~"^(theatre|cinema|marketplace|arts_centre|planetarium)$"]["name"](BBOX);
  nwr["shop"~"^(books|fabric|wool|yarn|craft|sewing)$"]["name"](BBOX);
- nwr["amenity"="restaurant"]["cuisine"~"korean"](BBOX);
+ nwr["amenity"="restaurant"]["cuisine"~"${CUISINES}"]["name"](BBOX);
  nwr["craft"="pottery"]["name"](BBOX);
  nwr["man_made"="observatory"]["name"](BBOX);
  nwr["sport"~"climbing|fencing|archery|martial_arts|karate|taekwondo|judo|yoga|pilates|roller_skating|pickleball|tennis|canoe|kayak"]["name"](BBOX);
@@ -74,7 +81,7 @@ function activitiesFor(t) {
   add(['fabric', 'sewing'].includes(shop), 'sewing-class');
   add(['wool', 'yarn'].includes(shop) || name.includes('yarn'), 'knitting-or-crocheting');
   add(t.craft === 'pottery' || /pottery|ceramic/.test(name), 'pottery-class');
-  add((t.cuisine ?? '').includes('korean'), 'korean-bbq');
+  add(NEW_CUISINE.test(t.cuisine ?? ''), 'new-cuisine');
   add(t.man_made === 'observatory' || name.includes('observatory'), 'stargazing');
   add(t.route === 'bicycle', 'bike-path');
   add(/\baxe\b/.test(name), 'axe-throwing');
