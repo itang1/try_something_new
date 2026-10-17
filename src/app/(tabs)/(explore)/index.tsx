@@ -4,8 +4,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import FiltersIcon from '@expo/material-symbols/tune.xml';
 import * as Haptics from 'expo-haptics';
-import { LEVELS, type Entry } from '@/data/catalog';
+import { LEVELS, otherWays, type Entry } from '@/data/catalog';
 import { addDays, dayKey, formatDay } from '@/data/days';
+import { searchNearby } from '@/data/directions';
 import { formatMinutes, placesByDistance } from '@/data/drive';
 import { describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
 import { readSetting, writeSetting } from '@/data/storage';
@@ -240,6 +241,7 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onN
   const { driveTimes } = useAppState();
   const sub = subcategory(entry.subcategory);
   const [nearest, ...others] = placesByDistance(entry, origin, driveTimes);
+  const way = otherWays(entry)[0];
   const placeLine = [
     nearest?.minutes != null && `${formatMinutes(nearest.minutes)} away`,
     others.length > 0 && `${others.length} more ${others.length === 1 ? 'place' : 'places'}`,
@@ -272,6 +274,26 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onN
               {nearest.place.name}
             </Text>
             {!!placeLine && <Text style={[styles.placeLine, { color: colors.secondary }]}>{placeLine}</Text>}
+          </View>
+          <Icon name="chevron_right" size={20} color={colors.tertiary} />
+        </Pressable>
+      )}
+
+      {!nearest && way && (
+        <Pressable
+          onPress={way.kind === 'search' ? () => searchNearby(entry.search!, origin) : onOpen}
+          accessibilityRole="button"
+          accessibilityHint={way.kind === 'search' ? 'Opens your maps app' : 'Shows what you need'}
+          style={({ pressed }) => [styles.place, { backgroundColor: colors.background, opacity: pressed ? 0.7 : 1 }]}
+        >
+          <Icon name={way.icon} size={22} color={colors.accent} />
+          <View style={styles.grow}>
+            <Text style={[styles.placeName, { color: colors.label }]} numberOfLines={1}>
+              {way.title}
+            </Text>
+            <Text style={[styles.placeLine, { color: colors.secondary }]} numberOfLines={2}>
+              {way.detail}
+            </Text>
           </View>
           <Icon name="chevron_right" size={20} color={colors.tertiary} />
         </Pressable>

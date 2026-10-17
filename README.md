@@ -52,7 +52,7 @@ The app is built on a few findings from psychology. The evidence varies, so the 
 - **Looking back:** a memories timeline of what you tried, with your ratings, notes, and photos. Revisiting good experiences (savoring) is linked to enjoying them more.
 - **Easy wins first:** activities are tagged easy, a bit new, or stretch. Explore holds back stretches until you've tried a few things, building confidence step by step (behavioral activation).
 - **Doing it together:** "Invite a friend" shares the plan. Plans made with someone are more fun and harder to skip.
-- **Your choice:** filters for kind, level, drive, cost, and time, and "Not for me" items you can bring back. Feeling in control keeps motivation your own (self-determination theory).
+- **Your choice:** filters for kind, where, level, drive, cost, and time, and "Not for me" items you can bring back. Feeling in control keeps motivation your own (self-determination theory).
 - **What I avoid:** streaks that punish a missed week, and health claims.
 
 ### Data at scale

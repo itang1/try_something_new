@@ -1,9 +1,9 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { LEVELS } from '@/data/catalog';
+import { LEVELS, otherWays } from '@/data/catalog';
 import { formatDay } from '@/data/days';
-import { openDirections } from '@/data/directions';
+import { openDirections, searchNearby } from '@/data/directions';
 import { inviteFriend } from '@/data/invite';
 import { formatMinutes, placesByDistance } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
@@ -35,6 +35,7 @@ export default function ActivitySheet() {
   const visitedCount = places.filter(({ place }) => visitedPlaceIds.has(place.id)).length;
   const plan = plans.get(entry.id);
   const planPlace = plan && places.find(({ place }) => place.id === plan.placeId)?.place;
+  const ways = otherWays(entry);
 
   return (
     <View style={styles.screen}>
@@ -135,6 +136,52 @@ export default function ActivitySheet() {
                       <Icon name="directions" size={18} color={colors.accent} />
                       <Text style={[styles.goText, { color: colors.accent }]}>Go</Text>
                     </Pressable>
+                  </View>
+                );
+              })}
+            </View>
+          </>
+        )}
+
+        {ways.length > 0 && (
+          <>
+            <Text style={[styles.section, { color: colors.secondary }]}>
+              {places.length ? 'Other ways' : 'Ways to try it'}
+            </Text>
+            <View style={[styles.list, { backgroundColor: colors.card }]}>
+              {ways.map((way, i) => {
+                const action =
+                  way.kind === 'search'
+                    ? { label: 'Search', icon: 'search' as const, onPress: () => searchNearby(entry.search!, origin) }
+                    : way.kind === 'host'
+                      ? { label: 'Invite', icon: 'person_add' as const, onPress: () => inviteFriend(entry, null, plan?.day ?? null) }
+                      : null;
+                return (
+                  <View
+                    key={way.kind}
+                    style={[
+                      styles.row,
+                      i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
+                    ]}
+                  >
+                    <Icon name={way.icon} size={24} color={colors.accent} />
+                    <View style={styles.grow}>
+                      <Text style={[styles.placeName, { color: colors.label }]}>{way.title}</Text>
+                      <Text style={[styles.meta, { color: colors.secondary }]}>{way.detail}</Text>
+                    </View>
+                    {action && (
+                      <Pressable
+                        onPress={action.onPress}
+                        accessibilityLabel={`${action.label}: ${way.title}`}
+                        style={({ pressed }) => [
+                          styles.go,
+                          { backgroundColor: colors.accentSoft, opacity: pressed ? 0.6 : 1 },
+                        ]}
+                      >
+                        <Icon name={action.icon} size={18} color={colors.accent} />
+                        <Text style={[styles.goText, { color: colors.accent }]}>{action.label}</Text>
+                      </Pressable>
+                    )}
                   </View>
                 );
               })}

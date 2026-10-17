@@ -10,6 +10,7 @@ import {
   DURATION_OPTIONS,
   matchesFilters,
   NO_FILTERS,
+  WHERE_OPTIONS,
   type Filters,
 } from '@/data/filters';
 import { useAppState } from '@/state/app-state';
@@ -58,6 +59,19 @@ export default function FiltersSheet() {
               color={subcategory(id).color}
               selected={filters.subcategories.includes(id)}
               onPress={() => update({ subcategories: toggle(filters.subcategories, id) })}
+            />
+          ))}
+        </Group>
+
+        <Group title="Where">
+          {WHERE_OPTIONS.map(({ where, label, icon }) => (
+            <FilterChip
+              key={where}
+              title={label}
+              icon={icon}
+              color={colors.accent}
+              selected={filters.where === where}
+              onPress={() => update({ where: filters.where === where ? null : where })}
             />
           ))}
         </Group>

@@ -16,8 +16,11 @@ export type Place = {
   cost?: string;
 };
 
-/** Something to try, like archery or an art museum. It's done once, at any of its places. */
-export type Activity = { id: string; name: string; subcategory: string; duration: string; cost: string; level: Level };
+/** Something to try, like archery or an art museum. It's done once, at any of its places or in one of its other ways. */
+export type Activity = { id: string; name: string; subcategory: string; duration: string; cost: string; level: Level } & Ways;
+
+/** Ways to do an activity without one of its places: what you'd need at home, how to host it, or a maps search. */
+export type Ways = { home?: string; host?: string; search?: string };
 
 /** How far outside a comfort zone it is. Starting easy and building up keeps people going. */
 export type Level = 'easy' | 'medium' | 'stretch';
@@ -57,7 +60,7 @@ export type Entry = {
   places: Place[];
   /** Added by the user, so it has no places and can be deleted. */
   custom: boolean;
-};
+} & Ways;
 
 /** Something the user added to a city's list themselves. */
 export type CustomActivity = { id: string; cityId: string; name: string; subcategory: string; duration: string; cost: string };
@@ -95,6 +98,7 @@ function entry(base: Activity | CityIcon, kind: Entry['kind'], activityId: strin
     activityId,
     places,
     custom: false,
+    ...(kind === 'activity' && { home: base.home, host: base.host, search: base.search }),
   };
 }
 
@@ -122,7 +126,10 @@ function buildEntries(city: City): Entry[] {
     for (const id of p.activities) placesByActivity.set(id, [...(placesByActivity.get(id) ?? []), p]);
   }
   const placeById = new Map(city.places.map((p) => [p.id, p]));
-  const activities = [...placesByActivity].map(([id, places]) => entry(ACTIVITIES.get(id)!, 'activity', id, places));
+  const activities = [...ACTIVITIES.values()]
+    // Activities that need no venue show up in every city.
+    .filter((a) => placesByActivity.has(a.id) || a.home || a.host || a.search)
+    .map((a) => entry(a, 'activity', a.id, placesByActivity.get(a.id) ?? []));
   const cityIcons = city.icons.map((i) => entry(i, 'icon', i.activity, [placeById.get(i.place)!]));
   return [...activities, ...cityIcons].sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -166,5 +173,17 @@ export function placeNames(entry: Entry): string {
 export function entryHint(entry: Entry): string {
   if (entry.custom) return 'Added by you';
   if (entry.kind === 'icon') return `Counts toward: ${ACTIVITIES.get(entry.activityId)?.name ?? 'an activity'}`;
-  return placeNames(entry);
+  return placeNames(entry) || otherWays(entry)[0]?.title || '';
+}
+
+export type Way = { kind: keyof Ways; icon: IconName; title: string; detail: string };
+
+/** The ways to do an entry besides going to one of its places, in the order the card offers them. */
+export function otherWays(entry: Entry): Way[] {
+  const ways: (Way | false)[] = [
+    !!entry.search && { kind: 'search', icon: 'search', title: 'Find one near you', detail: `Search maps for “${entry.search}”` },
+    !!entry.home && { kind: 'home', icon: 'cottage', title: 'Try it at home', detail: entry.home },
+    !!entry.host && { kind: 'host', icon: 'groups', title: 'Host friends', detail: entry.host },
+  ];
+  return ways.filter((w): w is Way => !!w);
 }
