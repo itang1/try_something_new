@@ -15,7 +15,7 @@ export default function AddSheet() {
   const toast = useToast();
   const { city, addCustom } = useAppState();
   const [name, setName] = useState('');
-  const [kind, setKind] = useState('outdoor');
+  const [kind, setKind] = useState('move');
   const [duration, setDuration] = useState('1-2 hours');
   const [cost, setCost] = useState('$');
   const trimmed = name.trim();

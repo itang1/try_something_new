@@ -5,16 +5,16 @@
   "lat": 39.9612,
   "lng": -82.9988,
   "icons": [
-    {"id": "hocking-hills-state-park", "name": "Hike Hocking Hills", "place": "columbus--hocking-hills-state-park", "activity": "hike-a-trail", "subcategory": "hike", "duration": "Full day", "cost": "Free"},
-    {"id": "german-village-columbus", "name": "German Village Columbus", "place": "columbus--german-village-columbus", "activity": "neighborhood", "subcategory": "neighborhoods", "duration": "2-3 hours", "cost": "$"},
-    {"id": "short-north-arts-district", "name": "Short North Arts District", "place": "columbus--short-north-arts-district", "activity": "neighborhood", "subcategory": "neighborhoods", "duration": "2-3 hours", "cost": "$"},
-    {"id": "ohio-state-buckeyes-football", "name": "Ohio State football game", "place": "columbus--ohio-state-buckeyes-football", "activity": "sports-game", "subcategory": "entertainment", "duration": "Half day", "cost": "$$$"},
+    {"id": "hocking-hills-state-park", "name": "Hike Hocking Hills", "place": "columbus--hocking-hills-state-park", "activity": "hike-a-trail", "subcategory": "outdoors", "duration": "Full day", "cost": "Free"},
+    {"id": "german-village-columbus", "name": "German Village Columbus", "place": "columbus--german-village-columbus", "activity": "neighborhood", "subcategory": "explore", "duration": "2-3 hours", "cost": "$"},
+    {"id": "short-north-arts-district", "name": "Short North Arts District", "place": "columbus--short-north-arts-district", "activity": "neighborhood", "subcategory": "explore", "duration": "2-3 hours", "cost": "$"},
+    {"id": "ohio-state-buckeyes-football", "name": "Ohio State football game", "place": "columbus--ohio-state-buckeyes-football", "activity": "sports-game", "subcategory": "shows", "duration": "Half day", "cost": "$$$"},
     {"id": "north-market-columbus", "name": "North Market Columbus", "place": "columbus--north-market-columbus", "activity": "food-market", "subcategory": "food", "duration": "1-2 hours", "cost": "$"},
     {"id": "jenis-splendid-ice-creams", "name": "Jeni's Splendid Ice Creams", "place": "columbus--jenis-splendid-ice-creams", "activity": "local-legend", "subcategory": "food", "duration": "30 min", "cost": "$"},
-    {"id": "columbus-zoo-and-aquarium", "name": "Columbus Zoo and Aquarium", "place": "columbus--columbus-zoo-and-aquarium", "activity": "zoo-aquarium", "subcategory": "nature", "duration": "Half day", "cost": "$$"},
-    {"id": "cosi-columbus", "name": "COSI Columbus", "place": "columbus--cosi-columbus", "activity": "science-history-museum", "subcategory": "museum", "duration": "Half day", "cost": "$$"},
-    {"id": "franklin-park-conservatory", "name": "Franklin Park Conservatory", "place": "columbus--franklin-park-conservatory", "activity": "botanical-garden", "subcategory": "nature", "duration": "1-2 hours", "cost": "$$"},
-    {"id": "scioto-mile", "name": "Scioto Mile", "place": "columbus--scioto-mile", "activity": "city-landmark", "subcategory": "landmark", "duration": "1-2 hours", "cost": "Free"}
+    {"id": "columbus-zoo-and-aquarium", "name": "Columbus Zoo and Aquarium", "place": "columbus--columbus-zoo-and-aquarium", "activity": "zoo-aquarium", "subcategory": "explore", "duration": "Half day", "cost": "$$"},
+    {"id": "cosi-columbus", "name": "COSI Columbus", "place": "columbus--cosi-columbus", "activity": "science-history-museum", "subcategory": "explore", "duration": "Half day", "cost": "$$"},
+    {"id": "franklin-park-conservatory", "name": "Franklin Park Conservatory", "place": "columbus--franklin-park-conservatory", "activity": "botanical-garden", "subcategory": "calm", "duration": "1-2 hours", "cost": "$$"},
+    {"id": "scioto-mile", "name": "Scioto Mile", "place": "columbus--scioto-mile", "activity": "city-landmark", "subcategory": "explore", "duration": "1-2 hours", "cost": "Free"}
   ],
   "places": [
     {"id": "columbus--osm-r13294808", "name": "21 (Ohio)", "lat": 40.1109, "lng": -82.9303, "activities": ["bike-path"]},

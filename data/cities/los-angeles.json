@@ -5,15 +5,15 @@
   "lat": 34.0522,
   "lng": -118.2437,
   "icons": [
-    {"id": "sunset-at-griffith-observatory", "name": "Sunset at Griffith Observatory", "place": "los-angeles--griffith-observatory", "activity": "city-landmark", "subcategory": "landmark", "duration": "1-2 hours", "cost": "Free"},
-    {"id": "the-getty-center", "name": "The Getty Center", "place": "los-angeles--the-getty-center", "activity": "art-museum", "subcategory": "museum", "duration": "2-3 hours", "cost": "Free"},
-    {"id": "hollywood-sign-hike", "name": "Hike to the Hollywood Sign", "place": "los-angeles--hollywood-sign-hike", "activity": "hike-a-trail", "subcategory": "hike", "duration": "2-3 hours", "cost": "Free"},
-    {"id": "santa-monica-pier", "name": "Santa Monica Pier", "place": "los-angeles--santa-monica-pier", "activity": "roller-coaster", "subcategory": "entertainment", "duration": "2-3 hours", "cost": "Free"},
-    {"id": "venice-beach-boardwalk", "name": "Walk the Venice Beach Boardwalk", "place": "los-angeles--venice-beach-boardwalk", "activity": "beach-day", "subcategory": "beach", "duration": "2-3 hours", "cost": "Free"},
-    {"id": "dodger-stadium", "name": "Dodger Stadium", "place": "los-angeles--dodger-stadium", "activity": "sports-game", "subcategory": "entertainment", "duration": "Half day", "cost": "$$"},
-    {"id": "hollywood-bowl", "name": "Hollywood Bowl", "place": "los-angeles--hollywood-bowl", "activity": "live-show", "subcategory": "entertainment", "duration": "2-3 hours", "cost": "$$"},
+    {"id": "sunset-at-griffith-observatory", "name": "Sunset at Griffith Observatory", "place": "los-angeles--griffith-observatory", "activity": "city-landmark", "subcategory": "explore", "duration": "1-2 hours", "cost": "Free"},
+    {"id": "the-getty-center", "name": "The Getty Center", "place": "los-angeles--the-getty-center", "activity": "art-museum", "subcategory": "explore", "duration": "2-3 hours", "cost": "Free"},
+    {"id": "hollywood-sign-hike", "name": "Hike to the Hollywood Sign", "place": "los-angeles--hollywood-sign-hike", "activity": "hike-a-trail", "subcategory": "outdoors", "duration": "2-3 hours", "cost": "Free"},
+    {"id": "santa-monica-pier", "name": "Santa Monica Pier", "place": "los-angeles--santa-monica-pier", "activity": "roller-coaster", "subcategory": "play", "duration": "2-3 hours", "cost": "Free"},
+    {"id": "venice-beach-boardwalk", "name": "Walk the Venice Beach Boardwalk", "place": "los-angeles--venice-beach-boardwalk", "activity": "beach-day", "subcategory": "water", "duration": "2-3 hours", "cost": "Free"},
+    {"id": "dodger-stadium", "name": "Dodger Stadium", "place": "los-angeles--dodger-stadium", "activity": "sports-game", "subcategory": "shows", "duration": "Half day", "cost": "$$"},
+    {"id": "hollywood-bowl", "name": "Hollywood Bowl", "place": "los-angeles--hollywood-bowl", "activity": "live-show", "subcategory": "shows", "duration": "2-3 hours", "cost": "$$"},
     {"id": "grand-central-market", "name": "Grand Central Market", "place": "los-angeles--grand-central-market", "activity": "food-market", "subcategory": "food", "duration": "1-2 hours", "cost": "$"},
-    {"id": "the-broad", "name": "The Broad", "place": "los-angeles--the-broad", "activity": "art-museum", "subcategory": "museum", "duration": "1-2 hours", "cost": "Free"}
+    {"id": "the-broad", "name": "The Broad", "place": "los-angeles--the-broad", "activity": "art-museum", "subcategory": "explore", "duration": "1-2 hours", "cost": "Free"}
   ],
   "places": [
     {"id": "los-angeles--60out-escape-rooms-westwood", "name": "60Out Escape Rooms Westwood", "lat": 34.0597, "lng": -118.444, "activities": ["escape-room"]},

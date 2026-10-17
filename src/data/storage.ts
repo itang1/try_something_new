@@ -58,6 +58,32 @@ db.execSync(`
   );
 `);
 
+// Each step runs once, when stored ids or kinds change shape.
+const { user_version: version } = db.getFirstSync<{ user_version: number }>('PRAGMA user_version')!;
+if (version < 1) {
+  const kinds: Record<string, string> = {
+    outdoor: 'move',
+    museum: 'explore',
+    hike: 'outdoors',
+    beach: 'water',
+    shopping: 'explore',
+    nature: 'outdoors',
+    entertainment: 'shows',
+    landmark: 'explore',
+    neighborhoods: 'explore',
+    craft: 'make',
+  };
+  for (const [from, to] of Object.entries(kinds)) {
+    db.runSync('UPDATE custom_activities SET subcategory = ? WHERE subcategory = ?', [to, from]);
+  }
+  const filters = readSetting<{ subcategories?: string[] } | null>('exploreFilters', null);
+  if (filters?.subcategories?.length) {
+    const subcategories = [...new Set(filters.subcategories.map((k) => kinds[k] ?? k))];
+    writeSetting('exploreFilters', { ...filters, subcategories });
+  }
+  db.execSync('PRAGMA user_version = 1');
+}
+
 export function loadDoneIds(): Set<string> {
   const rows = db.getAllSync<{ activity_id: string }>(`
     SELECT e.activity_id FROM completion_events e

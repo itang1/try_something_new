@@ -55,18 +55,18 @@ const MINT = '#00C7BE';
 const BROWN = '#A2845E';
 const CRAFT = '#D940A6';
 
+// Kinds group by what you'd be doing, not by venue, so they stay the same in every region.
 export const SUBCATEGORIES: Record<string, Subcategory> = {
-  outdoor: { label: 'Outdoor', icon: 'directions_run', color: ORANGE, gradient: [ORANGE, RED] },
-  museum: { label: 'Museum', icon: 'account_balance', color: PURPLE, gradient: [PURPLE, INDIGO] },
-  hike: { label: 'Hike', icon: 'hiking', color: GREEN, gradient: [GREEN, TEAL] },
-  beach: { label: 'Beach', icon: 'beach_access', color: CYAN, gradient: [CYAN, BLUE] },
+  move: { label: 'Move', icon: 'directions_run', color: ORANGE, gradient: [ORANGE, RED] },
+  outdoors: { label: 'Outdoors', icon: 'hiking', color: GREEN, gradient: [GREEN, TEAL] },
+  water: { label: 'Water & Snow', icon: 'waves', color: CYAN, gradient: [CYAN, BLUE] },
+  make: { label: 'Make', icon: 'palette', color: CRAFT, gradient: [CRAFT, PURPLE] },
   food: { label: 'Food & Drink', icon: 'restaurant', color: RED, gradient: [RED, ORANGE] },
-  shopping: { label: 'Shopping', icon: 'shopping_bag', color: PINK, gradient: [PINK, PURPLE] },
-  nature: { label: 'Nature', icon: 'eco', color: MINT, gradient: [MINT, GREEN] },
-  entertainment: { label: 'Entertainment', icon: 'star', color: INDIGO, gradient: [INDIGO, PURPLE] },
-  landmark: { label: 'Landmark', icon: 'location_on', color: BROWN, gradient: [BROWN, ORANGE] },
-  neighborhoods: { label: 'Neighborhoods', icon: 'location_city', color: TEAL, gradient: [TEAL, CYAN] },
-  craft: { label: 'Craft', icon: 'content_cut', color: CRAFT, gradient: [CRAFT, PURPLE] },
+  explore: { label: 'Explore', icon: 'explore', color: BROWN, gradient: [BROWN, ORANGE] },
+  shows: { label: 'Shows', icon: 'theater_comedy', color: INDIGO, gradient: [INDIGO, BLUE] },
+  play: { label: 'Play', icon: 'attractions', color: PINK, gradient: [PINK, PURPLE] },
+  social: { label: 'Social', icon: 'groups', color: PURPLE, gradient: [PURPLE, INDIGO] },
+  calm: { label: 'Calm', icon: 'self_improvement', color: MINT, gradient: [MINT, CYAN] },
 };
 
 export function subcategory(id: string): Subcategory {

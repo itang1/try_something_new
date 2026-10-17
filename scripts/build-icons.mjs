@@ -5,7 +5,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 const UI_ICONS = [
   'account_balance', 'add', 'arrow_back', 'arrow_forward', 'beach_access', 'block', 'bolt', 'bookmark', 'calendar_month', 'check', 'check_circle',
   'chevron_right', 'close', 'content_cut', 'directions',
-  'directions_car', 'directions_run', 'eco', 'explore', 'favorite', 'flight', 'grid_view', 'help', 'hiking', 'history', 'ios_share',
+  'directions_car', 'directions_run', 'eco', 'explore', 'favorite', 'flight', 'grid_view', 'groups', 'help', 'hiking', 'history', 'ios_share',
   'keyboard_arrow_down', 'location_city', 'location_on', 'my_location', 'payments', 'person_add', 'photo_camera', 'photo_library',
   'radio_button_unchecked', 'remove', 'restaurant', 'schedule', 'search', 'share', 'shopping_bag', 'shuffle', 'star', 'trending_up', 'trophy', 'tune', 'undo',
 ];
