@@ -5,7 +5,7 @@
 
 ## Medium Impact — UX Polish
 
-- [ ] **Widget** — A home screen widget that shows a daily random activity suggestion. Needs a small native target on each platform (WidgetKit on iOS, Glance on Android).
+- [ ] **Widget** — A home screen widget that shows a daily random activity suggestion. The iOS one is built with expo-widgets; Android still needs a Glance widget.
 
 ## Lower Priority — Technical & Platform
 

@@ -3,6 +3,7 @@ import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppStateProvider } from '@/state/app-state';
 import { ToastProvider } from '@/state/toast';
+import { WidgetSync } from '@/state/widget-sync';
 import { useColors } from '@/theme';
 
 export default function RootLayout() {
@@ -19,6 +20,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={theme}>
         <AppStateProvider>
+          <WidgetSync />
           <ToastProvider>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(tabs)" />

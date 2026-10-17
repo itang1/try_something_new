@@ -72,6 +72,22 @@
           "calendarPermission": "Plans you make are added to your calendar.",
           "remindersPermission": false
         }
+      ],
+      [
+        "expo-widgets",
+        {
+          "widgets": [
+            {
+              "name": "IdeaWidget",
+              "displayName": "Idea for Today",
+              "description": "A new thing to try each day.",
+              "ios": {
+                "supportedFamilies": ["systemSmall", "systemMedium"],
+                "initialLayout": "src/widgets/idea-widget.tsx"
+              }
+            }
+          ]
+        }
       ]
     ],
     "experiments": {
