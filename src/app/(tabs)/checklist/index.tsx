@@ -12,7 +12,7 @@ import { formatDay } from '@/data/days';
 import { driveMinutes } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
 import { useToggleWithUndo } from '@/state/use-toggle-with-undo';
-import { subcategory, useColors } from '@/theme';
+import { readable, subcategory, useColors } from '@/theme';
 import { ActivityRow, type PlaceProgress } from '@/components/activity-row';
 import { FilterChip } from '@/components/chips';
 import { Icon } from '@/components/icon';
@@ -235,7 +235,7 @@ export default function ChecklistScreen() {
 }
 
 const styles = StyleSheet.create({
-  list: { paddingHorizontal: 16, paddingBottom: 24, gap: 8 },
+  list: { ...readable, paddingHorizontal: 16, paddingBottom: 24, gap: 8 },
   header: { gap: 12, paddingTop: 8, paddingBottom: 4 },
   progress: { borderRadius: 12, padding: 16, gap: 8 },
   progressTop: { flexDirection: 'row', alignItems: 'center', gap: 6 },

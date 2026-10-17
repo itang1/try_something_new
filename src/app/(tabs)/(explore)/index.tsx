@@ -10,7 +10,7 @@ import { formatMinutes, placesByDistance } from '@/data/drive';
 import { describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
 import { readSetting } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
-import { subcategory, useColors } from '@/theme';
+import { readable, subcategory, useColors } from '@/theme';
 import { toolbarIcon } from '@/components/header-items';
 import { GradientIcon, Icon } from '@/components/icon';
 import { MetadataTag } from '@/components/chips';
@@ -317,7 +317,7 @@ function CardAction({ icon, label, onPress, tint, selected }: ActionProps) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  content: { flexGrow: 1, padding: 16, gap: 16 },
+  content: { ...readable, flexGrow: 1, padding: 16, gap: 16 },
   middle: { flex: 1, justifyContent: 'center' },
   // The scroll view runs behind the footer, so a centered card would slip under it.
   top: { justifyContent: 'flex-start' },
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
   filterBar: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14 },
   filterText: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
   filterLabel: { flex: 1, fontSize: 15, fontWeight: '600' },
-  footer: { paddingHorizontal: 16, paddingBottom: 16, alignItems: 'center' },
+  footer: { ...readable, paddingHorizontal: 16, paddingBottom: 16, alignItems: 'center' },
   tryButton: {
     alignSelf: 'stretch',
     flexDirection: 'row',

@@ -13,7 +13,15 @@
     ],
     "ios": {
       "bundleIdentifier": "com.pastureraised.trysomethingnew",
-      "supportsTablet": false
+      "supportsTablet": true,
+      "infoPlist": {
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ]
+      }
     },
     "android": {
       "package": "com.pastureraised.trysomethingnew",

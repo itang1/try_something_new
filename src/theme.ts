@@ -70,3 +70,6 @@ export const SUBCATEGORIES: Record<string, Subcategory> = {
 export function subcategory(id: string): Subcategory {
   return SUBCATEGORIES[id] ?? { label: id, icon: 'help', color: '#8E8E93', gradient: ['#8E8E93', '#636366'] };
 }
+
+/** Keeps lists and cards a comfortable width on tablets. */
+export const readable = { width: '100%', maxWidth: 680, alignSelf: 'center' } as const;

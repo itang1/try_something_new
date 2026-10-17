@@ -4,7 +4,7 @@ import type { City, Entry } from '@/data/catalog';
 import { keptPhotoUri } from '@/data/photos';
 import { loadMemories, type Memory, type Rating } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
-import { subcategory, useColors } from '@/theme';
+import { readable, subcategory, useColors } from '@/theme';
 import { FilterChip } from '@/components/chips';
 import { GradientIcon, Icon } from '@/components/icon';
 import type { IconName } from '@/icons/paths';
@@ -206,7 +206,7 @@ function MemoryCard({ item }: { item: Item }) {
 }
 
 const styles = StyleSheet.create({
-  list: { paddingHorizontal: 16, paddingBottom: 32, gap: 10 },
+  list: { ...readable, paddingHorizontal: 16, paddingBottom: 32, gap: 10 },
   header: { gap: 12, paddingTop: 4 },
   summary: { fontSize: 15, fontWeight: '600' },
   stats: { gap: 10 },

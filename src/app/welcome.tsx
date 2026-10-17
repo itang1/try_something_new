@@ -3,7 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown, ZoomIn } from 'react-native-reanimated';
 import { writeSetting } from '@/data/storage';
-import { useColors } from '@/theme';
+import { readable, useColors } from '@/theme';
 import { GradientIcon, Icon } from '@/components/icon';
 import type { IconName } from '@/icons/paths';
 
@@ -69,7 +69,7 @@ export default function WelcomeScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, paddingHorizontal: 24 },
-  top: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14 },
+  top: { ...readable, maxWidth: 480, flex: 1, alignItems: 'center', justifyContent: 'center', gap: 14 },
   title: { fontSize: 32, fontWeight: '800', textAlign: 'center', marginTop: 8 },
   subtitle: { fontSize: 17, textAlign: 'center', lineHeight: 23 },
   points: { alignSelf: 'stretch', gap: 18, marginTop: 24 },
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
   grow: { flex: 1 },
   pointTitle: { fontSize: 17, fontWeight: '700' },
   pointBody: { fontSize: 15, marginTop: 2 },
-  actions: { gap: 8, paddingBottom: 12 },
+  actions: { ...readable, maxWidth: 480, gap: 8, paddingBottom: 12 },
   primary: {
     minHeight: 54,
     borderRadius: 999,

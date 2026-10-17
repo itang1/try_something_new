@@ -9,7 +9,7 @@ import { buildIndex, featuresInRegion, zoomToDelta } from '@/data/clusters';
 import { openDirections } from '@/data/directions';
 import { formatMinutes, haversineKm } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
-import { subcategory, useColors } from '@/theme';
+import { readable, subcategory, useColors } from '@/theme';
 import { GradientIcon, Icon } from '@/components/icon';
 import { LocationControl } from '@/components/location-control';
 import { ClusterPin, PlacePin } from '@/components/map-pins';
@@ -230,8 +230,8 @@ const styles = StyleSheet.create({
   chip: { minHeight: 36, paddingHorizontal: 14, borderRadius: 18, justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' },
   chipText: { fontSize: 14, fontWeight: '600' },
   origin: { width: 18, height: 18, borderRadius: 9, borderWidth: 3, borderColor: 'white', boxShadow: '0 0 0 8px rgba(0,122,255,0.15)' },
-  bottom: { position: 'absolute', left: 12, right: 12, bottom: 0 },
-  card: { borderRadius: 24, marginBottom: 12, boxShadow: '0 8px 28px rgba(0,0,0,0.18)' },
+  bottom: { position: 'absolute', left: 12, right: 12, bottom: 0, alignItems: 'center' },
+  card: { ...readable, maxWidth: 480, borderRadius: 24, marginBottom: 12, boxShadow: '0 8px 28px rgba(0,0,0,0.18)' },
   cardBody: { padding: 16, gap: 10 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   grow: { flex: 1 },

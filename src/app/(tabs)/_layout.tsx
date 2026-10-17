@@ -4,7 +4,7 @@ import { useColors } from '@/theme';
 export default function TabLayout() {
   const colors = useColors();
   return (
-    <NativeTabs tintColor={colors.accent}>
+    <NativeTabs tintColor={colors.accent} sidebarAdaptable>
       <NativeTabs.Trigger name="(explore)">
         <NativeTabs.Trigger.Icon sf="sparkle.magnifyingglass" md="travel_explore" />
         <NativeTabs.Trigger.Label>Explore</NativeTabs.Trigger.Label>
