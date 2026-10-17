@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import FiltersIcon from '@expo/material-symbols/tune.xml';
@@ -33,6 +33,9 @@ export default function ExploreScreen() {
   // The pick remembers its city, so switching cities clears it without an effect.
   const [pick, setPick] = useState<{ id: string; city: string; n: number } | null>(null);
   const [noMatch, setNoMatch] = useState(false);
+  const { height } = useWindowDimensions();
+  const footer = useRef<ComponentRef<typeof View>>(null);
+  const [toastBottom, setToastBottom] = useState<number>();
 
   useEffect(() => {
     if (!home && !readSetting('onboarded', false)) router.push('/welcome');
@@ -74,7 +77,7 @@ export default function ExploreScreen() {
   const save = (entry: Entry) => {
     if (savedIds.has(entry.id)) return;
     toggleSaved(entry.id);
-    toast(`Saved ${entry.name}`, { type: 'unsave', id: entry.id });
+    toast(`Saved ${entry.name}`, { type: 'unsave', id: entry.id }, toastBottom);
   };
 
   return (
@@ -147,7 +150,7 @@ export default function ExploreScreen() {
                 onOpen={() => router.push(`/activity/${activity.id}`)}
                 onNotForMe={() => {
                   hide(activity.id);
-                  toast(`Hid ${activity.name}`, { type: 'hide', id: activity.id });
+                  toast(`Hid ${activity.name}`, { type: 'hide', id: activity.id }, toastBottom);
                   showAnother(activity.id);
                 }}
                 onSave={() => {
@@ -178,7 +181,12 @@ export default function ExploreScreen() {
         </View>
       </ScrollView>
 
-      <SafeAreaView edges={['bottom']} style={styles.footer}>
+      <SafeAreaView
+        ref={footer}
+        edges={['bottom']}
+        style={styles.footer}
+        onLayout={() => footer.current?.measureInWindow((_x, y) => setToastBottom(height - y + 8))}
+      >
         <Pressable
           onPress={() => showAnother()}
           disabled={entries.length === 0}

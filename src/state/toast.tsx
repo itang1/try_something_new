@@ -14,9 +14,12 @@ export type UndoAction =
   | { type: 'hide'; id: string }
   | { type: 'unsave'; id: string };
 
-type Toast = { message: string; undo?: UndoAction; key: number };
+type Toast = { message: string; undo?: UndoAction; bottom?: number; key: number };
 
-const ToastContext = createContext<(message: string, undo?: UndoAction) => void>(() => {});
+/** `bottom` places the toast that far from the window's bottom edge, to clear a screen's own footer. */
+type Show = (message: string, undo?: UndoAction, bottom?: number) => void;
+
+const ToastContext = createContext<Show>(() => {});
 
 const VISIBLE_MS = 5000;
 // Clears the floating tab bar.
@@ -24,8 +27,8 @@ const TAB_BAR_SPACE = 92;
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toast, setToast] = useState<Toast | null>(null);
-  const show = (message: string, undo?: UndoAction) => {
-    setToast({ message, undo, key: Date.now() });
+  const show: Show = (message, undo, bottom) => {
+    setToast({ message, undo, bottom, key: Date.now() });
     AccessibilityInfo.announceForAccessibility(undo ? `${message}. Undo available.` : message);
   };
 
@@ -65,7 +68,7 @@ function ToastView({ toast, onDone }: { toast: Toast; onDone: () => void }) {
     <Animated.View
       entering={FadeInDown.springify().damping(16)}
       exiting={FadeOutDown.duration(160)}
-      style={[styles.toast, { bottom: insets.bottom + TAB_BAR_SPACE }]}
+      style={[styles.toast, { bottom: toast.bottom ?? insets.bottom + TAB_BAR_SPACE }]}
       accessibilityLiveRegion="polite"
     >
       <Text style={styles.message} numberOfLines={2}>
