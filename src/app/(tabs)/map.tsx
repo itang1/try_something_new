@@ -7,7 +7,7 @@ import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { nearestCity, type Entry, type Place } from '@/data/catalog';
 import { buildIndex, featuresInRegion, zoomToDelta } from '@/data/clusters';
 import { openDirections } from '@/data/directions';
-import { formatMinutes, haversineKm } from '@/data/drive';
+import { formatMinutes, haversineKm, minutesTo } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
 import { readable, subcategory, useColors } from '@/theme';
 import { GradientIcon, Icon } from '@/components/icon';
@@ -22,7 +22,7 @@ type PinPlace = Place & { entries: Entry[] };
 export default function MapScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { city, entries, origin, doneIds } = useAppState();
+  const { city, entries, origin, driveTimes, doneIds } = useAppState();
   const mapRef = useRef<MapView>(null);
   const [notDoneOnly, setNotDoneOnly] = useState(false);
   // Selection remembers its city, so switching cities clears it without an effect.
@@ -154,7 +154,7 @@ export default function MapScreen() {
           >
             <PlaceCard
               place={selected}
-              minutes={origin ? Math.max(1, Math.floor((haversineKm(origin, selected.lat, selected.lng) / 50) * 60)) : null}
+              minutes={origin ? minutesTo(selected, origin, driveTimes) : null}
               doneIds={doneIds}
               onOpen={(id) => router.push(`/activity/${id}`)}
             />

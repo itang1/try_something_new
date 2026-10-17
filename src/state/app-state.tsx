@@ -1,4 +1,4 @@
-import { createContext, use, useCallback, useMemo, useState, type ReactNode } from 'react';
+import { createContext, use, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   CITIES,
   cityById,
@@ -10,8 +10,9 @@ import {
   type CustomActivity,
   type Entry,
 } from '@/data/catalog';
-import type { Coordinate } from '@/data/drive';
+import type { Coordinate, DriveTimes } from '@/data/drive';
 import { NO_FILTERS, type Filters } from '@/data/filters';
+import { cachedDriveTimes, refreshDriveTimes } from '@/data/routing';
 import {
   deleteCustomActivity,
   loadCustomActivities,
@@ -47,6 +48,8 @@ type AppState = {
   trip: Trip | null;
   /** Where drive times start. */
   origin: HomeLocation | null;
+  /** Real drive minutes from the origin, by place id, as far as they're known. */
+  driveTimes: DriveTimes;
   /** Sets the trip's starting point during a trip, or home otherwise. Typed and picked places are remembered. */
   setLocation: (location: HomeLocation, options?: { remember?: boolean }) => void;
   startTrip: (cityId: string) => void;
@@ -109,6 +112,23 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const city = (trip && cityById(trip.cityId)) || (home ? nearestCity(home).city : CITIES[0]);
   const origin = trip ? trip.start : home;
+  const lat = origin?.latitude;
+  const lng = origin?.longitude;
+  const cachedTimes = useMemo<DriveTimes>(
+    () => (lat != null && lng != null ? cachedDriveTimes({ latitude: lat, longitude: lng }) : new Map()),
+    [lat, lng],
+  );
+  const timesKey = `${lat},${lng},${city.id}`;
+  const [fetchedTimes, setFetchedTimes] = useState<{ key: string; times: DriveTimes } | null>(null);
+  useEffect(() => {
+    if (lat == null || lng == null) return;
+    const controller = new AbortController();
+    refreshDriveTimes({ latitude: lat, longitude: lng }, city.places, cachedTimes, controller.signal)
+      .then((times) => setFetchedTimes({ key: timesKey, times }))
+      .catch(() => {});
+    return () => controller.abort();
+  }, [lat, lng, city, cachedTimes, timesKey]);
+  const driveTimes = fetchedTimes?.key === timesKey ? fetchedTimes.times : cachedTimes;
   const entries = useMemo(
     () =>
       [...entriesForCity(city.id), ...customs.filter((c) => c.cityId === city.id).map(customEntry)].sort((a, b) =>
@@ -243,6 +263,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         home,
         trip,
         origin,
+        driveTimes,
         setLocation,
         startTrip,
         endTrip,

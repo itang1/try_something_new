@@ -49,6 +49,13 @@ db.execSync(`
     at TEXT NOT NULL
   );
   CREATE INDEX IF NOT EXISTS plans_entry ON plans (city_id, entry_id, id);
+  CREATE TABLE IF NOT EXISTS drive_times (
+    origin TEXT NOT NULL,
+    place_id TEXT NOT NULL,
+    minutes INTEGER,
+    at TEXT NOT NULL,
+    PRIMARY KEY (origin, place_id)
+  );
 `);
 
 export function loadDoneIds(): Set<string> {
@@ -183,4 +190,28 @@ export function readSetting<T>(key: string, fallback: T): T {
 
 export function writeSetting<T>(key: string, value: T): void {
   Storage.setItemSync(key, JSON.stringify(value));
+}
+
+/** Cached drive times from one origin. A null means no route was found. */
+export function loadDriveTimes(origin: string, maxAgeDays: number): Map<string, number | null> {
+  const since = new Date(Date.now() - maxAgeDays * 86_400_000).toISOString();
+  const rows = db.getAllSync<{ place_id: string; minutes: number | null }>(
+    'SELECT place_id, minutes FROM drive_times WHERE origin = ? AND at >= ?',
+    [origin, since],
+  );
+  return new Map(rows.map((r) => [r.place_id, r.minutes]));
+}
+
+export function saveDriveTimes(origin: string, times: Map<string, number | null>): void {
+  const at = new Date().toISOString();
+  db.withTransactionSync(() => {
+    for (const [placeId, minutes] of times) {
+      db.runSync('INSERT OR REPLACE INTO drive_times (origin, place_id, minutes, at) VALUES (?, ?, ?, ?)', [
+        origin,
+        placeId,
+        minutes,
+        at,
+      ]);
+    }
+  });
 }

@@ -17,12 +17,12 @@ export default function PlanSheet() {
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { city, origin, plans, setPlan, findEntry } = useAppState();
+  const { city, origin, driveTimes, plans, setPlan, findEntry } = useAppState();
   const entry = findEntry(id);
   const existing = plans.get(id);
   const days = upcomingDays(DAYS_AHEAD);
   const keys = days.map(dayKey);
-  const places = entry ? placesByDistance(entry, origin) : [];
+  const places = entry ? placesByDistance(entry, origin, driveTimes) : [];
 
   const [day, setDay] = useState(() =>
     existing && keys.includes(existing.day) ? existing.day : dayKey(nextWeekendDay()),

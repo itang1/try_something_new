@@ -39,7 +39,7 @@ type Row = { activity: Entry; minutes: number | null; progress: PlaceProgress | 
 export default function ChecklistScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { city, entries, origin, doneIds, savedIds, visitedPlaceIds, plans } = useAppState();
+  const { city, entries, origin, driveTimes, doneIds, savedIds, visitedPlaceIds, plans } = useAppState();
   const toggleDone = useToggleWithUndo();
   const [status, setStatus] = useState<Status>('All');
   const [sort, setSort] = useState<Sort>('Name');
@@ -75,7 +75,7 @@ export default function ChecklistScreen() {
       .filter((a) => !selectedSub || a.subcategory === selectedSub)
       .filter(matchesStatus)
       .filter(matchesQuery)
-      .map((a) => ({ activity: a, minutes: driveMinutes(a, origin), progress: progressOf(a) }));
+      .map((a) => ({ activity: a, minutes: driveMinutes(a, origin, driveTimes), progress: progressOf(a) }));
     const byName = (x: Row, y: Row) => x.activity.name.localeCompare(y.activity.name);
     const compare: Record<Sort, (x: Row, y: Row) => number> = {
       Name: byName,
@@ -94,7 +94,7 @@ export default function ChecklistScreen() {
       { title: `${city.name} icons`, data: rest.filter((r) => r.activity.kind === 'icon') },
       { title: 'Activities', data: rest.filter((r) => r.activity.kind === 'activity') },
     ].filter((section) => section.data.length > 0);
-  }, [cityActivities, selectedSub, status, doneIds, savedIds, visitedPlaceIds, search, origin, sort, city.name, plans]);
+  }, [cityActivities, selectedSub, status, doneIds, savedIds, visitedPlaceIds, search, origin, driveTimes, sort, city.name, plans]);
 
   const renderItem = useCallback(
     ({ item }: { item: Row }) => (

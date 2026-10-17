@@ -22,11 +22,11 @@ const toggle = <T,>(list: T[], item: T) => (list.includes(item) ? list.filter((x
 export default function FiltersSheet() {
   const colors = useColors();
   const router = useRouter();
-  const { entries, origin, filters, setFilters, hiddenIds, unhide, isDone } = useAppState();
+  const { entries, origin, driveTimes, filters, setFilters, hiddenIds, unhide, isDone } = useAppState();
   const subcategories = [...new Set(entries.map((e) => e.subcategory))].sort();
   const hidden = entries.filter((e) => hiddenIds.has(e.id));
   const matchCount = entries.filter(
-    (e) => !hiddenIds.has(e.id) && !isDone(e.id) && matchesFilters(e, filters, origin),
+    (e) => !hiddenIds.has(e.id) && !isDone(e.id) && matchesFilters(e, filters, origin, driveTimes),
   ).length;
 
   const update = (next: Partial<Filters>) => {

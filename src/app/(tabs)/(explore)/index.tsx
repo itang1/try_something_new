@@ -27,7 +27,7 @@ function randomItem<T>(items: T[]): T {
 export default function ExploreScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { city, entries, findEntry, home, origin, isDone, savedIds, toggleSaved, hiddenIds, hide, plans, filters, setFilters } = useAppState();
+  const { city, entries, findEntry, home, origin, driveTimes, isDone, savedIds, toggleSaved, hiddenIds, hide, plans, filters, setFilters } = useAppState();
   const markDone = useMarkDone();
   const toast = useToast();
   // The pick remembers its city, so switching cities clears it without an effect.
@@ -44,7 +44,7 @@ export default function ExploreScreen() {
 
   const showAnother = (exclude?: string) => {
     const current = exclude ?? activity?.id;
-    const allowed = entries.filter((e) => e.id !== current && !hiddenIds.has(e.id) && matchesFilters(e, filters, origin));
+    const allowed = entries.filter((e) => e.id !== current && !hiddenIds.has(e.id) && matchesFilters(e, filters, origin, driveTimes));
     const fresh = allowed.filter((e) => !isDone(e.id));
     // Early on, skip the stretches so the first few tries are easy wins, unless levels were picked on purpose.
     const warmingUp = !filters.levels.length && entries.filter((e) => isDone(e.id)).length < 3;
@@ -219,8 +219,9 @@ type CardProps = {
 
 function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onNotForMe, onSave, onDone }: CardProps) {
   const colors = useColors();
+  const { driveTimes } = useAppState();
   const sub = subcategory(entry.subcategory);
-  const [nearest, ...others] = placesByDistance(entry, origin);
+  const [nearest, ...others] = placesByDistance(entry, origin, driveTimes);
   const placeLine = [
     nearest?.minutes != null && `${formatMinutes(nearest.minutes)} away`,
     others.length > 0 && `${others.length} more ${others.length === 1 ? 'place' : 'places'}`,

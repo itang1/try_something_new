@@ -33,9 +33,9 @@ export default function DoneSheet() {
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { city, origin, doneIds, visitedPlaceIds, toggleVisited, plans, entries, findEntry } = useAppState();
+  const { city, origin, driveTimes, doneIds, visitedPlaceIds, toggleVisited, plans, entries, findEntry } = useAppState();
   const entry = findEntry(id);
-  const places = entry ? placesByDistance(entry, origin) : [];
+  const places = entry ? placesByDistance(entry, origin, driveTimes) : [];
   const [placeId, setPlaceId] = useState<string | null>(
     plans.get(id)?.placeId ?? places[0]?.place.id ?? null,
   );

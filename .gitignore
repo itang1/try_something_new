@@ -53,6 +53,7 @@ node_modules/
 /android/
 
 # Expo extras
+.env*.local
 expo-env.d.ts
 dist/
 .kotlin/

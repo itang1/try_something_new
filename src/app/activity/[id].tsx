@@ -15,7 +15,7 @@ export default function ActivitySheet() {
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { city, origin, isDone, savedIds, toggleSaved, visitedPlaceIds, toggleVisited, plans, findEntry, removeCustom } =
+  const { city, origin, driveTimes, isDone, savedIds, toggleSaved, visitedPlaceIds, toggleVisited, plans, findEntry, removeCustom } =
     useAppState();
   const markDone = useMarkDone();
   const entry = findEntry(id);
@@ -29,7 +29,7 @@ export default function ActivitySheet() {
   }
 
   const sub = subcategory(entry.subcategory);
-  const places = placesByDistance(entry, origin);
+  const places = placesByDistance(entry, origin, driveTimes);
   const done = isDone(entry.id);
   const saved = savedIds.has(entry.id);
   const visitedCount = places.filter(({ place }) => visitedPlaceIds.has(place.id)).length;
