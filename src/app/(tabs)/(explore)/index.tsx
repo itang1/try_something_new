@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import FiltersIcon from '@expo/material-symbols/tune.xml';
 import * as Haptics from 'expo-haptics';
-import { LEVELS, otherWays, type Entry } from '@/data/catalog';
+import { inSeason, LEVELS, otherWays, type Entry } from '@/data/catalog';
 import { addDays, dayKey, formatDay } from '@/data/days';
 import { searchNearby } from '@/data/directions';
 import { formatMinutes, placesByDistance } from '@/data/drive';
@@ -48,7 +48,9 @@ export default function ExploreScreen() {
 
   const showAnother = (exclude?: string) => {
     const current = exclude ?? activity?.id;
-    const allowed = entries.filter((e) => e.id !== current && !hiddenIds.has(e.id) && matchesFilters(e, filters, origin, driveTimes));
+    const allowed = entries.filter(
+      (e) => e.id !== current && !hiddenIds.has(e.id) && inSeason(e) && matchesFilters(e, filters, origin, driveTimes),
+    );
     const fresh = allowed.filter((e) => !isDone(e.id));
     // Early on, skip the stretches so the first few tries are easy wins, unless levels were picked on purpose.
     const warmingUp = !filters.levels.length && entries.filter((e) => isDone(e.id)).length < 3;

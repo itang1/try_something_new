@@ -17,7 +17,18 @@ export type Place = {
 };
 
 /** Something to try, like archery or an art museum. It's done once, at any of its places or in one of its other ways. */
-export type Activity = { id: string; name: string; subcategory: string; duration: string; cost: string; level: Level } & Ways;
+export type Activity = {
+  id: string;
+  name: string;
+  subcategory: string;
+  duration: string;
+  cost: string;
+  level: Level;
+  /** Its season in the northern hemisphere, as months 1 to 12. */
+  months?: number[];
+  /** Needs warm weather, so it follows the city's warm months. */
+  warm?: boolean;
+} & Ways;
 
 /** Ways to do an activity without one of its places: what you'd need at home, how to host it, or a maps search. */
 export type Ways = { home?: string; host?: string; search?: string };
@@ -40,6 +51,8 @@ export type City = {
   state: string;
   lat: number;
   lng: number;
+  /** Months warm enough for beaches and boats. Missing means all year. */
+  warmMonths?: number[];
   icons: CityIcon[];
   places: Place[];
 };
@@ -60,6 +73,8 @@ export type Entry = {
   places: Place[];
   /** Added by the user, so it has no places and can be deleted. */
   custom: boolean;
+  /** Months it's in season in this city, in order. Missing means all year. */
+  months?: number[];
 } & Ways;
 
 /** Something the user added to a city's list themselves. */
@@ -83,7 +98,13 @@ const DURATION_MINUTES: Record<string, number> = {
 };
 const COST_LEVEL: Record<string, number> = { Free: 0, $: 1, $$: 2, $$$: 3 };
 
-function entry(base: Activity | CityIcon, kind: Entry['kind'], activityId: string, places: Place[]): Entry {
+function seasonIn(city: City, a: Activity): number[] | undefined {
+  // The southern hemisphere's seasons run six months off.
+  if (a.months) return city.lat < 0 ? a.months.map((m) => ((m + 5) % 12) + 1) : a.months;
+  if (a.warm) return city.warmMonths;
+}
+
+function entry(base: Activity | CityIcon, kind: Entry['kind'], activityId: string, places: Place[], months?: number[]): Entry {
   return {
     id: base.id,
     kind,
@@ -98,6 +119,7 @@ function entry(base: Activity | CityIcon, kind: Entry['kind'], activityId: strin
     activityId,
     places,
     custom: false,
+    months,
     ...(kind === 'activity' && { home: base.home, host: base.host, search: base.search }),
   };
 }
@@ -129,7 +151,7 @@ function buildEntries(city: City): Entry[] {
   const activities = [...ACTIVITIES.values()]
     // Activities that need no venue show up in every city.
     .filter((a) => placesByActivity.has(a.id) || a.home || a.host || a.search)
-    .map((a) => entry(a, 'activity', a.id, placesByActivity.get(a.id) ?? []));
+    .map((a) => entry(a, 'activity', a.id, placesByActivity.get(a.id) ?? [], seasonIn(city, a)));
   const cityIcons = city.icons.map((i) => entry(i, 'icon', i.activity, [placeById.get(i.place)!]));
   return [...activities, ...cityIcons].sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -163,6 +185,17 @@ export function findEntryAnywhere(id: string, placeId?: string | null): { entry:
     if (found) return { entry: found, city };
   }
   return undefined;
+}
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+export function inSeason(entry: Entry, date = new Date()): boolean {
+  return !entry.months || entry.months.includes(date.getMonth() + 1);
+}
+
+/** Like "Dec to Mar". */
+export function seasonLabel(months: number[]): string {
+  return `${MONTHS[months[0] - 1]} to ${MONTHS[months[months.length - 1] - 1]}`;
 }
 
 export function placeNames(entry: Entry): string {

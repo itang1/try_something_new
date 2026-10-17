@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { LEVELS, type Level } from '@/data/catalog';
+import { inSeason, LEVELS, type Level } from '@/data/catalog';
 import { formatMinutes } from '@/data/drive';
 import {
   COST_OPTIONS,
@@ -27,7 +27,7 @@ export default function FiltersSheet() {
   const subcategories = [...new Set(entries.map((e) => e.subcategory))].sort();
   const hidden = entries.filter((e) => hiddenIds.has(e.id));
   const matchCount = entries.filter(
-    (e) => !hiddenIds.has(e.id) && !isDone(e.id) && matchesFilters(e, filters, origin, driveTimes),
+    (e) => !hiddenIds.has(e.id) && !isDone(e.id) && inSeason(e) && matchesFilters(e, filters, origin, driveTimes),
   ).length;
 
   const update = (next: Partial<Filters>) => {

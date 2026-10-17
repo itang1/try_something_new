@@ -4,6 +4,7 @@
   "state": "OH",
   "lat": 39.9612,
   "lng": -82.9988,
+  "warmMonths": [5,6,7,8,9],
   "icons": [
     {"id": "hocking-hills-state-park", "name": "Hike Hocking Hills", "place": "columbus--hocking-hills-state-park", "activity": "hike-a-trail", "subcategory": "outdoors", "duration": "Full day", "cost": "Free"},
     {"id": "german-village-columbus", "name": "German Village Columbus", "place": "columbus--german-village-columbus", "activity": "neighborhood", "subcategory": "explore", "duration": "2-3 hours", "cost": "$"},

@@ -1,7 +1,7 @@
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { LEVELS, otherWays } from '@/data/catalog';
+import { LEVELS, otherWays, seasonLabel } from '@/data/catalog';
 import { formatDay } from '@/data/days';
 import { openDirections, searchNearby } from '@/data/directions';
 import { inviteFriend } from '@/data/invite';
@@ -50,6 +50,9 @@ export default function ActivitySheet() {
                 .map((part) => part.replaceAll(' ', ' '))
                 .join(' · ')}
             </Text>
+            {entry.months && (
+              <Text style={[styles.meta, { color: colors.secondary }]}>In season {seasonLabel(entry.months)}</Text>
+            )}
           </View>
           <Pressable
             onPress={() => inviteFriend(entry, planPlace ?? places[0]?.place ?? null, plan?.day ?? null)}

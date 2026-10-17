@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { inSeason } from '@/data/catalog';
 import { addDays, dayKey } from '@/data/days';
 import { useAppState } from '@/state/app-state';
 import { subcategory } from '@/theme';
@@ -21,7 +22,7 @@ export function WidgetSync() {
 
   useEffect(() => {
     if (process.env.EXPO_OS !== 'ios') return;
-    const fresh = entries.filter((e) => !isDone(e.id) && !hiddenIds.has(e.id));
+    const fresh = entries.filter((e) => !isDone(e.id) && !hiddenIds.has(e.id) && inSeason(e));
     const warmingUp = entries.filter((e) => isDone(e.id)).length < 3;
     const gentle = warmingUp ? fresh.filter((e) => e.level !== 'stretch') : fresh;
     const pool = gentle.length ? gentle : fresh;
