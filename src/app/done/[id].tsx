@@ -56,123 +56,131 @@ export default function DoneSheet() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <View style={styles.hero}>
-        <Confetti />
-        <Animated.View
-          entering={ZoomIn.springify().damping(12)}
-          style={[styles.check, { backgroundColor: colors.done, boxShadow: `0 10px 24px ${colors.done}59` }]}
-        >
-          <Icon name="check" size={52} color="white" />
-        </Animated.View>
-      </View>
-      {milestone && (
-        <Animated.View
-          entering={ZoomIn.delay(500).springify().damping(10)}
-          style={[styles.milestone, { backgroundColor: colors.accentSoft }]}
-        >
-          <Icon name="trophy" size={18} color={colors.accent} />
-          <Text style={[styles.milestoneText, { color: colors.accent }]}>{milestone}</Text>
-        </Animated.View>
-      )}
-      <Text style={[styles.title, { color: colors.label }]}>You did it!</Text>
-      <Text style={[styles.name, { color: colors.label }]}>{entry.name}</Text>
-      <Text style={[styles.progress, { color: colors.secondary }]}>
-        {triedCount} of {all.length} tried in {city.name}
-      </Text>
+    <View style={styles.screen}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag">
+        <View style={styles.hero}>
+          <Confetti />
+          <Animated.View
+            entering={ZoomIn.springify().damping(12)}
+            style={[styles.check, { backgroundColor: colors.done, boxShadow: `0 10px 24px ${colors.done}59` }]}
+          >
+            <Icon name="check" size={52} color="white" />
+          </Animated.View>
+        </View>
+        {milestone && (
+          <Animated.View
+            entering={ZoomIn.delay(500).springify().damping(10)}
+            style={[styles.milestone, { backgroundColor: colors.accentSoft }]}
+          >
+            <Icon name="trophy" size={18} color={colors.accent} />
+            <Text style={[styles.milestoneText, { color: colors.accent }]}>{milestone}</Text>
+          </Animated.View>
+        )}
+        <Text style={[styles.title, { color: colors.label }]}>You did it!</Text>
+        <Text style={[styles.name, { color: colors.label }]}>{entry.name}</Text>
+        <Text style={[styles.progress, { color: colors.secondary }]}>
+          {triedCount} of {all.length} tried in {city.name}
+        </Text>
 
-      {entry.kind === 'activity' && places.length > 1 && (
+        {entry.kind === 'activity' && places.length > 1 && (
+          <View style={styles.group}>
+            <Text style={[styles.question, { color: colors.label }]}>Where did you go?</Text>
+            <View style={styles.chips}>
+              {places.slice(0, 6).map(({ place }) => {
+                const selected = place.id === placeId;
+                return (
+                  <Pressable
+                    key={place.id}
+                    onPress={() => setPlaceId(selected ? null : place.id)}
+                    accessibilityState={{ selected }}
+                    style={[
+                      styles.chip,
+                      { backgroundColor: selected ? colors.accentSoft : colors.fill },
+                      selected && { borderColor: colors.accent, borderWidth: 1.5 },
+                    ]}
+                  >
+                    <Text style={[styles.chipText, { color: selected ? colors.accent : colors.label }]}>{place.name}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
         <View style={styles.group}>
-          <Text style={[styles.question, { color: colors.label }]}>Where did you go?</Text>
-          <View style={styles.chips}>
-            {places.slice(0, 6).map(({ place }) => {
-              const selected = place.id === placeId;
+          <Text style={[styles.question, { color: colors.label }]}>How was it?</Text>
+          <View style={styles.ratings}>
+            {RATINGS.map((r) => {
+              const selected = rating === r.id;
               return (
                 <Pressable
-                  key={place.id}
-                  onPress={() => setPlaceId(selected ? null : place.id)}
+                  key={r.id}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setRating(selected ? null : r.id);
+                  }}
+                  accessibilityRole="radio"
                   accessibilityState={{ selected }}
                   style={[
-                    styles.chip,
+                    styles.rating,
                     { backgroundColor: selected ? colors.accentSoft : colors.fill },
                     selected && { borderColor: colors.accent, borderWidth: 1.5 },
                   ]}
                 >
-                  <Text style={[styles.chipText, { color: selected ? colors.accent : colors.label }]}>{place.name}</Text>
+                  <Icon name={r.icon} size={24} color={selected ? colors.accent : colors.secondary} />
+                  <Text style={[styles.ratingText, { color: selected ? colors.accent : colors.label }]}>{r.label}</Text>
                 </Pressable>
               );
             })}
           </View>
         </View>
-      )}
 
-      <View style={styles.group}>
-        <Text style={[styles.question, { color: colors.label }]}>How was it?</Text>
-        <View style={styles.ratings}>
-          {RATINGS.map((r) => {
-            const selected = rating === r.id;
-            return (
-              <Pressable
-                key={r.id}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  setRating(selected ? null : r.id);
-                }}
-                accessibilityRole="radio"
-                accessibilityState={{ selected }}
-                style={[
-                  styles.rating,
-                  { backgroundColor: selected ? colors.accentSoft : colors.fill },
-                  selected && { borderColor: colors.accent, borderWidth: 1.5 },
-                ]}
-              >
-                <Icon name={r.icon} size={24} color={selected ? colors.accent : colors.secondary} />
-                <Text style={[styles.ratingText, { color: selected ? colors.accent : colors.label }]}>{r.label}</Text>
-              </Pressable>
-            );
-          })}
+        <View style={styles.group}>
+          <Text style={[styles.label, { color: colors.secondary }]}>Note (optional)</Text>
+          <TextInput
+            value={note}
+            onChangeText={setNote}
+            placeholder="Who came along? What would you tell a friend?"
+            placeholderTextColor={colors.tertiary}
+            multiline
+            accessibilityLabel="Note"
+            style={[styles.note, { backgroundColor: colors.fill, color: colors.label }]}
+          />
+          {photo ? (
+            <Pressable onPress={() => setPhoto(null)} accessibilityLabel="Remove photo" style={styles.photoWrap}>
+              <Image source={{ uri: photo }} style={styles.photo} />
+              <View style={[styles.removePhoto, { backgroundColor: colors.card }]}>
+                <Icon name="close" size={16} color={colors.label} />
+              </View>
+            </Pressable>
+          ) : (
+            <Pressable
+              onPress={async () => setPhoto(await pickAndKeepPhoto())}
+              style={({ pressed }) => [styles.addPhoto, { backgroundColor: colors.fill, opacity: pressed ? 0.7 : 1 }]}
+            >
+              <Icon name="photo_camera" size={20} color={colors.secondary} />
+              <Text style={[styles.addPhotoText, { color: colors.label }]}>Add a photo</Text>
+            </Pressable>
+          )}
         </View>
-      </View>
 
-      <View style={styles.group}>
-        <Text style={[styles.label, { color: colors.secondary }]}>Note (optional)</Text>
-        <TextInput
-          value={note}
-          onChangeText={setNote}
-          placeholder="Who came along? What would you tell a friend?"
-          placeholderTextColor={colors.tertiary}
-          multiline
-          accessibilityLabel="Note"
-          style={[styles.note, { backgroundColor: colors.fill, color: colors.label }]}
-        />
-        {photo ? (
-          <Pressable onPress={() => setPhoto(null)} accessibilityLabel="Remove photo" style={styles.photoWrap}>
-            <Image source={{ uri: photo }} style={styles.photo} />
-            <View style={[styles.removePhoto, { backgroundColor: colors.card }]}>
-              <Icon name="close" size={16} color={colors.label} />
-            </View>
-          </Pressable>
-        ) : (
-          <Pressable
-            onPress={async () => setPhoto(await pickAndKeepPhoto())}
-            style={({ pressed }) => [styles.addPhoto, { backgroundColor: colors.fill, opacity: pressed ? 0.7 : 1 }]}
-          >
-            <Icon name="photo_camera" size={20} color={colors.secondary} />
-            <Text style={[styles.addPhotoText, { color: colors.label }]}>Add a photo</Text>
-          </Pressable>
-        )}
-      </View>
+      </ScrollView>
 
-      <Pressable
-        onPress={save}
-        style={({ pressed }) => [styles.save, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
-      >
-        <Text style={styles.saveText}>Save</Text>
-      </Pressable>
-      <Pressable onPress={() => router.back()} hitSlop={8} style={styles.skip}>
-        <Text style={[styles.skipText, { color: colors.secondary }]}>Skip</Text>
-      </Pressable>
-    </ScrollView>
+      <View style={[styles.footer, { borderTopColor: colors.separator, backgroundColor: colors.background }]}>
+        <Pressable
+          onPress={() => router.back()}
+          style={({ pressed }) => [styles.button, styles.skip, { backgroundColor: colors.card, opacity: pressed ? 0.7 : 1 }]}
+        >
+          <Text style={[styles.buttonText, { color: colors.label }]}>Skip</Text>
+        </Pressable>
+        <Pressable
+          onPress={save}
+          style={({ pressed }) => [styles.button, styles.save, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
+        >
+          <Text style={[styles.buttonText, { color: 'white' }]}>Save</Text>
+        </Pressable>
+      </View>
+    </View>
   );
 }
 
@@ -187,7 +195,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   milestoneText: { fontSize: 15, fontWeight: '700' },
-  content: { padding: 20, paddingTop: 32, paddingBottom: 40, gap: 8 },
+  content: { padding: 20, paddingTop: 32, paddingBottom: 24, gap: 8 },
   hero: { height: 140, alignItems: 'center', justifyContent: 'center' },
   check: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center' },
   title: { fontSize: 28, fontWeight: '700', textAlign: 'center' },
@@ -224,8 +232,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  save: { minHeight: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center', marginTop: 20 },
-  saveText: { color: 'white', fontSize: 17, fontWeight: '600' },
-  skip: { alignSelf: 'center', minHeight: 44, justifyContent: 'center' },
-  skipText: { fontSize: 15, fontWeight: '600' },
+  screen: { flex: 1 },
+  footer: { flexDirection: 'row', gap: 8, padding: 16, paddingBottom: 32, borderTopWidth: StyleSheet.hairlineWidth },
+  button: { minHeight: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  skip: { flex: 1 },
+  save: { flex: 2 },
+  buttonText: { fontSize: 16, fontWeight: '600' },
 });
