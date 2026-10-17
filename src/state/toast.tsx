@@ -11,7 +11,8 @@ import { useAppState } from './app-state';
  */
 export type UndoAction =
   | { type: 'done'; ids: string[]; done: boolean; visit?: { placeId: string; activityId: string; visited: boolean } }
-  | { type: 'hide'; id: string };
+  | { type: 'hide'; id: string }
+  | { type: 'unsave'; id: string };
 
 type Toast = { message: string; undo?: UndoAction; key: number };
 
@@ -44,14 +45,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
 function ToastView({ toast, onDone }: { toast: Toast; onDone: () => void }) {
   const insets = useSafeAreaInsets();
-  const { setDone, setVisited, unhide } = useAppState();
+  const { setDone, setVisited, unhide, savedIds, toggleSaved } = useAppState();
 
   const undo = () => {
     const action = toast.undo;
     if (!action) return;
     Haptics.selectionAsync();
     if (action.type === 'hide') unhide(action.id);
-    else {
+    else if (action.type === 'unsave') {
+      if (savedIds.has(action.id)) toggleSaved(action.id);
+    } else {
       setDone(action.ids, action.done);
       if (action.visit) setVisited(action.visit.placeId, action.visit.activityId, action.visit.visited);
     }

@@ -70,8 +70,11 @@ export default function ExploreScreen() {
 
   const activeFilters = describeFilters(filters, (id) => subcategory(id).label);
 
+  // A swipe moves the card away, so say it was saved.
   const save = (entry: Entry) => {
-    if (!savedIds.has(entry.id)) toggleSaved(entry.id);
+    if (savedIds.has(entry.id)) return;
+    toggleSaved(entry.id);
+    toast(`Saved ${entry.name}`, { type: 'unsave', id: entry.id });
   };
 
   return (
