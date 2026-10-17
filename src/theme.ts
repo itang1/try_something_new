@@ -15,6 +15,7 @@ const light = {
   done: '#34C759',
   doneSoft: 'rgba(52,199,89,0.05)',
   blue: '#007AFF',
+  red: '#FF3B30',
 };
 
 const dark: typeof light = {
@@ -30,6 +31,7 @@ const dark: typeof light = {
   done: '#30D158',
   doneSoft: 'rgba(48,209,88,0.08)',
   blue: '#0A84FF',
+  red: '#FF453A',
 };
 
 export type Colors = typeof light;

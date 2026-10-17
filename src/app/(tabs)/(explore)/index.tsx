@@ -8,7 +8,7 @@ import { LEVELS, type Entry } from '@/data/catalog';
 import { addDays, dayKey, formatDay } from '@/data/days';
 import { formatMinutes, placesByDistance } from '@/data/drive';
 import { describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
-import { readSetting } from '@/data/storage';
+import { readSetting, writeSetting } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
 import { readable, subcategory, useColors } from '@/theme';
 import { toolbarIcon } from '@/components/header-items';
@@ -31,7 +31,7 @@ export default function ExploreScreen() {
   const markDone = useMarkDone();
   const toast = useToast();
   // The pick remembers its city, so switching cities clears it without an effect.
-  const [pick, setPick] = useState<{ id: string; city: string; n: number } | null>(null);
+  const [pick, setPick] = useState<{ id: string; city: string; n: number; nudge: boolean } | null>(null);
   const [noMatch, setNoMatch] = useState(false);
   const { height } = useWindowDimensions();
   const footer = useRef<ComponentRef<typeof View>>(null);
@@ -60,7 +60,9 @@ export default function ExploreScreen() {
       return;
     }
     setNoMatch(false);
-    setPick({ id: randomItem(pool).id, city: city.id, n: (pick?.n ?? 0) + 1 });
+    const nudge = !readSetting('swipeNudged', false);
+    if (nudge) writeSetting('swipeNudged', true);
+    setPick({ id: randomItem(pool).id, city: city.id, n: (pick?.n ?? 0) + 1, nudge });
   };
 
   // A gentle nudge for a plan that's today or tomorrow. Missed plans just drop off.
@@ -134,6 +136,7 @@ export default function ExploreScreen() {
           {activity ? (
             <SwipeCard
               key={pick?.n}
+              nudge={pick?.nudge}
               onSwipeLeft={() => showAnother(activity.id)}
               onSwipeRight={() => {
                 save(activity);
@@ -196,9 +199,13 @@ export default function ExploreScreen() {
           <Text style={styles.tryText}>{activity ? 'Show me another' : 'Show me something'}</Text>
         </Pressable>
         {activity && (
-          <Text style={[styles.swipeHint, { color: colors.secondary }]}>
-            or swipe the card: left to skip, right to save
-          </Text>
+          <View style={styles.swipeHint} accessibilityLabel="Or swipe the card: left to skip, right to save">
+            <Icon name="arrow_back" size={16} color={colors.secondary} />
+            <Text style={[styles.swipeHintText, { color: colors.secondary }]}>Skip</Text>
+            <Text style={[styles.swipeHintText, { color: colors.tertiary }]}>swipe</Text>
+            <Text style={[styles.swipeHintText, { color: colors.accent }]}>Save</Text>
+            <Icon name="arrow_forward" size={16} color={colors.accent} />
+          </View>
         )}
       </SafeAreaView>
 
@@ -277,26 +284,20 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onN
       </View>
 
       <View style={styles.actions}>
-        <CardAction icon="block" label="Not for me" onPress={onNotForMe} />
-        <CardAction
-          icon="bookmark"
-          label={saved ? 'Saved' : 'Save'}
-          onPress={onSave}
-          tint={saved ? colors.accent : undefined}
-          selected={saved}
-        />
+        <CardAction icon="block" label="Not for me" onPress={onNotForMe} tint={colors.red} />
+        <CardAction icon="bookmark" label={saved ? 'Saved' : 'Save'} onPress={onSave} tint={colors.accent} selected={saved} />
         <CardAction
           icon="calendar_month"
           label={planned ? 'Planned' : 'Plan'}
           onPress={onPlan}
-          tint={planned ? colors.accent : undefined}
+          tint={colors.blue}
           selected={planned}
         />
         <CardAction
           icon={done ? 'check_circle' : 'radio_button_unchecked'}
           label={done ? 'Done!' : 'Done'}
           onPress={onDone}
-          tint={done ? colors.done : undefined}
+          tint={colors.done}
           selected={done}
         />
       </View>
@@ -304,11 +305,10 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onN
   );
 }
 
-type ActionProps = { icon: IconName; label: string; onPress: () => void; tint?: string; selected?: boolean };
+type ActionProps = { icon: IconName; label: string; onPress: () => void; tint: string; selected?: boolean };
 
 function CardAction({ icon, label, onPress, tint, selected }: ActionProps) {
-  const colors = useColors();
-  const color = tint ?? colors.secondary;
+  const color = selected ? 'white' : tint;
   return (
     <Pressable
       onPress={onPress}
@@ -316,7 +316,7 @@ function CardAction({ icon, label, onPress, tint, selected }: ActionProps) {
       accessibilityState={{ selected }}
       style={({ pressed }) => [
         styles.action,
-        { backgroundColor: tint ? `${tint}26` : colors.fill, opacity: pressed ? 0.7 : 1 },
+        { backgroundColor: selected ? tint : `${tint}1F`, opacity: pressed ? 0.7 : 1 },
       ]}
     >
       <Icon name={icon} size={20} color={color} />
@@ -378,5 +378,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   tryText: { color: 'white', fontSize: 17, fontWeight: '600' },
-  swipeHint: { fontSize: 13, marginTop: 8 },
+  swipeHint: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
+  swipeHintText: { fontSize: 13, fontWeight: '600' },
 });

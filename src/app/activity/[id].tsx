@@ -166,11 +166,11 @@ export default function ActivitySheet() {
           style={({ pressed }) => [
             styles.button,
             styles.grow,
-            { backgroundColor: saved ? colors.accentSoft : colors.card, opacity: pressed ? 0.7 : 1 },
+            { backgroundColor: saved ? colors.accent : `${colors.accent}1F`, opacity: pressed ? 0.7 : 1 },
           ]}
         >
-          <Icon name="bookmark" size={20} color={saved ? colors.accent : colors.secondary} />
-          <Text style={[styles.buttonText, { color: saved ? colors.accent : colors.label }]}>
+          <Icon name="bookmark" size={20} color={saved ? 'white' : colors.accent} />
+          <Text style={[styles.buttonText, { color: saved ? 'white' : colors.accent }]}>
             {saved ? 'Saved' : 'Save'}
           </Text>
         </Pressable>
