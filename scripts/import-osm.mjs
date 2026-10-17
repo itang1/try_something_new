@@ -15,14 +15,19 @@ const NEW_CUISINE = new RegExp(`\\b(${CUISINES})\\b`);
 
 const QUERY = `[out:json][timeout:90];
 (
- nwr["leisure"~"^(bowling_alley|escape_game|golf_course|ice_rink|horse_riding|fishing|nature_reserve|stadium|dance|park|garden|water_park|sports_centre|fitness_centre|swimming_pool|pitch)$"]["name"](BBOX);
- nwr["tourism"~"^(museum|gallery|zoo|aquarium|theme_park|attraction)$"]["name"](BBOX);
- nwr["amenity"~"^(theatre|cinema|marketplace|arts_centre|planetarium)$"]["name"](BBOX);
+ nwr["leisure"~"^(bowling_alley|escape_game|golf_course|ice_rink|horse_riding|fishing|nature_reserve|stadium|dance|park|garden|water_park|sports_centre|fitness_centre|swimming_pool|pitch|miniature_golf|trampoline_park|amusement_arcade|disc_golf_course|sauna|bird_hide)$"]["name"](BBOX);
+ nwr["tourism"~"^(museum|gallery|zoo|aquarium|theme_park|attraction|viewpoint)$"]["name"](BBOX);
+ nwr["amenity"~"^(theatre|cinema|marketplace|arts_centre|planetarium|music_venue|library|public_bath)$"]["name"](BBOX);
+ nwr["amenity"~"^(cafe|bar|pub)$"]["name"~"[Gg]ame"](BBOX);
+ nwr["craft"~"^(brewery|winery|distillery)$"]["name"](BBOX);
+ nwr["shop"="farm"]["name"](BBOX);
+ nwr["landuse"="orchard"]["name"](BBOX);
+ nwr["attraction"="maze"]["name"](BBOX);
  nwr["shop"~"^(books|fabric|wool|yarn|craft|sewing)$"]["name"](BBOX);
  nwr["amenity"="restaurant"]["cuisine"~"${CUISINES}"]["name"](BBOX);
  nwr["craft"="pottery"]["name"](BBOX);
  nwr["man_made"="observatory"]["name"](BBOX);
- nwr["sport"~"climbing|fencing|archery|martial_arts|karate|taekwondo|judo|yoga|pilates|roller_skating|pickleball|tennis|canoe|kayak"]["name"](BBOX);
+ nwr["sport"~"climbing|fencing|archery|martial_arts|karate|taekwondo|judo|yoga|pilates|roller_skating|pickleball|tennis|canoe|kayak|karting|disc_golf"]["name"](BBOX);
  relation["route"="bicycle"]["name"](BBOX);
 );
 out center tags;`.replaceAll('BBOX', bbox);
@@ -48,6 +53,27 @@ function activitiesFor(t) {
   add(leisure === 'bowling_alley' || sport.includes('10pin'), 'bowling');
   add(leisure === 'escape_game' || name.includes('escape'), 'escape-room');
   add(leisure === 'golf_course' && !name.includes('mini'), 'golf');
+  add(leisure === 'miniature_golf' || (leisure === 'golf_course' && name.includes('mini')), 'mini-golf');
+  add(sport.includes('karting'), 'go-karts');
+  add(leisure === 'trampoline_park' || /trampoline|sky zone|urban air/.test(name), 'trampoline-park');
+  add(leisure === 'amusement_arcade' && !name.includes('chuck e'), 'arcade');
+  add(leisure === 'disc_golf_course' || sport.includes('disc_golf'), 'disc-golf');
+  add(leisure === 'sauna' || amenity === 'public_bath' || /bathhouse|banya/.test(name), 'sauna');
+  add(leisure === 'bird_hide' || (leisure === 'nature_reserve' && /audubon|bird|wetland/.test(name)), 'birdwatching');
+  // Zoos tag each exhibit as a viewpoint.
+  add(tourism === 'viewpoint' && /lookout|overlook|vista|observation|scenic|summit|deck|platform/.test(name), 'sunrise');
+  add(amenity === 'music_venue', 'live-music');
+  // University, law, and school libraries aren't open to everyone.
+  const library = `${name} ${t.operator ?? ''}`.toLowerCase();
+  add(
+    amenity === 'library' && /public|metropolitan|county librar|branch|libraries/.test(library) && !/universit|college|school|law/.test(library),
+    'library',
+  );
+  add(['cafe', 'bar', 'pub'].includes(amenity) && /board ?game|tabletop|game (cafe|café|lounge|tavern|pub)/.test(name), 'board-game-cafe');
+  add(['brewery', 'winery', 'distillery'].includes(t.craft), 'brewery-tasting');
+  const farm = shop === 'farm' || t.landuse === 'orchard';
+  add(farm && /orchard|apple|u-pick|pick your own/.test(name), 'apple-picking');
+  add(t.attraction === 'maze' || (farm && /pumpkin|maze/.test(name)), 'corn-maze');
   add(leisure === 'ice_rink' || sport.includes('ice_skating'), 'ice-skating');
   add(leisure === 'horse_riding' || sport.includes('equestrian'), 'horseback-riding');
   add(leisure === 'fishing', 'fishing');
