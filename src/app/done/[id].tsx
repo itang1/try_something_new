@@ -51,7 +51,8 @@ export default function DoneSheet() {
 
   const save = () => {
     if (placeId && entry.kind === 'activity' && !visitedPlaceIds.has(placeId)) toggleVisited(placeId, entry.activityId);
-    recordReflection({ entryId: entry.id, placeId, rating, note: note.trim(), photo });
+    const placeName = places.find((p) => p.place.id === placeId)?.place.name ?? null;
+    recordReflection({ entryId: entry.id, placeId, placeName, rating, note: note.trim(), photo });
     router.back();
   };
 

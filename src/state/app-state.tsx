@@ -169,14 +169,16 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   );
 
   const setPlan = useCallback(
-    (entryId: string, plan: Pick<Plan, 'placeId' | 'day'> | null) => {
+    (entryId: string, choice: Pick<Plan, 'placeId' | 'day'> | null) => {
+      const places = entries.find((e) => e.id === entryId)?.places ?? [];
+      const plan = choice && { ...choice, placeName: places.find((p) => p.id === choice.placeId)?.name ?? null };
       recordPlan(city.id, entryId, plan);
       const next = new Map(allPlans);
       if (plan) next.set(planKey(city.id, entryId), { entryId, cityId: city.id, ...plan });
       else next.delete(planKey(city.id, entryId));
       setAllPlans(next);
     },
-    [allPlans, city.id],
+    [allPlans, city.id, entries],
   );
 
   const setLocation = useCallback(

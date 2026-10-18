@@ -18,7 +18,7 @@ const RATING: Record<Rating, { label: string; icon: IconName }> = {
 const FILTERS = ['All', 'Loved it', 'With photos'] as const;
 type Filter = (typeof FILTERS)[number];
 
-type Item = Memory & { entry: Entry; placeName: string | null };
+type Item = Memory & { entry: Entry };
 
 type Finder = (id: string, placeId?: string | null) => { entry: Entry; city: City } | undefined;
 
@@ -26,7 +26,7 @@ function toItems(memories: Memory[], find: Finder): Item[] {
   const items = memories.flatMap((m) => {
     const found = find(m.entryId, m.placeId);
     if (!found) return [];
-    const placeName = found.city.places.find((p) => p.id === m.placeId)?.name ?? null;
+    const placeName = found.city.places.find((p) => p.id === m.placeId)?.name ?? m.placeName;
     return [{ ...m, entry: found.entry, placeName }];
   });
   // Checking off a city icon also checks off its activity, which would show the same outing twice.

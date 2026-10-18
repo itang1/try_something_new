@@ -74,7 +74,7 @@ export default function ExploreScreen() {
     .filter((p) => soonDays.includes(p.day) && !isDone(p.entryId))
     .sort((x, y) => x.day.localeCompare(y.day))[0];
   const soonEntry = soonPlan && findEntry(soonPlan.entryId);
-  const soonPlace = soonEntry?.places.find((p) => p.id === soonPlan?.placeId);
+  const soonPlace = soonEntry?.places.find((p) => p.id === soonPlan?.placeId)?.name ?? soonPlan?.placeName;
 
   const activeFilters = describeFilters(filters, (id) => subcategory(id).label);
 
@@ -128,7 +128,7 @@ export default function ExploreScreen() {
             <View style={styles.grow}>
               <Text style={[styles.soonDay, { color: colors.accent }]}>{formatDay(soonPlan.day)}</Text>
               <Text style={[styles.placeName, { color: colors.label }]} numberOfLines={2}>
-                {soonPlace ? `${soonEntry.name} at ${soonPlace.name}` : soonEntry.name}
+                {soonPlace ? `${soonEntry.name} at ${soonPlace}` : soonEntry.name}
               </Text>
             </View>
             <Icon name="chevron_right" size={20} color={colors.tertiary} />

@@ -97,6 +97,14 @@ if (version < 2) {
   }
   db.execSync('PRAGMA user_version = 2');
 }
+// Places come and go with catalog updates, so history keeps the name it had.
+if (version < 3) {
+  db.execSync(`
+    ALTER TABLE reflections ADD COLUMN place_name TEXT;
+    ALTER TABLE plans ADD COLUMN place_name TEXT;
+    PRAGMA user_version = 3;
+  `);
+}
 
 export function loadDoneIds(): Set<string> {
   const rows = db.getAllSync<{ activity_id: string }>(`
@@ -136,12 +144,20 @@ export function recordVisit(placeId: string, activityId: string, visited: boolea
 
 export type Rating = 'loved' | 'fine' | 'not-for-me';
 
-export type Reflection = { entryId: string; placeId: string | null; rating: Rating | null; note: string; photo: string | null };
+export type Reflection = {
+  entryId: string;
+  placeId: string | null;
+  placeName: string | null;
+  rating: Rating | null;
+  note: string;
+  photo: string | null;
+};
 
 export function recordReflection(r: Reflection): void {
-  db.runSync('INSERT INTO reflections (entry_id, place_id, rating, note, photo, at) VALUES (?, ?, ?, ?, ?, ?)', [
+  db.runSync('INSERT INTO reflections (entry_id, place_id, place_name, rating, note, photo, at) VALUES (?, ?, ?, ?, ?, ?, ?)', [
     r.entryId,
     r.placeId,
+    r.placeName,
     r.rating,
     r.note || null,
     r.photo,
@@ -153,6 +169,7 @@ export type Memory = {
   entryId: string;
   at: string;
   placeId: string | null;
+  placeName: string | null;
   rating: Rating | null;
   note: string | null;
   photo: string | null;
@@ -161,7 +178,7 @@ export type Memory = {
 /** Everything currently done, newest first, with its latest reflection if there is one. */
 export function loadMemories(): Memory[] {
   return db.getAllSync<Memory>(`
-    SELECT c.activity_id AS entryId, c.at, r.place_id AS placeId, r.rating, r.note, r.photo
+    SELECT c.activity_id AS entryId, c.at, r.place_id AS placeId, r.place_name AS placeName, r.rating, r.note, r.photo
     FROM completion_events c
     LEFT JOIN reflections r ON r.id = (SELECT MAX(id) FROM reflections WHERE entry_id = c.activity_id)
     WHERE c.id = (SELECT MAX(id) FROM completion_events WHERE activity_id = c.activity_id)
@@ -190,30 +207,31 @@ export function deleteCustomActivity(id: string): void {
 }
 
 /** A day is a local YYYY-MM-DD key. Activity ids repeat across cities, so plans are kept per city. */
-export type Plan = { entryId: string; cityId: string; placeId: string | null; day: string };
+export type Plan = { entryId: string; cityId: string; placeId: string | null; placeName: string | null; day: string };
 
 export const planKey = (cityId: string, entryId: string) => `${cityId}/${entryId}`;
 
 export function loadPlans(): Map<string, Plan> {
-  const rows = db.getAllSync<{ entry_id: string; city_id: string; place_id: string | null; day: string }>(`
-    SELECT p.entry_id, p.city_id, p.place_id, p.day FROM plans p
+  const rows = db.getAllSync<{ entry_id: string; city_id: string; place_id: string | null; place_name: string | null; day: string }>(`
+    SELECT p.entry_id, p.city_id, p.place_id, p.place_name, p.day FROM plans p
     WHERE p.id = (SELECT MAX(id) FROM plans WHERE city_id = p.city_id AND entry_id = p.entry_id)
       AND p.day IS NOT NULL
   `);
   return new Map(
     rows.map((r) => [
       planKey(r.city_id, r.entry_id),
-      { entryId: r.entry_id, cityId: r.city_id, placeId: r.place_id, day: r.day },
+      { entryId: r.entry_id, cityId: r.city_id, placeId: r.place_id, placeName: r.place_name, day: r.day },
     ]),
   );
 }
 
 /** Append-only like the other logs. A row with no day clears the plan. */
-export function recordPlan(cityId: string, entryId: string, plan: Pick<Plan, 'placeId' | 'day'> | null): void {
-  db.runSync('INSERT INTO plans (entry_id, city_id, place_id, day, at) VALUES (?, ?, ?, ?, ?)', [
+export function recordPlan(cityId: string, entryId: string, plan: Pick<Plan, 'placeId' | 'placeName' | 'day'> | null): void {
+  db.runSync('INSERT INTO plans (entry_id, city_id, place_id, place_name, day, at) VALUES (?, ?, ?, ?, ?, ?)', [
     entryId,
     cityId,
     plan?.placeId ?? null,
+    plan?.placeName ?? null,
     plan?.day ?? null,
     new Date().toISOString(),
   ]);

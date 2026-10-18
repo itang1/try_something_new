@@ -83,7 +83,7 @@ export default function ActivitySheet() {
               {plan ? `Planned for ${formatDay(plan.day)}` : 'Pick a day'}
             </Text>
             <Text style={[styles.meta, { color: colors.secondary }]} numberOfLines={1}>
-              {plan ? (planPlace?.name ?? 'Tap to change') : 'Deciding when helps you follow through'}
+              {plan ? (planPlace?.name ?? plan.placeName ?? 'Tap to change') : 'Deciding when helps you follow through'}
             </Text>
           </View>
           <Icon name="chevron_right" size={20} color={colors.tertiary} />
