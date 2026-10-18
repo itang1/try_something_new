@@ -28,6 +28,8 @@ export type Activity = {
   months?: number[];
   /** Needs warm weather, so it follows the city's warm months. */
   warm?: boolean;
+  /** Only happens where winters are cold, like fall colors, so it's left out of cities warm all year. */
+  needsWinter?: boolean;
 } & Ways;
 
 /** Ways to do an activity without one of its places: what you'd need at home, how to host it, or a maps search. */
@@ -151,6 +153,7 @@ function buildEntries(city: City): Entry[] {
   const activities = [...ACTIVITIES.values()]
     // Activities that need no venue show up in every city.
     .filter((a) => placesByActivity.has(a.id) || a.home || a.host || a.search)
+    .filter((a) => !a.needsWinter || city.warmMonths)
     .map((a) => entry(a, 'activity', a.id, placesByActivity.get(a.id) ?? [], seasonIn(city, a)));
   const cityIcons = city.icons.map((i) => entry(i, 'icon', i.activity, [placeById.get(i.place)!]));
   return [...activities, ...cityIcons].sort((a, b) => a.name.localeCompare(b.name));

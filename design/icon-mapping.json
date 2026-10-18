@@ -26,6 +26,7 @@
   "drive-in-movie": {"name": "Watch a drive-in movie", "sfSymbol": "film.fill", "material": "movie", "materialSpecific": true, "phosphor": "popcorn", "phosphorSpecific": true},
   "embroidery": {"name": "Embroidery", "sfSymbol": "pencil.tip", "material": "content_cut", "materialSpecific": false, "phosphor": "needle", "phosphorSpecific": true},
   "escape-room": {"name": "Escape Room", "sfSymbol": "puzzlepiece.fill", "material": "key", "materialSpecific": true, "phosphor": "lock-key", "phosphorSpecific": true},
+  "fall-colors": {"name": "See the fall colors", "sfSymbol": "leaf", "material": "forest", "materialSpecific": true, "phosphor": "leaf", "phosphorSpecific": false},
   "fencing": {"name": "Fencing", "sfSymbol": "figure.fencing", "material": "sports_martial_arts", "materialSpecific": false, "phosphor": "sword", "phosphorSpecific": false},
   "fishing": {"name": "Fishing", "sfSymbol": "figure.fishing", "material": "set_meal", "materialSpecific": true, "phosphor": "fish-simple", "phosphorSpecific": true},
   "flea-market": {"name": "Hunt for treasure at a flea market", "sfSymbol": "gift.fill", "material": "local_mall", "materialSpecific": true, "phosphor": "tag", "phosphorSpecific": true},
