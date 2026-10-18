@@ -105,6 +105,12 @@ if (version < 3) {
     PRAGMA user_version = 3;
   `);
 }
+if (version < 4) {
+  db.execSync(`
+    ALTER TABLE completion_events ADD COLUMN earlier INTEGER NOT NULL DEFAULT 0;
+    PRAGMA user_version = 4;
+  `);
+}
 
 export function loadDoneIds(): Set<string> {
   const rows = db.getAllSync<{ activity_id: string }>(`
@@ -115,10 +121,12 @@ export function loadDoneIds(): Set<string> {
   return new Set(rows.map((r) => r.activity_id));
 }
 
-export function recordCompletion(activityId: string, done: boolean): void {
-  db.runSync('INSERT INTO completion_events (activity_id, done, at) VALUES (?, ?, ?)', [
+/** Earlier means done before using the app: it counts as done but isn't a memory. */
+export function recordCompletion(activityId: string, done: boolean, earlier = false): void {
+  db.runSync('INSERT INTO completion_events (activity_id, done, earlier, at) VALUES (?, ?, ?, ?)', [
     activityId,
     done ? 1 : 0,
+    earlier ? 1 : 0,
     new Date().toISOString(),
   ]);
 }
@@ -182,7 +190,7 @@ export function loadMemories(): Memory[] {
     FROM completion_events c
     LEFT JOIN reflections r ON r.id = (SELECT MAX(id) FROM reflections WHERE entry_id = c.activity_id)
     WHERE c.id = (SELECT MAX(id) FROM completion_events WHERE activity_id = c.activity_id)
-      AND c.done = 1
+      AND c.done = 1 AND c.earlier = 0
     ORDER BY c.at DESC
   `);
 }

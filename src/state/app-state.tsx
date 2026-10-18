@@ -60,13 +60,15 @@ type AppState = {
   /** Checking off a city icon also logs a visit to its place and checks off its activity. */
   toggleDone: (entry: Entry) => void;
   /** Sets entries done or not, with no cascading. Used to undo. */
-  setDone: (ids: string[], done: boolean) => void;
+  /** Earlier marks things done before using the app, which stay out of memories. */
+  setDone: (ids: string[], done: boolean, earlier?: boolean) => void;
   visitedPlaceIds: Set<string>;
   setVisited: (placeId: string, activityId: string, visited: boolean) => void;
   /** Visiting any place also checks off the activity. */
   toggleVisited: (placeId: string, activityId: string) => void;
   savedIds: Set<string>;
   toggleSaved: (id: string) => void;
+  save: (ids: string[]) => void;
   /** Marked "Not for me", so Explore stops suggesting them. */
   hiddenIds: Set<string>;
   hide: (id: string) => void;
@@ -197,11 +199,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   // Undoing never cascades: unchecking an icon or a place leaves the activity checked off.
   const markDone = useCallback(
-    (ids: string[], done: boolean) => {
+    (ids: string[], done: boolean, earlier?: boolean) => {
       const next = new Set(doneIds);
       for (const id of ids) {
         if (next.has(id) === done) continue;
-        recordCompletion(id, done);
+        recordCompletion(id, done, earlier);
         if (done) next.add(id);
         else next.delete(id);
       }
@@ -250,6 +252,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     (id: string) => setSaved(saved.includes(id) ? saved.filter((s) => s !== id) : [...saved, id]),
     [saved, setSaved],
   );
+  const save = useCallback((ids: string[]) => setSaved([...new Set([...saved, ...ids])]), [saved, setSaved]);
   const hide = useCallback((id: string) => setHidden([...new Set([...hidden, id])]), [hidden, setHidden]);
   const unhide = useCallback((id: string) => setHidden(hidden.filter((h) => h !== id)), [hidden, setHidden]);
 
@@ -279,6 +282,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         toggleVisited,
         savedIds,
         toggleSaved,
+        save,
         hiddenIds,
         hide,
         unhide,

@@ -25,6 +25,7 @@ export default function RootLayout() {
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="welcome" options={{ presentation: 'fullScreenModal' }} />
+              <Stack.Screen name="quick-start" options={{ presentation: 'fullScreenModal' }} />
               <Stack.Screen
                 name="location"
                 options={{

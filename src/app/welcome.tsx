@@ -19,8 +19,7 @@ export default function WelcomeScreen() {
 
   const finish = (setLocation: boolean) => {
     writeSetting('onboarded', true);
-    router.back();
-    if (setLocation) router.push('/location');
+    router.replace(setLocation ? '/quick-start?location=1' : '/quick-start');
   };
 
   return (
