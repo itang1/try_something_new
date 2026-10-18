@@ -73,6 +73,9 @@ type AppState = {
   hiddenIds: Set<string>;
   hide: (id: string) => void;
   unhide: (id: string) => void;
+  /** Whether to send one idea on Thursday evenings. Off until the person turns it on. */
+  weekendNudge: boolean;
+  setWeekendNudge: (on: boolean) => void;
   /** Explore's filters, kept across launches. */
   filters: Filters;
   setFilters: (filters: Filters) => void;
@@ -109,6 +112,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [allPlans, setAllPlans] = useState(loadPlans);
   const [customs, setCustoms] = useState(loadCustomActivities);
   const [filters, setFilters] = usePersistedState<Filters>('exploreFilters', NO_FILTERS);
+  const [weekendNudge, setWeekendNudge] = usePersistedState('weekendNudge', false);
   const savedIds = useMemo(() => new Set(saved), [saved]);
   const hiddenIds = useMemo(() => new Set(hidden), [hidden]);
 
@@ -286,6 +290,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         hiddenIds,
         hide,
         unhide,
+        weekendNudge,
+        setWeekendNudge,
         filters,
         setFilters,
         plans,

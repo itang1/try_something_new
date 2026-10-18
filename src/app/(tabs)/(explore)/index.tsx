@@ -7,6 +7,7 @@ import * as Haptics from 'expo-haptics';
 import { inSeason, LEVELS, otherWays, type Entry } from '@/data/catalog';
 import { addDays, dayKey, formatDay } from '@/data/days';
 import { searchNearby } from '@/data/directions';
+import { allowNudges } from '@/data/nudge';
 import { formatMinutes, placesByDistance } from '@/data/drive';
 import { describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
 import { readSetting, writeSetting } from '@/data/storage';
@@ -28,12 +29,14 @@ function randomItem<T>(items: T[]): T {
 export default function ExploreScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { city, entries, findEntry, home, origin, driveTimes, isDone, savedIds, toggleSaved, hiddenIds, hide, plans, filters, setFilters } = useAppState();
+  const { city, entries, findEntry, home, origin, driveTimes, isDone, savedIds, toggleSaved, hiddenIds, hide, plans, filters, setFilters, weekendNudge, setWeekendNudge } =
+    useAppState();
   const markDone = useMarkDone();
   const toast = useToast();
   // The pick remembers its city, so switching cities clears it without an effect.
   const [pick, setPick] = useState<{ id: string; city: string; n: number; nudge: boolean } | null>(null);
   const [noMatch, setNoMatch] = useState(false);
+  const [nudgeAsked, setNudgeAsked] = useState(() => readSetting('nudgeAsked', false));
   const { height } = useWindowDimensions();
   const footer = useRef<ComponentRef<typeof View>>(null);
   const [toastBottom, setToastBottom] = useState<number>();
@@ -77,6 +80,13 @@ export default function ExploreScreen() {
   const soonPlace = soonEntry?.places.find((p) => p.id === soonPlan?.placeId)?.name ?? soonPlan?.placeName;
 
   const activeFilters = describeFilters(filters, (id) => subcategory(id).label);
+  // Asked once, and only after someone has saved or done something, so it never comes up cold.
+  const offerNudge = !weekendNudge && !nudgeAsked && (savedIds.size > 0 || entries.some((e) => isDone(e.id)));
+  const answerNudge = async (yes: boolean) => {
+    writeSetting('nudgeAsked', true);
+    setNudgeAsked(true);
+    if (yes) setWeekendNudge(await allowNudges());
+  };
 
   // A swipe moves the card away, so say it was saved.
   const save = (entry: Entry) => {
@@ -133,6 +143,36 @@ export default function ExploreScreen() {
             </View>
             <Icon name="chevron_right" size={20} color={colors.tertiary} />
           </Pressable>
+        )}
+
+        {offerNudge && (
+          <View style={[styles.nudge, { backgroundColor: colors.card }]}>
+            <View style={styles.nudgeTop}>
+              <View style={[styles.nudgeIcon, { backgroundColor: colors.accentSoft }]}>
+                <Icon name="notifications" size={22} color={colors.accent} />
+              </View>
+              <View style={styles.grow}>
+                <Text style={[styles.placeName, { color: colors.label }]}>Want one idea every Thursday?</Text>
+                <Text style={[styles.placeLine, { color: colors.secondary }]}>
+                  A single suggestion for the weekend, at 6 pm. No streaks, and you can turn it off in Settings.
+                </Text>
+              </View>
+            </View>
+            <View style={styles.nudgeButtons}>
+              <Pressable
+                onPress={() => answerNudge(false)}
+                style={({ pressed }) => [styles.nudgeButton, { backgroundColor: colors.fill, opacity: pressed ? 0.7 : 1 }]}
+              >
+                <Text style={[styles.nudgeButtonText, { color: colors.label }]}>No thanks</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => answerNudge(true)}
+                style={({ pressed }) => [styles.nudgeButton, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
+              >
+                <Text style={[styles.nudgeButtonText, { color: 'white' }]}>Yes, please</Text>
+              </Pressable>
+            </View>
+          </View>
         )}
 
         <View style={[styles.middle, activity && styles.top]}>
@@ -383,6 +423,12 @@ const styles = StyleSheet.create({
   },
   actionText: { fontSize: 12, fontWeight: '600' },
   soon: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 16 },
+  nudge: { padding: 14, borderRadius: 16, gap: 12 },
+  nudgeTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  nudgeIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  nudgeButtons: { flexDirection: 'row', gap: 8 },
+  nudgeButton: { flex: 1, minHeight: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  nudgeButtonText: { fontSize: 15, fontWeight: '600' },
   soonDay: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
   empty: { alignItems: 'center', gap: 12 },
   emptyTitle: { fontSize: 17, fontWeight: '600' },

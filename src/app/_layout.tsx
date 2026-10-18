@@ -1,12 +1,33 @@
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { useEffect } from 'react';
+import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider, type Href } from 'expo-router';
 import { useColorScheme } from 'react-native';
+import * as Notifications from 'expo-notifications';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppStateProvider } from '@/state/app-state';
 import { ToastProvider } from '@/state/toast';
+import { NudgeSync } from '@/state/nudge-sync';
 import { WidgetSync } from '@/state/widget-sync';
 import { useColors } from '@/theme';
 
+/** Opens the idea a weekend nudge suggested, whether the app was running or not. */
+function useNudgeTaps() {
+  useEffect(() => {
+    const open = (notification: Notifications.Notification) => {
+      const url = notification.request.content.data?.url;
+      if (typeof url === 'string') {
+        router.push(url as Href);
+        Notifications.clearLastNotificationResponse();
+      }
+    };
+    const last = Notifications.getLastNotificationResponse();
+    if (last?.notification) open(last.notification);
+    const subscription = Notifications.addNotificationResponseReceivedListener((r) => open(r.notification));
+    return () => subscription.remove();
+  }, []);
+}
+
 export default function RootLayout() {
+  useNudgeTaps();
   const scheme = useColorScheme();
   const colors = useColors();
   const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
@@ -21,6 +42,7 @@ export default function RootLayout() {
       <ThemeProvider value={theme}>
         <AppStateProvider>
           <WidgetSync />
+          <NudgeSync />
           <ToastProvider>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(tabs)" />
