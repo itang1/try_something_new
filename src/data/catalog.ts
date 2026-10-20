@@ -2,6 +2,7 @@ import activitiesFile from '../../data/activities.json';
 import losAngeles from '../../data/cities/los-angeles.json';
 import columbus from '../../data/cities/columbus.json';
 import iconMapping from '../../design/icon-mapping.json';
+import aliasesFile from '../../data/aliases.json';
 import { haversineKm, type Coordinate } from './drive';
 import type { IconName } from '@/icons/paths';
 import { subcategory } from '@/theme';
@@ -86,6 +87,16 @@ export const DURATIONS = ['1 hour', '1-2 hours', '2-3 hours', 'Half day', 'Full 
 export const COSTS = ['Free', '$', '$$', '$$$'];
 
 export const CITIES = [losAngeles, columbus] as City[];
+
+/** Old ids mapped to the ids that replaced them, following chains, so stored history survives renames and merges. */
+export const ALIASES: Record<string, string> = Object.fromEntries(
+  Object.keys(aliasesFile.aliases).map((from) => {
+    const table = aliasesFile.aliases as Record<string, string>;
+    let to = table[from];
+    for (let hops = 0; table[to] && hops < 10; hops++) to = table[to];
+    return [from, to];
+  }),
+);
 
 const ACTIVITIES = new Map((activitiesFile.activities as Activity[]).map((a) => [a.id, a]));
 const icons = iconMapping as Record<string, { material: string }>;

@@ -1,5 +1,6 @@
 import { createContext, use, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
+  ALIASES,
   CITIES,
   cityById,
   customEntry,
@@ -14,6 +15,7 @@ import type { Coordinate, DriveTimes } from '@/data/drive';
 import { NO_FILTERS, type Filters } from '@/data/filters';
 import { cachedDriveTimes, refreshDriveTimes } from '@/data/routing';
 import {
+  applyAliases,
   deleteCustomActivity,
   loadCustomActivities,
   loadDoneIds,
@@ -88,6 +90,9 @@ type AppState = {
 const AppStateContext = createContext<AppState | null>(null);
 
 const MAX_RECENT = 5;
+
+// Before anything reads stored ids, so renamed activities and places keep their history.
+applyAliases(ALIASES);
 
 function usePersistedState<T>(key: string, fallback: T) {
   const [value, setValue] = useState<T>(() => readSetting(key, fallback));

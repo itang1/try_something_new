@@ -128,7 +128,7 @@ function km(a, b) {
 
 const file = `data/cities/${cityId}.json`;
 const city = JSON.parse(readFileSync(file, 'utf8'));
-const handPicked = city.places.filter((p) => !p.id.includes('--osm-'));
+const handPicked = city.places.filter((p) => !p.id.startsWith('osm:'));
 const imported = [];
 let merged = 0;
 
@@ -139,8 +139,9 @@ for (const e of await fetchElements()) {
   // Fields and courts are often named just "1" or "A".
   if (!activities.size || !/[a-z]{3}/i.test(t.name ?? '') || center.lat == null) continue;
   const place = {
-    // OSM ids, unlike names, survive renames and tell apart places that share a name.
-    id: `${cityId}--osm-${e.type[0]}${e.id}`,
+    // OSM ids, unlike names, survive renames and tell apart places that share a name. No city in them, so a place
+    // keeps its id however the catalog is split up.
+    id: `osm:${e.type[0]}${e.id}`,
     name: t.name,
     lat: Math.round(center.lat * 1e4) / 1e4,
     lng: Math.round(center.lon * 1e4) / 1e4,

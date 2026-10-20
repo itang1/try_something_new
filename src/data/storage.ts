@@ -111,6 +111,42 @@ if (version < 4) {
     PRAGMA user_version = 4;
   `);
 }
+// Place ids lost their city: "columbus--osm-n1" became "osm:n1", and hand-picked "columbus--x" became "pick:x".
+if (version < 5) {
+  for (const [table, column] of [
+    ['place_visits', 'place_id'],
+    ['reflections', 'place_id'],
+    ['plans', 'place_id'],
+  ]) {
+    db.execSync(`
+      UPDATE ${table} SET ${column} = 'osm:' || substr(${column}, instr(${column}, '--osm-') + 6) WHERE ${column} LIKE '%--osm-%';
+      UPDATE ${table} SET ${column} = 'pick:' || substr(${column}, instr(${column}, '--') + 2) WHERE ${column} LIKE '%--%';
+    `);
+  }
+  db.execSync('DELETE FROM drive_times; PRAGMA user_version = 5;');
+}
+
+/** Moves stored ids onto their new ones when the catalog renames or merges something. Runs only when the list changes. */
+export function applyAliases(aliases: Record<string, string>): void {
+  const key = JSON.stringify(aliases);
+  if (readSetting('appliedAliases', '') === key) return;
+  db.withTransactionSync(() => {
+    for (const [from, to] of Object.entries(aliases)) {
+      db.runSync('UPDATE completion_events SET activity_id = ? WHERE activity_id = ?', [to, from]);
+      db.runSync('UPDATE place_visits SET activity_id = ? WHERE activity_id = ?', [to, from]);
+      db.runSync('UPDATE place_visits SET place_id = ? WHERE place_id = ?', [to, from]);
+      db.runSync('UPDATE reflections SET entry_id = ? WHERE entry_id = ?', [to, from]);
+      db.runSync('UPDATE reflections SET place_id = ? WHERE place_id = ?', [to, from]);
+      db.runSync('UPDATE plans SET entry_id = ? WHERE entry_id = ?', [to, from]);
+      db.runSync('UPDATE plans SET place_id = ? WHERE place_id = ?', [to, from]);
+      db.runSync('DELETE FROM drive_times WHERE place_id = ?', [from]);
+    }
+  });
+  for (const list of ['savedIds', 'hiddenIds']) {
+    writeSetting(list, [...new Set(readSetting<string[]>(list, []).map((id) => aliases[id] ?? id))]);
+  }
+  writeSetting('appliedAliases', key);
+}
 
 export function loadDoneIds(): Set<string> {
   const rows = db.getAllSync<{ activity_id: string }>(`
