@@ -8,7 +8,8 @@
     "ios": "expo run:ios",
     "android": "expo run:android",
     "icons": "node scripts/build-icons.mjs",
-    "lint": "eslint .",
+    "lint": "eslint . && npm run validate",
+    "validate": "node scripts/validate-catalog.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
