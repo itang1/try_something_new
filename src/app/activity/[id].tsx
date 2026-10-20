@@ -5,6 +5,7 @@ import { LEVELS, otherWays, seasonLabel } from '@/data/catalog';
 import { formatDay } from '@/data/days';
 import { openDirections, searchNearby } from '@/data/directions';
 import { inviteFriend } from '@/data/invite';
+import { canReport, reportPlace } from '@/data/report';
 import { formatMinutes, placesByDistance } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
 import { useMarkDone } from '@/state/use-mark-done';
@@ -128,6 +129,16 @@ export default function ActivitySheet() {
                         <Text style={[styles.meta, { color: colors.secondary }]}>{formatMinutes(minutes)} away</Text>
                       )}
                     </View>
+                    {canReport && (
+                      <Pressable
+                        onPress={() => reportPlace(place, entry, city.name)}
+                        hitSlop={8}
+                        accessibilityLabel={`Report a problem with ${place.name}`}
+                        style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
+                      >
+                        <Icon name="flag" size={18} color={colors.tertiary} />
+                      </Pressable>
+                    )}
                     <Pressable
                       onPress={() => openDirections(place)}
                       accessibilityLabel={`Directions to ${place.name}`}
