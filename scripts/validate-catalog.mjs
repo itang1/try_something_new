@@ -1,23 +1,15 @@
 // Checks the catalog for mistakes the app would hit at runtime: unknown ids, missing icons, bad values.
 // Run with `npm run validate`. Exits with an error listing every problem.
 import { readdirSync, readFileSync } from 'node:fs';
+import { COSTS as COST_LIST, DURATIONS as DURATION_LIST, KINDS as KIND_LIST, LEVEL_IDS } from '../src/data/vocab.ts';
 
 const read = (path) => readFileSync(path, 'utf8');
 const json = (path) => JSON.parse(read(path));
-const listIn = (source, name) =>
-  [...source.match(new RegExp(`export const ${name} = \\[([^\\]]*)\\]`))[1].matchAll(/'([^']*)'/g)].map((m) => m[1]);
 
-// Allowed values come from the app's own source, so they can't drift apart.
-const catalogSource = read('src/data/catalog.ts');
-const DURATIONS = new Set(
-  [...catalogSource.match(/const DURATION_MINUTES[^{]*\{([^}]*)\}/)[1].matchAll(/'([^']*)':/g)].map((m) => m[1]),
-);
-const COSTS = new Set(listIn(catalogSource, 'COSTS'));
-const LEVELS = new Set(['easy', 'medium', 'stretch']);
-const themeSource = read('src/theme.ts');
-const KINDS = new Set(
-  [...themeSource.slice(themeSource.indexOf('export const SUBCATEGORIES')).matchAll(/^ {2}(\w+): \{ label:/gm)].map((m) => m[1]),
-);
+const DURATIONS = new Set(DURATION_LIST);
+const COSTS = new Set(COST_LIST);
+const LEVELS = new Set(LEVEL_IDS);
+const KINDS = new Set(KIND_LIST);
 const ICON_NAMES = new Set([...read('src/icons/paths.ts').matchAll(/^ {2}(\w+): '/gm)].map((m) => m[1]));
 const PLACE_ID = /^(osm:[nwr]\d+|pick:[a-z0-9]+(-[a-z0-9]+)*)$/;
 const ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;

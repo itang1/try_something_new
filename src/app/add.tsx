@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { COSTS, DURATIONS } from '@/data/catalog';
+import { COSTS, DURATIONS, type Cost, type Duration, type Kind } from '@/data/catalog';
 import { useAppState } from '@/state/app-state';
 import { useToast } from '@/state/toast';
 import { SUBCATEGORIES, useColors } from '@/theme';
@@ -15,9 +15,9 @@ export default function AddSheet() {
   const toast = useToast();
   const { city, addCustom } = useAppState();
   const [name, setName] = useState('');
-  const [kind, setKind] = useState('move');
-  const [duration, setDuration] = useState('1-2 hours');
-  const [cost, setCost] = useState('$');
+  const [kind, setKind] = useState<Kind>('move');
+  const [duration, setDuration] = useState<Duration>('1-2 hours');
+  const [cost, setCost] = useState<Cost>('$');
   const trimmed = name.trim();
 
   const add = () => {
@@ -67,7 +67,7 @@ export default function AddSheet() {
               icon={sub.icon}
               color={sub.color}
               selected={kind === id}
-              onPress={() => setKind(id)}
+              onPress={() => setKind(id as Kind)}
             />
           ))}
         </View>

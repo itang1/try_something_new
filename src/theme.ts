@@ -1,5 +1,6 @@
 import { useColorScheme } from 'react-native';
 import type { IconName } from '@/icons/paths';
+import type { Kind } from '@/data/vocab';
 
 // iOS system colors, so the app looks at home on iOS and stays consistent on Android.
 const light = {
@@ -56,7 +57,7 @@ const BROWN = '#A2845E';
 const CRAFT = '#D940A6';
 
 // Kinds group by what you'd be doing, not by venue, so they stay the same in every region.
-export const SUBCATEGORIES: Record<string, Subcategory> = {
+export const SUBCATEGORIES: Record<Kind, Subcategory> = {
   move: { label: 'Move', icon: 'directions_run', color: ORANGE, gradient: [ORANGE, RED] },
   outdoors: { label: 'Outdoors', icon: 'hiking', color: GREEN, gradient: [GREEN, TEAL] },
   water: { label: 'Water & Snow', icon: 'waves', color: CYAN, gradient: [CYAN, BLUE] },
@@ -70,7 +71,7 @@ export const SUBCATEGORIES: Record<string, Subcategory> = {
 };
 
 export function subcategory(id: string): Subcategory {
-  return SUBCATEGORIES[id] ?? { label: id, icon: 'help', color: '#8E8E93', gradient: ['#8E8E93', '#636366'] };
+  return SUBCATEGORIES[id as Kind] ?? { label: id, icon: 'help', color: '#8E8E93', gradient: ['#8E8E93', '#636366'] };
 }
 
 /** Keeps lists and cards a comfortable width on tablets. */

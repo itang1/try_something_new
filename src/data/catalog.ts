@@ -6,6 +6,9 @@ import aliasesFile from '../../data/aliases.json';
 import { haversineKm, type Coordinate } from './drive';
 import type { IconName } from '@/icons/paths';
 import { subcategory } from '@/theme';
+import { COST_LEVEL, DURATION_MINUTES, type Cost, type Duration, type Kind, type Level } from './vocab';
+
+export { COSTS, DURATIONS, type Cost, type Duration, type Kind, type Level } from './vocab';
 
 export type Place = {
   id: string;
@@ -13,17 +16,17 @@ export type Place = {
   lat: number;
   lng: number;
   activities: string[];
-  duration?: string;
-  cost?: string;
+  duration?: Duration;
+  cost?: Cost;
 };
 
 /** Something to try, like archery or an art museum. It's done once, at any of its places or in one of its other ways. */
 export type Activity = {
   id: string;
   name: string;
-  subcategory: string;
-  duration: string;
-  cost: string;
+  subcategory: Kind;
+  duration: Duration;
+  cost: Cost;
   level: Level;
   /** Its season in the northern hemisphere, as months 1 to 12. */
   months?: number[];
@@ -35,9 +38,6 @@ export type Activity = {
 
 /** Ways to do an activity without one of its places: what you'd need at home, how to host it, or a maps search. */
 export type Ways = { home?: string; host?: string; search?: string };
-
-/** How far outside a comfort zone it is. Starting easy and building up keeps people going. */
-export type Level = 'easy' | 'medium' | 'stretch';
 
 export const LEVELS: Record<Level, { label: string; icon: IconName; rank: number }> = {
   easy: { label: 'Easy', icon: 'eco', rank: 0 },
@@ -67,9 +67,9 @@ export type Entry = {
   kind: 'activity' | 'icon';
   name: string;
   icon: IconName;
-  subcategory: string;
-  duration: string;
-  cost: string;
+  subcategory: Kind;
+  duration: Duration;
+  cost: Cost;
   durationMinutes: number;
   costLevel: number;
   level: Level;
@@ -82,10 +82,7 @@ export type Entry = {
 } & Ways;
 
 /** Something the user added to a city's list themselves. */
-export type CustomActivity = { id: string; cityId: string; name: string; subcategory: string; duration: string; cost: string };
-
-export const DURATIONS = ['1 hour', '1-2 hours', '2-3 hours', 'Half day', 'Full day'];
-export const COSTS = ['Free', '$', '$$', '$$$'];
+export type CustomActivity = { id: string; cityId: string; name: string; subcategory: Kind; duration: Duration; cost: Cost };
 
 export const CITIES = [losAngeles, columbus] as City[];
 
@@ -101,16 +98,6 @@ export const ALIASES: Record<string, string> = Object.fromEntries(
 
 const ACTIVITIES = new Map((activitiesFile.activities as Activity[]).map((a) => [a.id, a]));
 const icons = iconMapping as Record<string, { material: string }>;
-
-const DURATION_MINUTES: Record<string, number> = {
-  '30 min': 30,
-  '1 hour': 60,
-  '1-2 hours': 90,
-  '2-3 hours': 150,
-  'Half day': 240,
-  'Full day': 480,
-};
-const COST_LEVEL: Record<string, number> = { Free: 0, $: 1, $$: 2, $$$: 3 };
 
 function seasonIn(city: City, a: Activity): number[] | undefined {
   // The southern hemisphere's seasons run six months off.
@@ -128,8 +115,8 @@ function entry(own: Activity | CityIcon, kind: Entry['kind'], activityId: string
     subcategory: base.subcategory,
     duration: base.duration,
     cost: base.cost,
-    durationMinutes: DURATION_MINUTES[base.duration] ?? 0,
-    costLevel: COST_LEVEL[base.cost] ?? 0,
+    durationMinutes: DURATION_MINUTES[base.duration],
+    costLevel: COST_LEVEL[base.cost],
     level: base.level,
     activityId,
     places,
