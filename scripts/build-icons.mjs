@@ -1,6 +1,6 @@
 // Generates src/icons/paths.ts with the path data for only the Material Symbols the app uses,
 // so the full 7,800-icon package never ships in the bundle. Run with `npm run icons`.
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs';
 
 const UI_ICONS = [
   'account_balance', 'add', 'arrow_back', 'arrow_forward', 'beach_access', 'block', 'bolt', 'bookmark', 'calendar_month', 'check', 'check_circle',
@@ -11,7 +11,11 @@ const UI_ICONS = [
 ];
 
 const mapping = JSON.parse(readFileSync('design/icon-mapping.json', 'utf8'));
-const names = [...new Set([...Object.values(mapping).map((a) => a.material), ...UI_ICONS])].sort();
+// A remote city can use only glyphs the installed app already has; others fall back to the activity's.
+const cityGlyphs = readdirSync('data/cities').flatMap((f) =>
+  JSON.parse(readFileSync(`data/cities/${f}`, 'utf8')).icons.flatMap((i) => (i.glyph ? [i.glyph] : [])),
+);
+const names = [...new Set([...Object.values(mapping).map((a) => a.material), ...cityGlyphs, ...UI_ICONS])].sort();
 
 const dir = 'node_modules/@material-symbols/svg-400/rounded';
 const paths = {};

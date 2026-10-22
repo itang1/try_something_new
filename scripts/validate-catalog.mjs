@@ -63,6 +63,9 @@ const iconIds = new Set();
 for (const file of readdirSync('data/cities').filter((f) => f.endsWith('.json'))) {
   const city = json(`data/cities/${file}`);
   const cityPlaces = new Set();
+  if (file !== `${city.id}.json`) fail(`city ${city.id}`, `file should be named ${city.id}.json`);
+  if (!ID.test(city.id ?? '')) fail(`city ${city.id}`, 'id must be lowercase words joined by hyphens');
+  if (!/^[A-Z]{2}$/.test(city.country ?? '')) fail(`city ${city.id}`, 'country must be an ISO 3166 code like "US"');
   if (city.warmMonths) checkMonths(`city ${city.id}`, city.warmMonths);
   for (const p of city.places) {
     const where = `${city.id} place ${p.id} (${p.name})`;
@@ -92,7 +95,11 @@ for (const file of readdirSync('data/cities').filter((f) => f.endsWith('.json'))
     for (const field of ['subcategory', 'duration', 'cost', 'level']) {
       if (activity && i[field] === activity[field]) fail(where, `${field} matches its activity, so leave it out`);
     }
-    checkIcon(i.id);
+    if (i.glyph && !ICON_NAMES.has(i.glyph)) fail(where, `glyph "${i.glyph}" is missing from src/icons/paths.ts (run npm run icons)`);
+  }
+  for (const [from, to] of Object.entries(city.aliases ?? {})) {
+    if (cityPlaces.has(from)) fail(`${city.id} alias ${from}`, 'old id is still in use, so history would move away from it');
+    if (!cityPlaces.has(to) && !city.aliases[to]) fail(`${city.id} alias ${from}`, `points at "${to}", which isn't in this city`);
   }
 }
 

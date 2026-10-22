@@ -1,21 +1,20 @@
 import { createContext, use, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { customEntry, entriesForCity, type City, type CitySummary, type CustomActivity, type Entry } from '@/data/catalog';
 import {
-  ALIASES,
-  CITIES,
-  cityById,
-  customEntry,
-  entriesForCity,
+  applyCatalogAliases,
+  citySummary,
+  DEFAULT_CITY_ID,
+  downloadCity,
   findEntryAnywhere,
+  localCity,
   nearestCity,
-  type City,
-  type CustomActivity,
-  type Entry,
-} from '@/data/catalog';
+  needsDownload,
+  refreshCatalog,
+} from '@/data/cities';
 import type { Coordinate, DriveTimes } from '@/data/drive';
 import { NO_FILTERS, type Filters } from '@/data/filters';
 import { cachedDriveTimes, refreshDriveTimes } from '@/data/routing';
 import {
-  applyAliases,
   deleteCustomActivity,
   loadCustomActivities,
   loadDoneIds,
@@ -39,6 +38,8 @@ export type Trip = { cityId: string; start: HomeLocation | null };
 type AppState = {
   /** The trip's city, or else the city nearest home. */
   city: City;
+  /** That city while it downloads, when the closest city already on the device stands in for it. */
+  pendingCity: CitySummary | null;
   /** The city's list: its activities and icons, plus any the user added. */
   entries: Entry[];
   findEntry: (id: string) => Entry | undefined;
@@ -91,8 +92,7 @@ const AppStateContext = createContext<AppState | null>(null);
 
 const MAX_RECENT = 5;
 
-// Before anything reads stored ids, so renamed activities and places keep their history.
-applyAliases(ALIASES);
+applyCatalogAliases();
 
 function usePersistedState<T>(key: string, fallback: T) {
   const [value, setValue] = useState<T>(() => readSetting(key, fallback));
@@ -121,7 +121,20 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const savedIds = useMemo(() => new Set(saved), [saved]);
   const hiddenIds = useMemo(() => new Set(hidden), [hidden]);
 
-  const city = (trip && cityById(trip.cityId)) || (home ? nearestCity(home).city : CITIES[0]);
+  const [catalogVersion, setCatalogVersion] = useState(0);
+  const wantedId = trip?.cityId ?? (home ? nearestCity(home).city.id : DEFAULT_CITY_ID);
+  const wanted = localCity(wantedId);
+  const wantedSummary = citySummary(wantedId);
+  const standIn = wantedSummary && nearestCity({ latitude: wantedSummary.lat, longitude: wantedSummary.lng }, true).city.id;
+  const city = wanted ?? localCity(standIn ?? DEFAULT_CITY_ID)!;
+  const pendingCity = wanted ? null : (wantedSummary ?? null);
+  const bump = useCallback((changed: boolean) => changed && setCatalogVersion((v) => v + 1), []);
+  useEffect(() => {
+    refreshCatalog().then(bump, () => {});
+  }, [bump]);
+  useEffect(() => {
+    if (needsDownload(wantedId)) downloadCity(wantedId).then(bump, () => {});
+  }, [wantedId, catalogVersion, bump]);
   const origin = trip ? trip.start : home;
   const lat = origin?.latitude;
   const lng = origin?.longitude;
@@ -142,10 +155,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const driveTimes = fetchedTimes?.key === timesKey ? fetchedTimes.times : cachedTimes;
   const entries = useMemo(
     () =>
-      [...entriesForCity(city.id), ...customs.filter((c) => c.cityId === city.id).map(customEntry)].sort((a, b) =>
+      [...entriesForCity(city), ...customs.filter((c) => c.cityId === city.id).map(customEntry)].sort((a, b) =>
         a.name.localeCompare(b.name),
       ),
-    [city.id, customs],
+    [city, customs],
   );
   const findEntry = useCallback((id: string) => entries.find((e) => e.id === id), [entries]);
   const findAnyEntry = useCallback(
@@ -153,7 +166,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       const found = findEntryAnywhere(id, placeId);
       if (found) return found;
       const custom = customs.find((c) => c.id === id);
-      const customCity = custom && cityById(custom.cityId);
+      const customCity = custom && localCity(custom.cityId);
       return custom && customCity ? { entry: customEntry(custom), city: customCity } : undefined;
     },
     [customs],
@@ -269,6 +282,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     <AppStateContext
       value={{
         city,
+        pendingCity,
         entries,
         findEntry,
         findAnyEntry,

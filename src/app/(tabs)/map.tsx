@@ -4,7 +4,8 @@ import MapView, { Marker, type Region } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
-import { nearestCity, type Entry, type Place } from '@/data/catalog';
+import type { Entry, Place } from '@/data/catalog';
+import { nearestCity } from '@/data/cities';
 import { buildIndex, featuresInRegion, zoomToDelta } from '@/data/clusters';
 import { openDirections } from '@/data/directions';
 import { formatMinutes, haversineKm, minutesTo } from '@/data/drive';
@@ -35,13 +36,12 @@ export default function MapScreen() {
   const [region, setRegion] = useState<Region>(initialRegion);
 
   const places = useMemo(() => {
-    return city.places.map((p): PinPlace => ({
-      ...p,
-      // Icons first, so a must-do sets the pin's look.
-      entries: entries
-        .filter((e) => e.places.some((ep) => ep.id === p.id))
-        .sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'icon' ? -1 : 1)),
-    }));
+    const byPlace = new Map<string, Entry[]>();
+    // Icons first, so a must-do sets the pin's look.
+    for (const e of [...entries].sort((a, b) => (a.kind === b.kind ? 0 : a.kind === 'icon' ? -1 : 1))) {
+      for (const p of e.places) byPlace.set(p.id, [...(byPlace.get(p.id) ?? []), e]);
+    }
+    return city.places.map((p): PinPlace => ({ ...p, entries: byPlace.get(p.id) ?? [] }));
   }, [city, entries]);
 
   const isPlaceDone = (p: PinPlace) => p.entries.length > 0 && p.entries.every((e) => doneIds.has(e.id));

@@ -1,16 +1,18 @@
 # Data model
 
-## Catalog (read-only, shipped with the app, later served per city from a CDN)
+## Catalog (read-only: a few cities ship with the app, the rest download per city from a CDN)
 
 - **Activity** ([`data/activities.json`](../data/activities.json)): something to try, like archery or an art museum. It has a name, subcategory, typical duration, cost, and level (easy, a bit new, or stretch). It isn't tied to a city. It can also list other ways to do it: what you'd need at home, how to host friends, or a maps search for venues open map data can't find, like cooking classes. An activity with a season (snow sports) lists its months, flipped for the southern hemisphere, and one that needs warm weather (kayaking) follows its city's warm months. One that needs cold winters (fall colors) only shows up in cities with warm months. Explore leaves out what's out of season.
-- **City** ([`data/cities/<id>.json`](../data/cities)): a name, a center point, its warm months (all year if missing), its places, and its icons. One file per city, so a city can be added or updated on its own.
+- **City** ([`data/cities/<id>.json`](../data/cities)): a name, a region where the country uses one (a state or province), an ISO country code, a center point, its warm months (all year if missing), its places, and its icons. One file per city, so a city can be added or updated on its own.
 - **Place:** a real location in a city, with coordinates and the activities you can do there. A place can serve several activities (a beach for surfing and for beach yoga). It can override the activity's duration or cost when it differs, like a full day at Universal Studios. Its id comes from its source, like `osm:n123` for OpenStreetMap or `pick:<name>` for a hand-picked place, and never names the city, so it stays the same however the catalog is split up.
-- **City icon:** a hand-picked must-do in one city, like the Getty or Sunset at Griffith Observatory. It points to one place and one activity, and doing it also counts toward that activity. It shares the activity's level unless it sets its own.
-- **Aliases** ([`data/aliases.json`](../data/aliases.json)): old activity and place ids mapped to the ones that replaced them. On launch, stored history, plans, and saved lists move onto the new ids, so a rename or merge in the catalog never loses anything.
+- **City icon:** a hand-picked must-do in one city, like the Getty or Sunset at Griffith Observatory. It points to one place and one activity, and doing it also counts toward that activity. It takes the activity's kind, duration, cost, and level unless it sets its own, and can name its own glyph.
+- **Aliases** ([`data/aliases.json`](../data/aliases.json) for activities, and a city file's `aliases` for its places): old ids mapped to the ones that replaced them. On launch, stored history, plans, and saved lists move onto the new ids, so a rename or merge in the catalog never loses anything.
 
 A city's list is every activity that has a place there or another way to do it, plus that city's icons. Places will come from the Overture Maps pipeline. Activities and icons stay hand-picked and small.
 
-Icons for activities and city icons come from [`icon-mapping.json`](icon-mapping.json), keyed by the same ids.
+Icons for activities come from [`icon-mapping.json`](icon-mapping.json), keyed by the same ids. A city icon's `glyph` must be one the installed app has, or it falls back to its activity's.
+
+- **Index and downloads:** `npm run catalog` writes `dist/catalog/index.json` (each city's id, name, region, country, center, and content hash) and one `cities/<id>-<hash>.json` per city. The app downloads the index on launch and a city's file when you're there or plan a trip, and keeps it in SQLite. Until a city arrives, the closest one on the device stands in. The cities bundled in the app are listed in [`src/data/cities.ts`](../src/data/cities.ts).
 
 ## User state (on the device, synced later)
 

@@ -1,10 +1,7 @@
 import activitiesFile from '../../data/activities.json';
-import losAngeles from '../../data/cities/los-angeles.json';
-import columbus from '../../data/cities/columbus.json';
 import iconMapping from '../../design/icon-mapping.json';
 import aliasesFile from '../../data/aliases.json';
-import { haversineKm, type Coordinate } from './drive';
-import type { IconName } from '@/icons/paths';
+import { ICON_PATHS, type IconName } from '@/icons/paths';
 import { subcategory } from '@/theme';
 import { COST_LEVEL, DURATION_MINUTES, type Cost, type Duration, type Kind, type Level } from './vocab';
 
@@ -47,19 +44,40 @@ export const LEVELS: Record<Level, { label: string; icon: IconName; rank: number
 
 /** A city's must-do, tied to one place. Doing it also counts toward its activity, and takes the activity's kind, duration, cost and level unless set. */
 export type CityIcon = Pick<Activity, 'id' | 'name'> &
-  Partial<Pick<Activity, 'subcategory' | 'duration' | 'cost' | 'level'>> & { place: string; activity: string };
+  Partial<Pick<Activity, 'subcategory' | 'duration' | 'cost' | 'level'>> & {
+    place: string;
+    activity: string;
+    /** A Material Symbol of its own. Missing, or not in this build of the app, means the activity's. */
+    glyph?: string;
+  };
 
-export type City = {
+/** A city as the catalog index lists it, before its places are downloaded. */
+export type CitySummary = {
   id: string;
   name: string;
-  state: string;
+  /** A state or province, where the country uses them in place names. */
+  region?: string;
+  /** ISO 3166 alpha-2 code. */
+  country: string;
   lat: number;
   lng: number;
+  /** Changes whenever the city's file does. Bundled cities have none until the index is downloaded. */
+  hash?: string;
+};
+
+export type City = Omit<CitySummary, 'hash'> & {
   /** Months warm enough for beaches and boats. Missing means all year. */
   warmMonths?: number[];
   icons: CityIcon[];
   places: Place[];
+  /** Old place ids mapped to the ids that replaced them, so visits and plans survive a re-import. */
+  aliases?: Record<string, string>;
 };
+
+/** Like "Columbus, OH" or "Kyoto, JP". */
+export function cityLabel(city: CitySummary): string {
+  return `${city.name}, ${city.region ?? city.country}`;
+}
 
 /** A row in a city's list: an activity with its places there, or a city icon. */
 export type Entry = {
@@ -84,17 +102,18 @@ export type Entry = {
 /** Something the user added to a city's list themselves. */
 export type CustomActivity = { id: string; cityId: string; name: string; subcategory: Kind; duration: Duration; cost: Cost };
 
-export const CITIES = [losAngeles, columbus] as City[];
-
 /** Old ids mapped to the ids that replaced them, following chains, so stored history survives renames and merges. */
-export const ALIASES: Record<string, string> = Object.fromEntries(
-  Object.keys(aliasesFile.aliases).map((from) => {
-    const table = aliasesFile.aliases as Record<string, string>;
-    let to = table[from];
-    for (let hops = 0; table[to] && hops < 10; hops++) to = table[to];
-    return [from, to];
-  }),
-);
+export function resolveAliases(table: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(
+    Object.keys(table).map((from) => {
+      let to = table[from];
+      for (let hops = 0; table[to] && hops < 10; hops++) to = table[to];
+      return [from, to];
+    }),
+  );
+}
+
+export const ACTIVITY_ALIASES = resolveAliases(aliasesFile.aliases as Record<string, string>);
 
 const ACTIVITIES = new Map((activitiesFile.activities as Activity[]).map((a) => [a.id, a]));
 const icons = iconMapping as Record<string, { material: string }>;
@@ -105,13 +124,18 @@ function seasonIn(city: City, a: Activity): number[] | undefined {
   if (a.warm) return city.warmMonths;
 }
 
+function glyphFor(own: Activity | CityIcon, activityId: string): IconName {
+  const glyph = 'glyph' in own ? own.glyph : undefined;
+  return (glyph && glyph in ICON_PATHS ? glyph : icons[activityId].material) as IconName;
+}
+
 function entry(own: Activity | CityIcon, kind: Entry['kind'], activityId: string, places: Place[], months?: number[]): Entry {
   const base = { ...ACTIVITIES.get(activityId)!, ...own };
   return {
     id: base.id,
     kind,
     name: base.name,
-    icon: icons[base.id].material as IconName,
+    icon: glyphFor(own, activityId),
     subcategory: base.subcategory,
     duration: base.duration,
     cost: base.cost,
@@ -147,7 +171,11 @@ export function customEntry(c: CustomActivity): Entry {
 function buildEntries(city: City): Entry[] {
   const placesByActivity = new Map<string, Place[]>();
   for (const p of city.places) {
-    for (const id of p.activities) placesByActivity.set(id, [...(placesByActivity.get(id) ?? []), p]);
+    for (const id of p.activities) {
+      const list = placesByActivity.get(id);
+      if (list) list.push(p);
+      else placesByActivity.set(id, [p]);
+    }
   }
   const placeById = new Map(city.places.map((p) => [p.id, p]));
   const activities = [...ACTIVITIES.values()]
@@ -155,39 +183,27 @@ function buildEntries(city: City): Entry[] {
     .filter((a) => placesByActivity.has(a.id) || a.home || a.host || a.search)
     .filter((a) => !a.needsWinter || city.warmMonths)
     .map((a) => entry(a, 'activity', a.id, placesByActivity.get(a.id) ?? [], seasonIn(city, a)));
-  const cityIcons = city.icons.map((i) => entry(i, 'icon', i.activity, [placeById.get(i.place)!]));
+  // A city file newer than the app can name an activity this build doesn't have yet.
+  const cityIcons = city.icons
+    .filter((i) => ACTIVITIES.has(i.activity) && placeById.has(i.place))
+    .map((i) => entry(i, 'icon', i.activity, [placeById.get(i.place)!]));
   return [...activities, ...cityIcons].sort((a, b) => a.name.localeCompare(b.name));
 }
 
-const ENTRIES = new Map(CITIES.map((c) => [c.id, buildEntries(c)]));
+// Keyed by the city object, so a downloaded update gets fresh entries.
+const ENTRIES = new WeakMap<City, Entry[]>();
 
-export function entriesForCity(cityId: string): Entry[] {
-  return ENTRIES.get(cityId) ?? [];
-}
-
-export function findEntry(cityId: string, id: string): Entry | undefined {
-  return entriesForCity(cityId).find((e) => e.id === id);
-}
-
-export function cityById(id: string): City | undefined {
-  return CITIES.find((c) => c.id === id);
-}
-
-/** The covered city closest to a point, with its distance from the city center. */
-export function nearestCity(point: Coordinate): { city: City; km: number } {
-  return CITIES.map((city) => ({ city, km: haversineKm(point, city.lat, city.lng) })).reduce((a, b) =>
-    b.km < a.km ? b : a,
-  );
-}
-
-/** Finds an entry in any city, using the place to pick the city when ids repeat across cities. */
-export function findEntryAnywhere(id: string, placeId?: string | null): { entry: Entry; city: City } | undefined {
-  const byPlace = placeId ? CITIES.find((c) => c.places.some((p) => p.id === placeId)) : undefined;
-  for (const city of byPlace ? [byPlace, ...CITIES] : CITIES) {
-    const found = findEntry(city.id, id);
-    if (found) return { entry: found, city };
+export function entriesForCity(city: City): Entry[] {
+  let entries = ENTRIES.get(city);
+  if (!entries) {
+    entries = buildEntries(city);
+    ENTRIES.set(city, entries);
   }
-  return undefined;
+  return entries;
+}
+
+export function findEntry(city: City, id: string): Entry | undefined {
+  return entriesForCity(city).find((e) => e.id === id);
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];

@@ -1,21 +1,22 @@
 {
   "id": "columbus",
   "name": "Columbus",
-  "state": "OH",
+  "region": "OH",
+  "country": "US",
   "lat": 39.9612,
   "lng": -82.9988,
   "warmMonths": [5,6,7,8,9],
   "icons": [
     {"id": "hocking-hills-state-park", "name": "Hike Hocking Hills", "place": "pick:hocking-hills-state-park", "activity": "hike-a-trail", "duration": "Full day"},
-    {"id": "german-village-columbus", "name": "German Village Columbus", "place": "pick:german-village-columbus", "activity": "neighborhood"},
-    {"id": "short-north-arts-district", "name": "Short North Arts District", "place": "pick:short-north-arts-district", "activity": "neighborhood"},
-    {"id": "ohio-state-buckeyes-football", "name": "Ohio State football game", "place": "pick:ohio-state-buckeyes-football", "activity": "sports-game", "cost": "$$$"},
+    {"id": "german-village-columbus", "name": "German Village Columbus", "place": "pick:german-village-columbus", "activity": "neighborhood", "glyph": "cottage"},
+    {"id": "short-north-arts-district", "name": "Short North Arts District", "place": "pick:short-north-arts-district", "activity": "neighborhood", "glyph": "brush"},
+    {"id": "ohio-state-buckeyes-football", "name": "Ohio State football game", "place": "pick:ohio-state-buckeyes-football", "activity": "sports-game", "cost": "$$$", "glyph": "sports_football"},
     {"id": "north-market-columbus", "name": "North Market Columbus", "place": "pick:north-market-columbus", "activity": "food-market"},
-    {"id": "jenis-splendid-ice-creams", "name": "Jeni's Splendid Ice Creams", "place": "pick:jenis-splendid-ice-creams", "activity": "local-legend", "duration": "30 min"},
+    {"id": "jenis-splendid-ice-creams", "name": "Jeni's Splendid Ice Creams", "place": "pick:jenis-splendid-ice-creams", "activity": "local-legend", "duration": "30 min", "glyph": "icecream"},
     {"id": "columbus-zoo-and-aquarium", "name": "Columbus Zoo and Aquarium", "place": "pick:columbus-zoo-and-aquarium", "activity": "zoo-aquarium"},
     {"id": "cosi-columbus", "name": "COSI Columbus", "place": "pick:cosi-columbus", "activity": "science-history-museum", "duration": "Half day"},
-    {"id": "franklin-park-conservatory", "name": "Franklin Park Conservatory", "place": "pick:franklin-park-conservatory", "activity": "botanical-garden", "duration": "1-2 hours", "cost": "$$"},
-    {"id": "scioto-mile", "name": "Scioto Mile", "place": "pick:scioto-mile", "activity": "city-landmark", "duration": "1-2 hours"}
+    {"id": "franklin-park-conservatory", "name": "Franklin Park Conservatory", "place": "pick:franklin-park-conservatory", "activity": "botanical-garden", "duration": "1-2 hours", "cost": "$$", "glyph": "potted_plant"},
+    {"id": "scioto-mile", "name": "Scioto Mile", "place": "pick:scioto-mile", "activity": "city-landmark", "duration": "1-2 hours", "glyph": "directions_walk"}
   ],
   "places": [
     {"id": "osm:r13294808", "name": "21 (Ohio)", "lat": 40.1109, "lng": -82.9303, "activities": ["bike-path"]},

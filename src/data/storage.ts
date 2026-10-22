@@ -56,6 +56,12 @@ db.execSync(`
     at TEXT NOT NULL,
     PRIMARY KEY (origin, place_id)
   );
+  CREATE TABLE IF NOT EXISTS catalog_cities (
+    id TEXT PRIMARY KEY,
+    hash TEXT NOT NULL,
+    json TEXT NOT NULL,
+    at TEXT NOT NULL
+  );
 `);
 
 // Each step runs once, when stored ids or kinds change shape.
@@ -316,4 +322,23 @@ export function saveDriveTimes(origin: string, times: Map<string, number | null>
       ]);
     }
   });
+}
+
+/** Downloaded city files, kept whole so a city works offline once it has been opened. */
+export function loadCachedCity(id: string): { hash: string; json: string } | null {
+  return db.getFirstSync<{ hash: string; json: string }>('SELECT hash, json FROM catalog_cities WHERE id = ?', [id]);
+}
+
+export function cachedCityHashes(): Map<string, string> {
+  const rows = db.getAllSync<{ id: string; hash: string }>('SELECT id, hash FROM catalog_cities');
+  return new Map(rows.map((r) => [r.id, r.hash]));
+}
+
+export function saveCachedCity(id: string, hash: string, json: string): void {
+  db.runSync('INSERT OR REPLACE INTO catalog_cities (id, hash, json, at) VALUES (?, ?, ?, ?)', [
+    id,
+    hash,
+    json,
+    new Date().toISOString(),
+  ]);
 }
