@@ -99,6 +99,11 @@ export default function ActivitySheet() {
             <View style={[styles.list, { backgroundColor: colors.card }]}>
               {places.map(({ place, minutes }, i) => {
                 const visited = visitedPlaceIds.has(place.id);
+                const meta = [
+                  minutes != null && `${formatMinutes(minutes)} away`,
+                  place.cost && place.cost !== entry.cost && place.cost,
+                  place.duration && place.duration !== entry.duration && place.duration,
+                ].filter(Boolean);
                 return (
                   <View
                     key={place.id}
@@ -125,8 +130,8 @@ export default function ActivitySheet() {
                     </Pressable>
                     <View style={styles.grow}>
                       <Text style={[styles.placeName, { color: colors.label }]}>{place.name}</Text>
-                      {minutes != null && (
-                        <Text style={[styles.meta, { color: colors.secondary }]}>{formatMinutes(minutes)} away</Text>
+                      {meta.length > 0 && (
+                        <Text style={[styles.meta, { color: colors.secondary }]}>{meta.join(' · ')}</Text>
                       )}
                     </View>
                     {canReport && (
