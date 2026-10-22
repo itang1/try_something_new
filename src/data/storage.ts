@@ -131,6 +131,19 @@ if (version < 5) {
   }
   db.execSync('DELETE FROM drive_times; PRAGMA user_version = 5;');
 }
+// Calm and Social became filters instead of kinds.
+if (version < 6) {
+  const kinds: Record<string, string> = { calm: 'outdoors', social: 'play' };
+  for (const [from, to] of Object.entries(kinds)) {
+    db.runSync('UPDATE custom_activities SET subcategory = ? WHERE subcategory = ?', [to, from]);
+  }
+  const filters = readSetting<{ subcategories?: string[] } | null>('exploreFilters', null);
+  if (filters?.subcategories?.length) {
+    const subcategories = [...new Set(filters.subcategories.map((k) => kinds[k] ?? k))];
+    writeSetting('exploreFilters', { ...filters, subcategories });
+  }
+  db.execSync('PRAGMA user_version = 6');
+}
 
 /** Moves stored ids onto their new ones when the catalog renames or merges something. Runs only when the list changes. */
 export function applyAliases(aliases: Record<string, string>): void {

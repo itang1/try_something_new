@@ -3,9 +3,9 @@ import iconMapping from '../../design/icon-mapping.json';
 import aliasesFile from '../../data/aliases.json';
 import { ICON_PATHS, type IconName } from '@/icons/paths';
 import { subcategory } from '@/theme';
-import { COST_LEVEL, DURATION_MINUTES, type Cost, type Duration, type Kind, type Level } from './vocab';
+import { COST_LEVEL, DURATION_MINUTES, type Cost, type Duration, type Kind, type Level, type Setting } from './vocab';
 
-export { COSTS, DURATIONS, type Cost, type Duration, type Kind, type Level } from './vocab';
+export { COSTS, DURATIONS, type Cost, type Duration, type Kind, type Level, type Setting } from './vocab';
 
 export type Place = {
   id: string;
@@ -25,6 +25,11 @@ export type Activity = {
   duration: Duration;
   cost: Cost;
   level: Level;
+  setting?: Setting;
+  /** Better with friends or a group than alone. */
+  together?: boolean;
+  /** Works for families with children. */
+  kids?: boolean;
   /** Its season in the northern hemisphere, as months 1 to 12. */
   months?: number[];
   /** Needs warm weather, so it follows the city's warm months. */
@@ -91,6 +96,9 @@ export type Entry = {
   durationMinutes: number;
   costLevel: number;
   level: Level;
+  setting?: Setting;
+  together?: boolean;
+  kids?: boolean;
   activityId: string;
   places: Place[];
   /** Added by the user, so it has no places and can be deleted. */
@@ -142,6 +150,9 @@ function entry(own: Activity | CityIcon, kind: Entry['kind'], activityId: string
     durationMinutes: DURATION_MINUTES[base.duration],
     costLevel: COST_LEVEL[base.cost],
     level: base.level,
+    setting: base.setting,
+    together: base.together,
+    kids: base.kids,
     activityId,
     places,
     custom: false,

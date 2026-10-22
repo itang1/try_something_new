@@ -52,7 +52,6 @@ const TEAL = '#30B0C7';
 const CYAN = '#32ADE6';
 const BLUE = '#007AFF';
 const PINK = '#FF2D55';
-const MINT = '#00C7BE';
 const BROWN = '#A2845E';
 const CRAFT = '#D940A6';
 
@@ -67,8 +66,6 @@ export const SUBCATEGORIES: Record<Kind, Subcategory> = {
   explore: { label: 'Explore', icon: 'explore', color: BROWN, gradient: [BROWN, ORANGE] },
   shows: { label: 'Shows', icon: 'theater_comedy', color: INDIGO, gradient: [INDIGO, BLUE] },
   play: { label: 'Play', icon: 'attractions', color: PINK, gradient: [PINK, PURPLE] },
-  social: { label: 'Social', icon: 'groups', color: PURPLE, gradient: [PURPLE, INDIGO] },
-  calm: { label: 'Calm', icon: 'self_improvement', color: MINT, gradient: [MINT, CYAN] },
 };
 
 export function subcategory(id: string): Subcategory {

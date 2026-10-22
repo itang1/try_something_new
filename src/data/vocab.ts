@@ -1,6 +1,6 @@
 // The catalog's allowed values. No imports, so scripts/validate-catalog.mjs can load this file with plain Node.
 
-export const KINDS = ['move', 'outdoors', 'water', 'make', 'food', 'learn', 'explore', 'shows', 'play', 'social', 'calm'] as const;
+export const KINDS = ['move', 'outdoors', 'water', 'make', 'food', 'learn', 'explore', 'shows', 'play'] as const;
 export type Kind = (typeof KINDS)[number];
 
 export const DURATION_MINUTES = {
@@ -17,6 +17,10 @@ export const DURATIONS = Object.keys(DURATION_MINUTES) as Duration[];
 export const COST_LEVEL = { Free: 0, $: 1, $$: 2, $$$: 3 } as const;
 export type Cost = keyof typeof COST_LEVEL;
 export const COSTS = Object.keys(COST_LEVEL) as Cost[];
+
+/** Missing on an activity means it works either way. */
+export const SETTINGS = ['indoor', 'outdoor'] as const;
+export type Setting = (typeof SETTINGS)[number];
 
 /** How far outside a comfort zone it is. Starting easy and building up keeps people going. */
 export const LEVEL_IDS = ['easy', 'medium', 'stretch'] as const;

@@ -1,7 +1,7 @@
 // Checks the catalog for mistakes the app would hit at runtime: unknown ids, missing icons, bad values.
 // Run with `npm run validate`. Exits with an error listing every problem.
 import { readdirSync, readFileSync } from 'node:fs';
-import { COSTS as COST_LIST, DURATIONS as DURATION_LIST, KINDS as KIND_LIST, LEVEL_IDS } from '../src/data/vocab.ts';
+import { COSTS as COST_LIST, DURATIONS as DURATION_LIST, KINDS as KIND_LIST, LEVEL_IDS, SETTINGS } from '../src/data/vocab.ts';
 
 const read = (path) => readFileSync(path, 'utf8');
 const json = (path) => JSON.parse(read(path));
@@ -45,6 +45,8 @@ for (const a of activities) {
   if (!COSTS.has(a.cost)) fail(where, `unknown cost "${a.cost}"`);
   if (!LEVELS.has(a.level)) fail(where, `unknown level "${a.level}"`);
   if (a.months) checkMonths(where, a.months);
+  if (a.setting && !SETTINGS.includes(a.setting)) fail(where, `unknown setting "${a.setting}"`);
+  for (const flag of ['together', 'kids']) if (flag in a && a[flag] !== true) fail(where, `${flag} should be true or left out`);
   if (a.months && a.warm) fail(where, 'has both months and warm; pick one');
   for (const way of ['home', 'host', 'search']) {
     if (way in a && !a[way]?.trim()) fail(where, `empty ${way}`);

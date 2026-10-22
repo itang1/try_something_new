@@ -5,11 +5,13 @@ import * as Haptics from 'expo-haptics';
 import { inSeason, LEVELS, type Level } from '@/data/catalog';
 import { formatMinutes } from '@/data/drive';
 import {
+  COMPANY_OPTIONS,
   COST_OPTIONS,
   DRIVE_OPTIONS,
   DURATION_OPTIONS,
   matchesFilters,
   NO_FILTERS,
+  SETTING_OPTIONS,
   WHERE_OPTIONS,
   type Filters,
 } from '@/data/filters';
@@ -72,6 +74,32 @@ export default function FiltersSheet() {
               color={colors.accent}
               selected={filters.where === where}
               onPress={() => update({ where: filters.where === where ? null : where })}
+            />
+          ))}
+        </Group>
+
+        <Group title="Setting">
+          {SETTING_OPTIONS.map(({ setting, label, icon }) => (
+            <FilterChip
+              key={setting}
+              title={label}
+              icon={icon}
+              color={colors.accent}
+              selected={filters.setting === setting}
+              onPress={() => update({ setting: filters.setting === setting ? null : setting })}
+            />
+          ))}
+        </Group>
+
+        <Group title="Who's coming">
+          {COMPANY_OPTIONS.map(({ company, label, icon }) => (
+            <FilterChip
+              key={company}
+              title={label}
+              icon={icon}
+              color={colors.accent}
+              selected={filters.company === company}
+              onPress={() => update({ company: filters.company === company ? null : company })}
             />
           ))}
         </Group>

@@ -2,7 +2,7 @@
 
 A local-activity checklist and random suggester. Explore picks a random activity, and Checklist tracks what you've done in each city, with drive times from your home address.
 
-Today it's an Expo (React Native) app for iOS and Android, with no backend, and 93 activities in 10 subcategories, plus city icons and 9,453 places across Los Angeles, Seattle, Chicago, and Columbus (see [design/data-model.md](design/data-model.md)). See [TODO.md](TODO.md) for what's next. [design/PROCESS.md](design/PROCESS.md) covers how it gets built, from spike to mockup to code. The SwiftUI version, with screenshots, is saved on the [`native-ios`](../../tree/native-ios) branch.
+Today it's an Expo (React Native) app for iOS and Android, with no backend, and 93 activities in 9 subcategories, plus city icons and 9,453 places across Los Angeles, Seattle, Chicago, and Columbus (see [design/data-model.md](design/data-model.md)). See [TODO.md](TODO.md) for what's next. [design/PROCESS.md](design/PROCESS.md) covers how it gets built, from spike to mockup to code. The SwiftUI version, with screenshots, is saved on the [`native-ios`](../../tree/native-ios) branch.
 
 ## What makes it different
 
@@ -52,7 +52,7 @@ The app is built on a few findings from psychology. The evidence varies, so the 
 - **Looking back:** a memories timeline of what you tried, with your ratings, notes, and photos. Revisiting good experiences (savoring) is linked to enjoying them more.
 - **Easy wins first:** activities are tagged easy, a bit new, or stretch. Explore holds back stretches until you've tried a few things, building confidence step by step (behavioral activation).
 - **Doing it together:** "Invite a friend" shares the plan. Plans made with someone are more fun and harder to skip.
-- **Your choice:** filters for kind, where, level, drive, cost, and time, and "Not for me" items you can bring back. Feeling in control keeps motivation your own (self-determination theory).
+- **Your choice:** filters for kind, where, setting, who's coming, level, drive, cost, and time, and "Not for me" items you can bring back. Feeling in control keeps motivation your own (self-determination theory).
 - **What I avoid:** streaks that punish a missed week, and health claims.
 
 ### Data at scale
