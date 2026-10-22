@@ -2,7 +2,7 @@
 
 A local-activity checklist and random suggester. Explore picks a random activity, and Checklist tracks what you've done in each city, with drive times from your home address.
 
-Today it's an Expo (React Native) app for iOS and Android, with no backend, and 93 activities in 10 subcategories, plus city icons and 1,002 places across Los Angeles and Columbus (see [design/data-model.md](design/data-model.md)). See [TODO.md](TODO.md) for what's next. [design/PROCESS.md](design/PROCESS.md) covers how it gets built, from spike to mockup to code. The SwiftUI version, with screenshots, is saved on the [`native-ios`](../../tree/native-ios) branch.
+Today it's an Expo (React Native) app for iOS and Android, with no backend, and 93 activities in 10 subcategories, plus city icons and 9,453 places across Los Angeles, Seattle, Chicago, and Columbus (see [design/data-model.md](design/data-model.md)). See [TODO.md](TODO.md) for what's next. [design/PROCESS.md](design/PROCESS.md) covers how it gets built, from spike to mockup to code. The SwiftUI version, with screenshots, is saved on the [`native-ios`](../../tree/native-ios) branch.
 
 ## What makes it different
 
