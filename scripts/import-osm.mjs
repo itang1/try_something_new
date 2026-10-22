@@ -116,6 +116,8 @@ function activitiesFor(t) {
   return a;
 }
 
+// Matches the validator's limit.
+const MAX_KM = 300;
 const SPREAD_OUT = new Set(['hike-a-trail', 'bike-path', 'city-park']);
 const normal = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '');
 
@@ -138,6 +140,8 @@ for (const e of await fetchElements()) {
   const center = e.center ?? e;
   // Fields and courts are often named just "1" or "A".
   if (!activities.size || !/[a-z]{3}/i.test(t.name ?? '') || center.lat == null) continue;
+  // Sites spread across states, like some national parks, have a center far outside the city.
+  if (km(city, { lat: center.lat, lng: center.lon }) > MAX_KM) continue;
   const place = {
     // OSM ids, unlike names, survive renames and tell apart places that share a name. No city in them, so a place
     // keeps its id however the catalog is split up.
