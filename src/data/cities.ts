@@ -1,5 +1,7 @@
 import losAngeles from '../../data/cities/los-angeles.json';
 import columbus from '../../data/cities/columbus.json';
+import seattle from '../../data/cities/seattle.json';
+import chicago from '../../data/cities/chicago.json';
 import { ACTIVITY_ALIASES, findEntry, resolveAliases, type City, type CitySummary, type Entry } from './catalog';
 import { haversineKm, type Coordinate } from './drive';
 import { applyAliases, cachedCityHashes, loadCachedCity, readSetting, saveCachedCity, writeSetting } from './storage';
@@ -8,7 +10,7 @@ import { applyAliases, cachedCityHashes, loadCachedCity, readSetting, saveCached
 const BASE_URL = process.env.EXPO_PUBLIC_CATALOG_URL?.replace(/\/+$/, '');
 
 /** Bundled so the app works on first launch and offline. Downloaded versions replace them once there are any. */
-const BUNDLED = new Map(([losAngeles, columbus] as City[]).map((c) => [c.id, c]));
+const BUNDLED = new Map(([losAngeles, columbus, seattle, chicago] as City[]).map((c) => [c.id, c]));
 
 export const DEFAULT_CITY_ID = 'los-angeles';
 
