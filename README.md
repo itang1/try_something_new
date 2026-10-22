@@ -2,7 +2,7 @@
 
 A local-activity checklist and random suggester. Explore picks a random activity, and Checklist tracks what you've done in each city, with drive times from your home address.
 
-Today it's an Expo (React Native) app for iOS and Android, with no backend, and 93 activities in 9 subcategories, plus city icons and 9,453 places across Los Angeles, Seattle, Chicago, and Columbus (see [design/data-model.md](design/data-model.md)). See [TODO.md](TODO.md) for what's next. [design/PROCESS.md](design/PROCESS.md) covers how it gets built, from spike to mockup to code. The SwiftUI version, with screenshots, is saved on the [`native-ios`](../../tree/native-ios) branch.
+Today it's an Expo (React Native) app for iOS and Android, with no backend, and 102 activities in 9 subcategories, plus city icons and 9,453 places across Los Angeles, Seattle, Chicago, and Columbus (see [design/data-model.md](design/data-model.md)). See [TODO.md](TODO.md) for what's next. [design/PROCESS.md](design/PROCESS.md) covers how it gets built, from spike to mockup to code. The SwiftUI version, with screenshots, is saved on the [`native-ios`](../../tree/native-ios) branch.
 
 ## What makes it different
 
@@ -12,7 +12,7 @@ Today it's an Expo (React Native) app for iOS and Android, with no backend, and 
 - **Progress you can finish:** a checklist of what you've tried in your city, with a number that grows, not an endless list.
 - **Starts easy, builds up:** every activity is tagged easy, a bit new, or stretch, and the bigger stretches wait until you've done a few.
 - **Local to you, not just your city:** places are sorted by real drive time from your home, so someone in a suburb sees what's close to them first.
-- **Affordable:** 90 of 93 activities cost $$ or less, and a cost filter finds the free ones.
+- **Affordable:** 99 of 102 activities cost $$ or less, and a cost filter finds the free ones.
 - **From idea to done:** pick a day and place, invite a friend, add it to your calendar, then save a memory with a rating, note, and photo.
 - **Private by default:** no account, no ads, no tracking. Everything stays on the phone and works offline.
 - **No guilt:** no streaks to break and no health claims.
