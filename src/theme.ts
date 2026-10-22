@@ -60,7 +60,7 @@ const CRAFT = '#D940A6';
 export const SUBCATEGORIES: Record<Kind, Subcategory> = {
   move: { label: 'Move', icon: 'directions_run', color: ORANGE, gradient: [ORANGE, RED] },
   outdoors: { label: 'Outdoors', icon: 'hiking', color: GREEN, gradient: [GREEN, TEAL] },
-  water: { label: 'Water & Snow', icon: 'waves', color: CYAN, gradient: [CYAN, BLUE] },
+  water: { label: 'Water', icon: 'waves', color: CYAN, gradient: [CYAN, BLUE] },
   make: { label: 'Make', icon: 'palette', color: CRAFT, gradient: [CRAFT, PURPLE] },
   food: { label: 'Food & Drink', icon: 'restaurant', color: RED, gradient: [RED, ORANGE] },
   learn: { label: 'See & Learn', icon: 'museum', color: TEAL, gradient: [TEAL, INDIGO] },
