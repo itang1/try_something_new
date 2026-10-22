@@ -9,7 +9,7 @@
     "android": "expo run:android",
     "icons": "node scripts/build-icons.mjs",
     "lint": "eslint . && npm run validate",
-    "validate": "node scripts/validate-catalog.mjs",
+    "validate": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/validate-catalog.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
