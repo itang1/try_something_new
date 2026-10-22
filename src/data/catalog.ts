@@ -45,8 +45,9 @@ export const LEVELS: Record<Level, { label: string; icon: IconName; rank: number
   stretch: { label: 'Stretch', icon: 'bolt', rank: 2 },
 };
 
-/** A city's must-do, tied to one place. Doing it also counts toward its activity, and shares its level unless set. */
-export type CityIcon = Omit<Activity, 'level'> & { level?: Level; place: string; activity: string };
+/** A city's must-do, tied to one place. Doing it also counts toward its activity, and takes the activity's kind, duration, cost and level unless set. */
+export type CityIcon = Pick<Activity, 'id' | 'name'> &
+  Partial<Pick<Activity, 'subcategory' | 'duration' | 'cost' | 'level'>> & { place: string; activity: string };
 
 export type City = {
   id: string;
@@ -117,7 +118,8 @@ function seasonIn(city: City, a: Activity): number[] | undefined {
   if (a.warm) return city.warmMonths;
 }
 
-function entry(base: Activity | CityIcon, kind: Entry['kind'], activityId: string, places: Place[], months?: number[]): Entry {
+function entry(own: Activity | CityIcon, kind: Entry['kind'], activityId: string, places: Place[], months?: number[]): Entry {
+  const base = { ...ACTIVITIES.get(activityId)!, ...own };
   return {
     id: base.id,
     kind,
@@ -128,7 +130,7 @@ function entry(base: Activity | CityIcon, kind: Entry['kind'], activityId: strin
     cost: base.cost,
     durationMinutes: DURATION_MINUTES[base.duration] ?? 0,
     costLevel: COST_LEVEL[base.cost] ?? 0,
-    level: base.level ?? ACTIVITIES.get(activityId)?.level ?? 'medium',
+    level: base.level,
     activityId,
     places,
     custom: false,

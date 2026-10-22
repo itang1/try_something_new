@@ -92,10 +92,14 @@ for (const file of readdirSync('data/cities').filter((f) => f.endsWith('.json'))
     iconIds.add(i.id);
     if (!cityPlaces.has(i.place)) fail(where, `place "${i.place}" isn't in this city`);
     if (!activityIds.has(i.activity)) fail(where, `unknown activity "${i.activity}"`);
-    if (!KINDS.has(i.subcategory)) fail(where, `unknown kind "${i.subcategory}"`);
-    if (!DURATIONS.has(i.duration)) fail(where, `unknown duration "${i.duration}"`);
-    if (!COSTS.has(i.cost)) fail(where, `unknown cost "${i.cost}"`);
+    if (i.subcategory && !KINDS.has(i.subcategory)) fail(where, `unknown kind "${i.subcategory}"`);
+    if (i.duration && !DURATIONS.has(i.duration)) fail(where, `unknown duration "${i.duration}"`);
+    if (i.cost && !COSTS.has(i.cost)) fail(where, `unknown cost "${i.cost}"`);
     if (i.level && !LEVELS.has(i.level)) fail(where, `unknown level "${i.level}"`);
+    const activity = activities.find((a) => a.id === i.activity);
+    for (const field of ['subcategory', 'duration', 'cost', 'level']) {
+      if (activity && i[field] === activity[field]) fail(where, `${field} matches its activity, so leave it out`);
+    }
     checkIcon(i.id);
   }
 }

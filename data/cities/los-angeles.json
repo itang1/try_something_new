@@ -5,15 +5,15 @@
   "lat": 34.0522,
   "lng": -118.2437,
   "icons": [
-    {"id": "sunset-at-griffith-observatory", "name": "Sunset at Griffith Observatory", "place": "pick:griffith-observatory", "activity": "city-landmark", "subcategory": "explore", "duration": "1-2 hours", "cost": "Free"},
-    {"id": "the-getty-center", "name": "The Getty Center", "place": "pick:the-getty-center", "activity": "art-museum", "subcategory": "explore", "duration": "2-3 hours", "cost": "Free"},
-    {"id": "hollywood-sign-hike", "name": "Hike to the Hollywood Sign", "place": "pick:hollywood-sign-hike", "activity": "hike-a-trail", "subcategory": "outdoors", "duration": "2-3 hours", "cost": "Free"},
-    {"id": "santa-monica-pier", "name": "Santa Monica Pier", "place": "pick:santa-monica-pier", "activity": "roller-coaster", "subcategory": "play", "duration": "2-3 hours", "cost": "Free"},
-    {"id": "venice-beach-boardwalk", "name": "Walk the Venice Beach Boardwalk", "place": "pick:venice-beach-boardwalk", "activity": "beach-day", "subcategory": "water", "duration": "2-3 hours", "cost": "Free"},
-    {"id": "dodger-stadium", "name": "Dodger Stadium", "place": "pick:dodger-stadium", "activity": "sports-game", "subcategory": "shows", "duration": "Half day", "cost": "$$"},
-    {"id": "hollywood-bowl", "name": "Hollywood Bowl", "place": "pick:hollywood-bowl", "activity": "live-show", "subcategory": "shows", "duration": "2-3 hours", "cost": "$$"},
-    {"id": "grand-central-market", "name": "Grand Central Market", "place": "pick:grand-central-market", "activity": "food-market", "subcategory": "food", "duration": "1-2 hours", "cost": "$"},
-    {"id": "the-broad", "name": "The Broad", "place": "pick:the-broad", "activity": "art-museum", "subcategory": "explore", "duration": "1-2 hours", "cost": "Free"}
+    {"id": "sunset-at-griffith-observatory", "name": "Sunset at Griffith Observatory", "place": "pick:griffith-observatory", "activity": "city-landmark", "duration": "1-2 hours"},
+    {"id": "the-getty-center", "name": "The Getty Center", "place": "pick:the-getty-center", "activity": "art-museum"},
+    {"id": "hollywood-sign-hike", "name": "Hike to the Hollywood Sign", "place": "pick:hollywood-sign-hike", "activity": "hike-a-trail"},
+    {"id": "santa-monica-pier", "name": "Santa Monica Pier", "place": "pick:santa-monica-pier", "activity": "roller-coaster", "duration": "2-3 hours", "cost": "Free"},
+    {"id": "venice-beach-boardwalk", "name": "Walk the Venice Beach Boardwalk", "place": "pick:venice-beach-boardwalk", "activity": "beach-day", "duration": "2-3 hours"},
+    {"id": "dodger-stadium", "name": "Dodger Stadium", "place": "pick:dodger-stadium", "activity": "sports-game"},
+    {"id": "hollywood-bowl", "name": "Hollywood Bowl", "place": "pick:hollywood-bowl", "activity": "live-show"},
+    {"id": "grand-central-market", "name": "Grand Central Market", "place": "pick:grand-central-market", "activity": "food-market"},
+    {"id": "the-broad", "name": "The Broad", "place": "pick:the-broad", "activity": "art-museum", "duration": "1-2 hours"}
   ],
   "places": [
     {"id": "pick:60out-escape-rooms-westwood", "name": "60Out Escape Rooms Westwood", "lat": 34.0597, "lng": -118.444, "activities": ["escape-room"]},
