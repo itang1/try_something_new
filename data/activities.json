@@ -3,7 +3,7 @@
     {"id": "apple-picking", "name": "Pick your own apples", "subcategory": "outdoors", "duration": "2-3 hours", "cost": "$", "level": "easy", "search": "apple orchard", "months": [9, 10]},
     {"id": "arcade", "name": "Play at an arcade", "subcategory": "play", "duration": "1-2 hours", "cost": "$", "level": "easy", "search": "arcade"},
     {"id": "archery", "name": "Try archery", "subcategory": "move", "duration": "1-2 hours", "cost": "$$", "level": "medium"},
-    {"id": "art-museum", "name": "Visit an art museum", "subcategory": "explore", "duration": "2-3 hours", "cost": "Free", "level": "easy"},
+    {"id": "art-museum", "name": "Visit an art museum", "subcategory": "learn", "duration": "2-3 hours", "cost": "Free", "level": "easy"},
     {"id": "axe-throwing", "name": "Throw axes", "subcategory": "play", "duration": "1-2 hours", "cost": "$$", "level": "stretch", "search": "axe throwing"},
     {"id": "bake-bread", "name": "Bake bread from scratch", "subcategory": "food", "duration": "Half day", "cost": "$", "level": "medium", "home": "Flour, yeast, salt, and a simple no-knead recipe", "host": "Bake together and trade loaves"},
     {"id": "beach-day", "name": "Spend a day at the beach", "subcategory": "water", "duration": "Half day", "cost": "Free", "level": "easy", "warm": true},
@@ -70,7 +70,7 @@
     {"id": "run-club", "name": "Join a run club", "subcategory": "social", "duration": "1 hour", "cost": "Free", "level": "medium", "search": "run club"},
     {"id": "sailing-lesson", "name": "Take a sailing lesson", "subcategory": "water", "duration": "2-3 hours", "cost": "$$", "level": "stretch", "warm": true},
     {"id": "sauna", "name": "Try a sauna or bathhouse", "subcategory": "calm", "duration": "2-3 hours", "cost": "$$", "level": "medium", "search": "sauna bathhouse"},
-    {"id": "science-history-museum", "name": "Visit a science or history museum", "subcategory": "explore", "duration": "2-3 hours", "cost": "$$", "level": "easy"},
+    {"id": "science-history-museum", "name": "Visit a science or history museum", "subcategory": "learn", "duration": "2-3 hours", "cost": "$$", "level": "easy"},
     {"id": "scrapbooking", "name": "Make a scrapbook", "subcategory": "make", "duration": "1-2 hours", "cost": "$", "level": "easy", "home": "A blank album, glue, and a stack of printed photos", "host": "Everyone brings photos from a trip you took together"},
     {"id": "sewing-class", "name": "Take a sewing class", "subcategory": "make", "duration": "1-2 hours", "cost": "$", "level": "medium", "home": "Sew a tote bag by hand: fabric, a needle, and thread, about ,5"},
     {"id": "shopping-street", "name": "Window-shop a famous street", "subcategory": "explore", "duration": "2-3 hours", "cost": "$$", "level": "easy"},
@@ -92,6 +92,6 @@
     {"id": "waterfall-hike", "name": "Hike to a waterfall", "subcategory": "outdoors", "duration": "2-3 hours", "cost": "Free", "level": "medium"},
     {"id": "woodworking", "name": "Try woodworking", "subcategory": "make", "duration": "2-3 hours", "cost": "$$", "level": "medium"},
     {"id": "yoga-class", "name": "Take a yoga class", "subcategory": "move", "duration": "1 hour", "cost": "$", "level": "easy"},
-    {"id": "zoo-aquarium", "name": "Visit a zoo or aquarium", "subcategory": "explore", "duration": "Half day", "cost": "$$", "level": "easy"}
+    {"id": "zoo-aquarium", "name": "Visit a zoo or aquarium", "subcategory": "learn", "duration": "Half day", "cost": "$$", "level": "easy"}
   ]
 }

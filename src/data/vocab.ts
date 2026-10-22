@@ -1,6 +1,6 @@
 // The catalog's allowed values. No imports, so scripts/validate-catalog.mjs can load this file with plain Node.
 
-export const KINDS = ['move', 'outdoors', 'water', 'make', 'food', 'explore', 'shows', 'play', 'social', 'calm'] as const;
+export const KINDS = ['move', 'outdoors', 'water', 'make', 'food', 'learn', 'explore', 'shows', 'play', 'social', 'calm'] as const;
 export type Kind = (typeof KINDS)[number];
 
 export const DURATION_MINUTES = {

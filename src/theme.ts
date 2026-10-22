@@ -63,6 +63,7 @@ export const SUBCATEGORIES: Record<Kind, Subcategory> = {
   water: { label: 'Water & Snow', icon: 'waves', color: CYAN, gradient: [CYAN, BLUE] },
   make: { label: 'Make', icon: 'palette', color: CRAFT, gradient: [CRAFT, PURPLE] },
   food: { label: 'Food & Drink', icon: 'restaurant', color: RED, gradient: [RED, ORANGE] },
+  learn: { label: 'See & Learn', icon: 'museum', color: TEAL, gradient: [TEAL, INDIGO] },
   explore: { label: 'Explore', icon: 'explore', color: BROWN, gradient: [BROWN, ORANGE] },
   shows: { label: 'Shows', icon: 'theater_comedy', color: INDIGO, gradient: [INDIGO, BLUE] },
   play: { label: 'Play', icon: 'attractions', color: PINK, gradient: [PINK, PURPLE] },
