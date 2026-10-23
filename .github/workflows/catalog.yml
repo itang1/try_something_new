@@ -1,0 +1,37 @@
+# Publishes the city catalog to GitHub Pages, where the app downloads cities from.
+name: Publish catalog
+
+on:
+  push:
+    branches: [main]
+    paths: ['data/**', 'design/icon-mapping.json', 'src/data/vocab.ts', 'scripts/build-catalog.mjs', 'scripts/validate-catalog.mjs']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm run validate
+      - run: npm run catalog
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/catalog
+      - id: deploy
+        uses: actions/deploy-pages@v4
