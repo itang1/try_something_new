@@ -1,4 +1,4 @@
-import losAngeles from '../../data/cities/los-angeles.json';
+import seedCity from './seed-city.json';
 import { ACTIVITY_ALIASES, findEntry, resolveAliases, type City, type CitySummary, type Entry } from './catalog';
 import { haversineKm, type Coordinate } from './drive';
 import { applyAliases, cachedCityHashes, loadCachedCity, readSetting, saveCachedCity, writeSetting } from './storage';
@@ -6,8 +6,8 @@ import { applyAliases, cachedCityHashes, loadCachedCity, readSetting, saveCached
 // Where `npm run catalog` output is hosted (see .env). Without it the app has only the cities bundled in it.
 const BASE_URL = process.env.EXPO_PUBLIC_CATALOG_URL?.replace(/\/+$/, '');
 
-/** Bundled so the app works on first launch and offline. Downloaded versions replace them once there are any. */
-const BUNDLED = new Map(([losAngeles] as City[]).map((c) => [c.id, c]));
+/** A slim copy bundled by `npm run catalog`, so the app works on first launch and offline. The full city replaces it once downloaded. */
+const BUNDLED = new Map(([seedCity] as City[]).map((c) => [c.id, c]));
 
 export const DEFAULT_CITY_ID = 'los-angeles';
 

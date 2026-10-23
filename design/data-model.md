@@ -12,7 +12,7 @@ A city's list is every activity that has a place there or another way to do it, 
 
 Icons for activities come from [`icon-mapping.json`](icon-mapping.json), keyed by the same ids. A city icon's `glyph` must be one the installed app has, or it falls back to its activity's.
 
-- **Index and downloads:** `npm run catalog` writes `dist/catalog/index.json` (each city's id, name, region, country, center, and content hash) and one `cities/<id>-<hash>.json` per city. The app downloads the index on launch and a city's file when you're there or plan a trip, and keeps it in SQLite. Until a city arrives, the closest one on the device stands in. The cities bundled in the app are listed in [`src/data/cities.ts`](../src/data/cities.ts).
+- **Index and downloads:** `npm run catalog` writes `dist/catalog/index.json` (each city's id, name, region, country, center, and content hash) and one `cities/<id>-<hash>.json` per city. The app downloads the index on launch and a city's file when you're there or plan a trip, and keeps it in SQLite. Until a city arrives, the closest one on the device stands in. The app ships a slim copy of one city, [`src/data/seed-city.json`](../src/data/seed-city.json), written by `npm run catalog`, so it works on first launch offline.
 
 ## User state (on the device, synced later)
 

@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 const out = 'dist/catalog';
+const SEED_CITY = 'los-angeles';
 rmSync(out, { recursive: true, force: true });
 mkdirSync(`${out}/cities`, { recursive: true });
 
@@ -19,4 +20,11 @@ for (const file of readdirSync('data/cities').filter((f) => f.endsWith('.json'))
   cities.push({ id, name, region, country, lat, lng, hash });
 }
 writeFileSync(`${out}/index.json`, JSON.stringify({ cities }));
+
+// The app ships a slim copy of one city so it works on first launch, offline: its must-dos and hand-picked places.
+// The full file downloads as soon as there's a connection.
+const seed = JSON.parse(readFileSync(`data/cities/${SEED_CITY}.json`, 'utf8'));
+const keep = new Set(seed.icons.map((i) => i.place));
+seed.places = seed.places.filter((p) => keep.has(p.id) || p.id.startsWith('pick:'));
+writeFileSync('src/data/seed-city.json', `${JSON.stringify(seed)}\n`);
 console.log(`Wrote ${cities.length} cities (${Math.round(bytes / 1024)} KB) to ${out}`);
