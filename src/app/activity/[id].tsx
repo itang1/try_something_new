@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -12,6 +13,9 @@ import { useMarkDone } from '@/state/use-mark-done';
 import { subcategory, useColors } from '@/theme';
 import { GradientIcon, Icon } from '@/components/icon';
 
+// Big cities have hundreds of parks or restaurants for one activity, so the list starts with the closest.
+const FIRST_PLACES = 20;
+
 export default function ActivitySheet() {
   const colors = useColors();
   const router = useRouter();
@@ -20,6 +24,7 @@ export default function ActivitySheet() {
     useAppState();
   const markDone = useMarkDone();
   const entry = findEntry(id);
+  const [showAll, setShowAll] = useState(false);
 
   if (!entry) {
     return (
@@ -97,7 +102,7 @@ export default function ActivitySheet() {
               {visitedCount > 0 && places.length > 1 ? ` · ${visitedCount} visited` : ''}
             </Text>
             <View style={[styles.list, { backgroundColor: colors.card }]}>
-              {places.map(({ place, minutes }, i) => {
+              {(showAll ? places : places.slice(0, FIRST_PLACES)).map(({ place, minutes }, i) => {
                 const visited = visitedPlaceIds.has(place.id);
                 const meta = [
                   minutes != null && `${formatMinutes(minutes)} away`,
@@ -158,6 +163,18 @@ export default function ActivitySheet() {
                   </View>
                 );
               })}
+              {!showAll && places.length > FIRST_PLACES && (
+                <Pressable
+                  onPress={() => setShowAll(true)}
+                  style={({ pressed }) => [
+                    styles.row,
+                    { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator, opacity: pressed ? 0.6 : 1 },
+                  ]}
+                >
+                  <Text style={[styles.placeName, styles.grow, { color: colors.accent }]}>Show all {places.length} places</Text>
+                  <Icon name="keyboard_arrow_down" size={20} color={colors.accent} />
+                </Pressable>
+              )}
             </View>
           </>
         )}
