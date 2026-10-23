@@ -1,0 +1,6 @@
+// Deploy with `npx wrangler deploy` from this folder, after `npx wrangler secret put ORS_KEY`.
+{
+  "name": "try-something-new-drive-times",
+  "main": "index.js",
+  "compatibility_date": "2026-10-01"
+}
