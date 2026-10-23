@@ -1,0 +1,8 @@
+{
+  "name": "overture-import",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@duckdb/node-api": "1.5.6-r.1"
+  }
+}

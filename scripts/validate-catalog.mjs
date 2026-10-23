@@ -11,7 +11,7 @@ const COSTS = new Set(COST_LIST);
 const LEVELS = new Set(LEVEL_IDS);
 const KINDS = new Set(KIND_LIST);
 const ICON_NAMES = new Set([...read('src/icons/paths.ts').matchAll(/^ {2}(\w+): '/gm)].map((m) => m[1]));
-const PLACE_ID = /^(osm:[nwr]\d+|pick:[a-z0-9]+(-[a-z0-9]+)*)$/;
+const PLACE_ID = /^(osm:[nwr]\d+|ovt:[0-9a-f-]{36}|pick:[a-z0-9]+(-[a-z0-9]+)*)$/;
 const ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 // Ski hills can be a couple of hours out, but a mistyped coordinate lands much farther away.
 const MAX_KM = 300;
@@ -71,7 +71,7 @@ for (const file of readdirSync('data/cities').filter((f) => f.endsWith('.json'))
   if (city.warmMonths) checkMonths(`city ${city.id}`, city.warmMonths);
   for (const p of city.places) {
     const where = `${city.id} place ${p.id} (${p.name})`;
-    if (!PLACE_ID.test(p.id)) fail(where, 'id must be osm:<type><number> or pick:<name>');
+    if (!PLACE_ID.test(p.id)) fail(where, 'id must be osm:<type><number>, ovt:<Overture id>, or pick:<name>');
     if (placeIds.has(p.id)) fail(where, `id also used in ${placeIds.get(p.id)}`);
     placeIds.set(p.id, city.id);
     cityPlaces.add(p.id);
