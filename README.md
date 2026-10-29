@@ -62,3 +62,34 @@ The app is built on a few findings from psychology. The evidence varies, so the 
 - **User state:** completions are saved on the device in SQLite (`expo-sqlite`) as an append-only log, so they can sync later. A backend (Convex, Supabase, or Firestore) is chosen when sync is built.
 - **Location:** `expo-location` for GPS and address lookup. Drive times come from the [OpenRouteService](https://openrouteservice.org) matrix API, one request for up to 3,000 places, and are cached on the device for 30 days. Until they arrive, or without a key, they fall back to a straight-line estimate at 50 km/h. To turn them on, put a free key in `.env.local` as `EXPO_PUBLIC_ORS_KEY`. Only the 25 nearest places get real times. For release, the key lives in a Cloudflare Worker ([`server/drive-times`](server/drive-times)) and the app gets its URL as `EXPO_PUBLIC_ROUTING_URL`, so the key never ships on phones.
 - **Reports:** a flag on each place opens an email about a wrong or closed place, with its id filled in. The address goes in `.env.local` as `EXPO_PUBLIC_REPORT_EMAIL`, kept out of the public repo, and the flag is hidden without it. Fixes go into the import rules or the city file.
+
+## Building
+
+Builds run in the cloud on [EAS](https://docs.expo.dev/eas/), set up in `eas.json`:
+
+- **development:** a dev client for testing native changes, shared by link. `development-simulator` is the same for the iOS Simulator.
+- **preview:** a standalone build to share by link, an APK on Android.
+- **production:** the store build. EAS keeps the build number and bumps it each time.
+
+```bash
+npx eas-cli@latest build --profile development --platform android
+npx eas-cli@latest build --profile production --platform all
+npx eas-cli@latest submit --profile production --platform android
+```
+
+`app.config.ts` reads keys from the environment, so none are in git. Each profile picks the matching [EAS environment](https://docs.expo.dev/eas/environment-variables/), and `.env.local` isn't uploaded, so build values live on EAS:
+
+| Variable | What it's for |
+| --- | --- |
+| `GOOGLE_MAPS_ANDROID_API_KEY` | Google Maps on Android. Without it the map is blank. |
+| `EXPO_PUBLIC_ROUTING_URL` | The drive-times Worker, for preview and production. |
+| `EXPO_PUBLIC_REPORT_EMAIL` | Where place reports go. |
+
+Set each one once per environment, for example:
+
+```bash
+npx eas-cli@latest env:set --name GOOGLE_MAPS_ANDROID_API_KEY --value <key> \
+  --environment development --environment preview --environment production --visibility sensitive
+```
+
+The Maps key ships inside the app, so its protection is a restriction in Google Cloud to the package `com.pastureraised.trysomethingnew` and the app's SHA-1 fingerprints (`npx eas-cli@latest credentials` shows them), not secrecy.
