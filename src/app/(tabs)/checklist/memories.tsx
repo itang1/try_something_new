@@ -1,11 +1,16 @@
-import { useState } from 'react';
-import { Image, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Alert, Image, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
+import { Stack } from 'expo-router';
+import BackupIcon from '@expo/material-symbols/backup.xml';
+import { restoreBackup, shareBackup } from '@/data/backup';
 import type { City, Entry } from '@/data/catalog';
 import { keptPhotoUri } from '@/data/photos';
 import { loadMemories, type Memory, type Rating } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
+import { useToast } from '@/state/toast';
 import { readable, subcategory, useColors } from '@/theme';
 import { FilterChip } from '@/components/chips';
+import { toolbarIcon } from '@/components/header-items';
 import { GradientIcon, Icon } from '@/components/icon';
 import type { IconName } from '@/icons/paths';
 
@@ -106,8 +111,10 @@ function Tile({ value, label }: { value: number; label: string }) {
 
 export default function MemoriesScreen() {
   const colors = useColors();
-  const { findAnyEntry } = useAppState();
-  const [items] = useState(() => toItems(loadMemories(), findAnyEntry));
+  const { findAnyEntry, reload } = useAppState();
+  const showToast = useToast();
+  // A restore reloads the app state, which gives a new finder, so the list reads the merged history.
+  const items = useMemo(() => toItems(loadMemories(), findAnyEntry), [findAnyEntry]);
   const [filter, setFilter] = useState<Filter>('All');
 
   const shown = items.filter(
@@ -121,54 +128,93 @@ export default function MemoriesScreen() {
     else sections.push({ title, data: [item] });
   }
 
+  const [busy, setBusy] = useState(false);
+  const run = async (work: () => Promise<void>) => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await work();
+    } catch (e) {
+      Alert.alert("Couldn't finish", e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const restore = () =>
+    run(async () => {
+      const added = await restoreBackup();
+      if (added == null) return;
+      reload();
+      showToast(added ? `Restored ${added} ${added === 1 ? 'item' : 'items'}` : 'Everything in that backup was already here');
+    });
+
   return (
-    <SectionList
-      sections={sections}
-      keyExtractor={(item) => `${item.entry.id}-${item.at}`}
-      contentInsetAdjustmentBehavior="automatic"
-      contentContainerStyle={styles.list}
-      style={{ backgroundColor: colors.background }}
-      stickySectionHeadersEnabled={false}
-      ListHeaderComponent={
-        items.length > 0 ? (
-          <View style={styles.header}>
-            <Text style={[styles.summary, { color: colors.secondary }]}>
-              {items.length} {items.length === 1 ? 'thing' : 'things'} tried
+    <>
+      <SectionList
+        sections={sections}
+        keyExtractor={(item) => `${item.entry.id}-${item.at}`}
+        contentInsetAdjustmentBehavior="automatic"
+        contentContainerStyle={styles.list}
+        style={{ backgroundColor: colors.background }}
+        stickySectionHeadersEnabled={false}
+        ListHeaderComponent={
+          items.length > 0 ? (
+            <View style={styles.header}>
+              <Text style={[styles.summary, { color: colors.secondary }]}>
+                {items.length} {items.length === 1 ? 'thing' : 'things'} tried
+              </Text>
+              <Stats items={items} />
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+                {FILTERS.map((f) => (
+                  <FilterChip
+                    key={f}
+                    title={f}
+                    icon={f === 'All' ? 'grid_view' : f === 'Loved it' ? 'favorite' : 'photo_camera'}
+                    color={colors.accent}
+                    selected={filter === f}
+                    onPress={() => setFilter(f)}
+                  />
+                ))}
+              </ScrollView>
+            </View>
+          ) : undefined
+        }
+        renderSectionHeader={({ section }) => (
+          <Text style={[styles.section, { color: colors.secondary }]}>{section.title}</Text>
+        )}
+        renderItem={({ item }) => <MemoryCard item={item} />}
+        ListEmptyComponent={
+          <View style={styles.empty}>
+            <Icon name={items.length ? 'search' : 'history'} size={44} color={colors.tertiary} />
+            <Text style={[styles.emptyTitle, { color: colors.label }]}>
+              {items.length ? 'Nothing here yet' : 'Your memories show up here'}
             </Text>
-            <Stats items={items} />
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-              {FILTERS.map((f) => (
-                <FilterChip
-                  key={f}
-                  title={f}
-                  icon={f === 'All' ? 'grid_view' : f === 'Loved it' ? 'favorite' : 'photo_camera'}
-                  color={colors.accent}
-                  selected={filter === f}
-                  onPress={() => setFilter(f)}
-                />
-              ))}
-            </ScrollView>
+            <Text style={[styles.caption, { color: colors.secondary }]}>
+              {items.length
+                ? 'Try another filter.'
+                : 'Mark something done, then say how it went. Looking back is half the fun.'}
+            </Text>
           </View>
-        ) : undefined
-      }
-      renderSectionHeader={({ section }) => (
-        <Text style={[styles.section, { color: colors.secondary }]}>{section.title}</Text>
-      )}
-      renderItem={({ item }) => <MemoryCard item={item} />}
-      ListEmptyComponent={
-        <View style={styles.empty}>
-          <Icon name={items.length ? 'search' : 'history'} size={44} color={colors.tertiary} />
-          <Text style={[styles.emptyTitle, { color: colors.label }]}>
-            {items.length ? 'Nothing here yet' : 'Your memories show up here'}
-          </Text>
-          <Text style={[styles.caption, { color: colors.secondary }]}>
-            {items.length
-              ? 'Try another filter.'
-              : 'Mark something done, then say how it went. Looking back is half the fun.'}
-          </Text>
-        </View>
-      }
-    />
+        }
+      />
+      <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Menu accessibilityLabel="Backup" tintColor={colors.accent}>
+          <Stack.Toolbar.Icon {...toolbarIcon('arrow.up.doc', BackupIcon)} />
+          <Stack.Toolbar.MenuAction
+            icon={process.env.EXPO_OS === 'ios' ? 'square.and.arrow.up' : undefined}
+            onPress={() => run(shareBackup)}
+          >
+            Export backup
+          </Stack.Toolbar.MenuAction>
+          <Stack.Toolbar.MenuAction
+            icon={process.env.EXPO_OS === 'ios' ? 'square.and.arrow.down' : undefined}
+            onPress={restore}
+          >
+            Restore from backup
+          </Stack.Toolbar.MenuAction>
+        </Stack.Toolbar.Menu>
+      </Stack.Toolbar>
+    </>
   );
 }
 
