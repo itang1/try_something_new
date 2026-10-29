@@ -1,3 +1,5 @@
+// First, so crash reporting is running before anything else loads.
+import { wrap } from '@/crash-reporting';
 import { useEffect } from 'react';
 import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider, type Href } from 'expo-router';
 import { useColorScheme } from 'react-native';
@@ -26,7 +28,7 @@ function useNudgeTaps() {
   }, []);
 }
 
-export default function RootLayout() {
+function RootLayout() {
   useNudgeTaps();
   const scheme = useColorScheme();
   const colors = useColors();
@@ -109,3 +111,5 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   );
 }
+
+export default wrap(RootLayout);
