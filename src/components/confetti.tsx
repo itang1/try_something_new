@@ -1,8 +1,9 @@
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import { BRAND, SUBCATEGORIES } from '@/theme';
 
-const COLORS = ['#FF9500', '#5856D6', '#34C759', '#FF2D55', '#32ADE6', '#FFCC00'];
+const COLORS = [BRAND.gold, BRAND.rose, BRAND.violet, SUBCATEGORIES.outdoors.color, SUBCATEGORIES.water.color, SUBCATEGORIES.play.color];
 
 // Picked once at load so every render of a burst draws the same pieces.
 const PIECES = Array.from({ length: 28 }, (_, i) => ({

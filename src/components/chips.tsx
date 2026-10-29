@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { IconName } from '@/icons/paths';
-import { useColors } from '@/theme';
+import { readableOn, useColors } from '@/theme';
 import { Icon } from './icon';
 
 export function MetadataTag({ icon, text }: { icon: IconName; text: string }) {
@@ -38,8 +38,8 @@ export function FilterChip({
         { backgroundColor: selected ? color : `${color}1A`, opacity: pressed ? 0.7 : 1 },
       ]}
     >
-      <Icon name={icon} size={14} color={selected ? 'white' : color} />
-      <Text style={[styles.chipText, { color: selected ? 'white' : color }]}>{title}</Text>
+      <Icon name={icon} size={14} color={selected ? readableOn(color) : color} />
+      <Text style={[styles.chipText, { color: selected ? readableOn(color) : color }]}>{title}</Text>
     </Pressable>
   );
 }

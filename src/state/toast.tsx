@@ -3,6 +3,7 @@ import { AccessibilityInfo, Pressable, StyleSheet, Text } from 'react-native';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
+import { INK } from '@/theme';
 import { useAppState } from './app-state';
 
 /**
@@ -98,9 +99,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: 16,
-    backgroundColor: 'rgba(28,28,30,0.94)',
+    backgroundColor: INK.surface,
     boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
   },
-  message: { flex: 1, color: 'white', fontSize: 15, fontWeight: '500' },
-  undo: { color: '#FF9F0A', fontSize: 15, fontWeight: '700' },
+  message: { flex: 1, color: INK.label, fontSize: 15, fontWeight: '500' },
+  undo: { color: INK.accent, fontSize: 15, fontWeight: '700' },
 });

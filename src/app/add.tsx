@@ -110,7 +110,7 @@ export default function AddSheet() {
             { backgroundColor: colors.accent, opacity: !trimmed ? 0.4 : pressed ? 0.8 : 1 },
           ]}
         >
-          <Text style={styles.buttonText}>Add to my list</Text>
+          <Text style={[styles.buttonText, { color: colors.onAccent }]}>Add to my list</Text>
         </Pressable>
       </View>
     </View>
@@ -129,5 +129,5 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   footer: { padding: 16, paddingBottom: 32, borderTopWidth: StyleSheet.hairlineWidth },
   button: { minHeight: 50, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  buttonText: { color: 'white', fontSize: 16, fontWeight: '600' },
+  buttonText: { fontSize: 16, fontWeight: '600' },
 });

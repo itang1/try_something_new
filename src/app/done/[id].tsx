@@ -65,7 +65,7 @@ export default function DoneSheet() {
             entering={ZoomIn.springify().damping(12)}
             style={[styles.check, { backgroundColor: colors.done, boxShadow: `0 10px 24px ${colors.done}59` }]}
           >
-            <Icon name="check" size={52} color="white" />
+            <Icon name="check" size={52} color={colors.onDone} />
           </Animated.View>
         </View>
         {milestone && (
@@ -178,7 +178,7 @@ export default function DoneSheet() {
           onPress={save}
           style={({ pressed }) => [styles.button, styles.save, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
         >
-          <Text style={[styles.buttonText, { color: 'white' }]}>Save</Text>
+          <Text style={[styles.buttonText, { color: colors.onAccent }]}>Save</Text>
         </Pressable>
       </View>
     </View>

@@ -1,0 +1,2 @@
+<!-- Android adaptive icon foreground layer: the door, scaled into the launcher safe zone. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><g transform="translate(512 512) scale(0.68) translate(-518 -568)"><path d="M224 900 L332 790 H692 L800 900Z" fill="#FFFFFF" fill-opacity="0.28"/><path fill-rule="evenodd" d="M332 790 V430 A180 180 0 0 1 692 430 V790Z M512 400 Q527.6 504.4 632 520 Q527.6 535.6 512 640 Q496.4 535.6 392 520 Q496.4 504.4 512 400Z" fill="#FFFFFF"/><path d="M692 300 L812 236 V862 L692 790Z" fill="#FFFFFF" fill-opacity="0.6"/></g></svg>
