@@ -61,3 +61,6 @@ dist/
 *.jks
 .wrangler/
 .dev.vars
+
+# EAS submit credentials
+google-service-account*.json

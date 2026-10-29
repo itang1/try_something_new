@@ -61,6 +61,40 @@ The app is built on a few findings from psychology. The evidence varies, so the 
 - **Catalog:** versioned per-city files on a CDN, cached on the device so the app works offline. `npm run catalog` writes them to `dist/catalog`. A GitHub Action publishes it to GitHub Pages on every data change, and `.env` points the app there with `EXPO_PUBLIC_CATALOG_URL`. A slim copy of Los Angeles (its must-dos and hand-picked places) ships inside the app; full cities download when needed.
 - **User state:** completions are saved on the device in SQLite (`expo-sqlite`) as an append-only log, so they can sync later. A backend (Convex, Supabase, or Firestore) is chosen when sync is built.
 - **Location:** `expo-location` for GPS and address lookup. Drive times come from the [OpenRouteService](https://openrouteservice.org) matrix API, one request for up to 3,000 places, and are cached on the device for 30 days. Until they arrive, or without a key, they fall back to a straight-line estimate at 50 km/h. To turn them on, put a free key in `.env.local` as `EXPO_PUBLIC_ORS_KEY`. Only the 25 nearest places get real times. For release, the key lives in a Cloudflare Worker ([`server/drive-times`](server/drive-times)) and the app gets its URL as `EXPO_PUBLIC_ROUTING_URL`, so the key never ships on phones.
+- **Credits:** OpenStreetMap (ODbL) and Overture Maps (CDLA Permissive 2.0) both require attribution. The map shows their notices in its corner, each activity's place list names its sources, and an About screen (the info button on Explore) lists every source, what it's used for, and its license. They're defined once in [`src/data/credits.ts`](src/data/credits.ts), and a place's source is read from its id prefix. A new data source gets a line there.
 - **Reports:** a flag on each place opens an email about a wrong or closed place, with its id filled in. The address goes in `.env.local` as `EXPO_PUBLIC_REPORT_EMAIL`, kept out of the public repo, and the flag is hidden without it. Fixes go into the import rules or the city file.
 - **Crash reports:** [Sentry](https://sentry.io) through `@sentry/react-native`, set up in [`src/crash-reporting.ts`](src/crash-reporting.ts). Release builds send crashes and slow screens when `EXPO_PUBLIC_SENTRY_DSN` is set; development builds and builds without it send nothing. Reports carry no user details, and places, plans and locations stay on the device. For readable stack traces, EAS builds also need `SENTRY_AUTH_TOKEN` (a sensitive secret), `SENTRY_ORG` and `SENTRY_PROJECT` in their environment so source maps upload.
 - **Checks:** a GitHub Action runs `npm run lint`, `npm run typecheck` and `npm test` (Jest with `jest-expo`, tests in `__tests__/`) on every pull request.
+
+## Building
+
+Builds run in the cloud on [EAS](https://docs.expo.dev/eas/), set up in `eas.json`:
+
+- **development:** a dev client for testing native changes, shared by link. `development-simulator` is the same for the iOS Simulator.
+- **preview:** a standalone build to share by link, an APK on Android.
+- **production:** the store build. EAS keeps the build number and bumps it each time.
+
+```bash
+npx eas-cli@latest build --profile development --platform android
+npx eas-cli@latest build --profile production --platform all
+npx eas-cli@latest submit --profile production --platform android
+```
+
+`app.config.ts` reads keys from the environment, so none are in git. Each profile picks the matching [EAS environment](https://docs.expo.dev/eas/environment-variables/), and `.env.local` isn't uploaded, so build values live on EAS:
+
+| Variable | What it's for |
+| --- | --- |
+| `GOOGLE_MAPS_ANDROID_API_KEY` | Google Maps on Android. Without it the map is blank. |
+| `EXPO_PUBLIC_ROUTING_URL` | The drive-times Worker, for preview and production. |
+| `EXPO_PUBLIC_REPORT_EMAIL` | Where place reports go. |
+| `EXPO_PUBLIC_SENTRY_DSN` | Where crash reports go. Without it none are sent. |
+| `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | Uploading source maps so crash reports show readable stack traces. The token is sensitive. |
+
+Set each one once per environment, for example:
+
+```bash
+npx eas-cli@latest env:set --name GOOGLE_MAPS_ANDROID_API_KEY --value <key> \
+  --environment development --environment preview --environment production --visibility sensitive
+```
+
+The Maps key ships inside the app, so its protection is a restriction in Google Cloud to the package `com.pastureraised.trysomethingnew` and the app's SHA-1 fingerprints (`npx eas-cli@latest credentials` shows them), not secrecy.

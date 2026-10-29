@@ -355,3 +355,115 @@ export function saveCachedCity(id: string, hash: string, json: string): void {
     new Date().toISOString(),
   ]);
 }
+
+// Backups carry the user's own rows and settings. Drive times and downloaded cities are caches that refill on their own.
+const BACKUP_TABLES = {
+  completion_events: ['activity_id', 'done', 'earlier', 'at'],
+  place_visits: ['place_id', 'activity_id', 'visited', 'at'],
+  reflections: ['entry_id', 'place_id', 'place_name', 'rating', 'note', 'photo', 'at'],
+  plans: ['entry_id', 'city_id', 'place_id', 'place_name', 'day', 'at'],
+  custom_activities: ['id', 'city_id', 'name', 'subcategory', 'duration', 'cost', 'deleted', 'at'],
+} as const;
+
+type BackupTable = keyof typeof BACKUP_TABLES;
+type Row = Record<string, string | number | null>;
+
+// Lists merge with what's on the phone. The rest only fill in what the phone doesn't have yet.
+// The weekend nudge is left out, since notification permission belongs to each phone.
+const MERGED_SETTINGS = ['savedIds', 'hiddenIds'];
+const FILLED_SETTINGS = ['homeLocation', 'trip', 'recentPlaces', 'exploreFilters', 'onboarded', 'planAddsToCalendar', 'swipeNudged'];
+
+/** Everything the user made, in the shape of the current schema. */
+export type UserData = {
+  schema: number;
+  tables: Record<BackupTable, Row[]>;
+  settings: Record<string, unknown>;
+};
+
+export function exportUserData(): UserData {
+  const tables = {} as UserData['tables'];
+  for (const [table, columns] of Object.entries(BACKUP_TABLES) as [BackupTable, readonly string[]][]) {
+    tables[table] = db.getAllSync<Row>(`SELECT ${columns.join(', ')} FROM ${table} ORDER BY ${table === 'custom_activities' ? 'at' : 'id'}`);
+  }
+  const settings: Record<string, unknown> = {};
+  for (const key of [...MERGED_SETTINGS, ...FILLED_SETTINGS]) {
+    const value = readSetting<unknown>(key, undefined);
+    if (value !== undefined) settings[key] = value;
+  }
+  return { schema: schemaVersion(), tables, settings };
+}
+
+function schemaVersion(): number {
+  return db.getFirstSync<{ user_version: number }>('PRAGMA user_version')!.user_version;
+}
+
+/**
+ * Adds a backup's rows to what's on the phone, so restoring never loses anything newer.
+ * The logs are rewritten in time order, since the latest row per id is the current state.
+ * Returns how many rows were new.
+ */
+export function mergeUserData(data: UserData): number {
+  // A migration that changes stored ids has to upgrade older backups here before they merge.
+  if (data.schema > schemaVersion()) throw new Error('This backup is from a newer version of the app. Update the app, then try again.');
+  let added = 0;
+  db.withTransactionSync(() => {
+    for (const [table, columns] of Object.entries(BACKUP_TABLES) as [BackupTable, readonly string[]][]) {
+      const incoming = (data.tables[table] ?? []).map((r) => pick(r, columns));
+      if (!incoming.length) continue;
+      const placeholders = columns.map(() => '?').join(', ');
+      if (table === 'custom_activities') {
+        // One row per activity, so the newer edit wins.
+        const updates = columns.filter((c) => c !== 'id').map((c) => `${c} = excluded.${c}`);
+        for (const row of incoming) {
+          const { changes } = db.runSync(
+            `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${placeholders})
+             ON CONFLICT (id) DO UPDATE SET ${updates.join(', ')} WHERE excluded.at > ${table}.at`,
+            columns.map((c) => row[c]),
+          );
+          added += changes;
+        }
+        continue;
+      }
+      const local = db.getAllSync<Row>(`SELECT ${columns.join(', ')} FROM ${table} ORDER BY id`);
+      const seen = new Set(local.map((r) => JSON.stringify(columns.map((c) => r[c]))));
+      const fresh = incoming.filter((r) => {
+        const key = JSON.stringify(columns.map((c) => r[c]));
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      if (!fresh.length) continue;
+      added += fresh.length;
+      // Stable, so rows with the same time keep their order.
+      const merged = [...local, ...fresh].sort((a, b) => (a.at! < b.at! ? -1 : a.at! > b.at! ? 1 : 0));
+      db.runSync(`DELETE FROM ${table}`);
+      for (const row of merged) {
+        db.runSync(`INSERT INTO ${table} (${columns.join(', ')}) VALUES (${placeholders})`, columns.map((c) => row[c]));
+      }
+    }
+  });
+  for (const key of MERGED_SETTINGS) {
+    const ids = data.settings[key];
+    if (Array.isArray(ids)) writeSetting(key, [...new Set([...readSetting<string[]>(key, []), ...ids.map(String)])]);
+  }
+  for (const key of FILLED_SETTINGS) {
+    if (data.settings[key] !== undefined && readSetting<unknown>(key, undefined) === undefined) writeSetting(key, data.settings[key]);
+  }
+  // The backup may predate a catalog rename, so aliases run again over the merged rows.
+  writeSetting('appliedAliases', '');
+  return added;
+}
+
+/** Only known columns, and only values SQLite can store as they are. */
+function pick(row: unknown, columns: readonly string[]): Row {
+  if (!row || typeof row !== 'object') throw new Error('This backup is damaged.');
+  const source = row as Record<string, unknown>;
+  const picked: Row = {};
+  for (const c of columns) {
+    const value = source[c] ?? null;
+    if (value !== null && typeof value !== 'string' && typeof value !== 'number') throw new Error('This backup is damaged.');
+    picked[c] = value;
+  }
+  if (typeof picked.at !== 'string') throw new Error('This backup is damaged.');
+  return picked;
+}

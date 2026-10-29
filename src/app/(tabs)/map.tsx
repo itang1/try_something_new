@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import type { Entry, Place } from '@/data/catalog';
 import { nearestCity } from '@/data/cities';
+import { placeSources } from '@/data/credits';
 import { buildIndex, featuresInRegion, zoomToDelta } from '@/data/clusters';
 import { openDirections } from '@/data/directions';
 import { formatMinutes, haversineKm, minutesTo } from '@/data/drive';
@@ -51,6 +52,7 @@ export default function MapScreen() {
     [notDoneOnly, places, doneIds],
   );
   const byId = useMemo(() => new Map(places.map((p) => [p.id, p])), [places]);
+  const sources = useMemo(() => placeSources(city.places), [city]);
   const index = useMemo(() => buildIndex(shown), [shown]);
   const features = featuresInRegion(index, region);
   const selected = selection?.city === city.id ? byId.get(selection.placeId) : undefined;
@@ -144,8 +146,8 @@ export default function MapScreen() {
         </Pressable>
       </SafeAreaView>
 
-      {selected && (
-        <SafeAreaView edges={['bottom']} style={styles.bottom} pointerEvents="box-none">
+      <SafeAreaView edges={['bottom']} style={styles.bottom} pointerEvents="box-none">
+        {selected && (
           <Animated.View
             key={selected.id}
             entering={SlideInDown.springify().damping(18)}
@@ -159,8 +161,21 @@ export default function MapScreen() {
               onOpen={(id) => router.push(`/activity/${id}`)}
             />
           </Animated.View>
-        </SafeAreaView>
-      )}
+        )}
+        {sources.length > 0 && (
+          <Pressable
+            onPress={() => router.push('/about')}
+            accessibilityRole="link"
+            accessibilityLabel={`Place data ${sources.map((c) => c.notice).join(', ')}. Opens credits.`}
+            hitSlop={8}
+            style={({ pressed }) => [styles.attribution, { backgroundColor: colors.card, opacity: pressed ? 0.6 : 0.85 }]}
+          >
+            <Text style={[styles.attributionText, { color: colors.secondary }]} numberOfLines={1}>
+              {sources.map((c) => c.notice).join(' · ')}
+            </Text>
+          </Pressable>
+        )}
+      </SafeAreaView>
     </View>
   );
 }
@@ -231,6 +246,8 @@ const styles = StyleSheet.create({
   chipText: { fontSize: 14, fontWeight: '600' },
   origin: { width: 18, height: 18, borderRadius: 9, borderWidth: 3, borderColor: 'white', boxShadow: '0 0 0 8px rgba(0,122,255,0.15)' },
   bottom: { position: 'absolute', left: 12, right: 12, bottom: 0, alignItems: 'center' },
+  attribution: { alignSelf: 'flex-end', maxWidth: '100%', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginBottom: 4 },
+  attributionText: { fontSize: 11 },
   card: { ...readable, maxWidth: 480, borderRadius: 24, marginBottom: 12, boxShadow: '0 8px 28px rgba(0,0,0,0.18)' },
   cardBody: { padding: 16, gap: 10 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12 },
