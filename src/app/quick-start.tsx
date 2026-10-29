@@ -105,7 +105,7 @@ export default function QuickStartScreen() {
           onPress={next}
           style={({ pressed }) => [styles.primary, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
         >
-          <Text style={styles.primaryText}>
+          <Text style={[styles.primaryText, { color: colors.onAccent }]}>
             {picked.length ? (step === 0 ? `Next (${picked.length} done)` : `Save ${picked.length}`) : 'None of these'}
           </Text>
         </Pressable>
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   check: { position: 'absolute', top: 6, right: 6 },
   actions: { ...readable, gap: 8, paddingHorizontal: 16, paddingBottom: 12 },
   primary: { minHeight: 54, borderRadius: 999, alignItems: 'center', justifyContent: 'center' },
-  primaryText: { color: 'white', fontSize: 17, fontWeight: '600' },
+  primaryText: { fontSize: 17, fontWeight: '600' },
   secondary: { alignItems: 'center', paddingVertical: 12 },
   secondaryText: { fontSize: 16, fontWeight: '600' },
 });

@@ -99,7 +99,7 @@ export function SwipeCard({ children, onSwipeLeft, onSwipeRight, nudge }: Props)
       >
         {children}
         <Stamp x={x} direction={1} label="SAVE" icon="bookmark" color={colors.accent} />
-        <Stamp x={x} direction={-1} label="SKIP" icon="close" color="#8E8E93" />
+        <Stamp x={x} direction={-1} label="SKIP" icon="close" color={colors.secondary} />
       </Animated.View>
     </GestureDetector>
   );

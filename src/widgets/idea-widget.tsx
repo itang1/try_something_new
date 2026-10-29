@@ -46,5 +46,5 @@ export default createWidget<IdeaProps>('IdeaWidget', IdeaWidget, {
   name: 'Open the app to get today’s idea',
   meta: 'One new thing a day',
   city: '',
-  colors: ['#FF9500', '#FF2D55'],
+  colors: ['#F0405A', '#7A2BE2'],
 });

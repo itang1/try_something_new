@@ -37,6 +37,7 @@ I ported the app from SwiftUI to Expo (React Native), with Expo Router for navig
 - **Motion:** animations run on the UI thread with Reanimated, with haptics (`expo-haptics`) on key actions. Skia is planned for effects.
 - **One icon set:** Material Symbols. When I chose it, it had a specific icon for 166 of 177 activities, against 150 for Phosphor. SF Symbols are licensed for Apple platforms only. The gaps are mostly crafts, which will get custom icons in the same style.
 - **Icon pipeline:** [`design/icon-mapping.json`](design/icon-mapping.json) picks an icon per activity. `npm run icons` copies their shapes from `@material-symbols/svg-400` into `src/icons/paths.ts`, so only the icons in use ship, drawn with `react-native-svg`.
+- **Look:** the Dusk Ember theme lives in [`src/theme.ts`](src/theme.ts) as light and dark tokens, and every text color passes WCAG AA on its background. The app icon, Android adaptive and themed icons, splash and favicon are SVGs in [`assets/brand`](assets/brand); `npm run app-icons` renders them to the PNGs Expo uses.
 - **Color:** each subcategory has a color and a two-color gradient, defined in [`src/theme.ts`](src/theme.ts) from the iOS system palette. Each icon sits in a circle or tile with that gradient, the same in lists, pins, and widgets.
 - **Map:** Apple Maps on iOS and Google Maps on Android, with custom pins. Tapping a pin glides the camera and slides up a card, rather than animating the pin itself.
 

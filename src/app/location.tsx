@@ -117,7 +117,7 @@ export default function LocationSheet() {
           />
           {busy === 'address' && <ActivityIndicator />}
         </View>
-        {error && <Text style={styles.error}>{error}</Text>}
+        {error && <Text style={[styles.error, { color: colors.red }]}>{error}</Text>}
       </View>
 
       {!text && (
@@ -218,7 +218,7 @@ const styles = StyleSheet.create({
   section: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase', marginLeft: 4 },
   field: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 12, paddingHorizontal: 12 },
   input: { flex: 1, fontSize: 17, paddingVertical: 12 },
-  error: { fontSize: 13, color: '#FF3B30', marginLeft: 4 },
+  error: { fontSize: 13, marginLeft: 4 },
   card: { borderRadius: 16, overflow: 'hidden' },
   tripCard: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, padding: 14 },
   option: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingHorizontal: 14 },
