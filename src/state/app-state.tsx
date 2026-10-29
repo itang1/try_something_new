@@ -86,6 +86,8 @@ type AppState = {
   plans: Map<string, Plan>;
   /** Pass null to clear the plan. */
   setPlan: (entryId: string, plan: Pick<Plan, 'placeId' | 'day'> | null) => void;
+  /** Reads everything from storage again, after a backup is restored. */
+  reload: () => void;
 };
 
 const AppStateContext = createContext<AppState | null>(null);
@@ -103,20 +105,21 @@ function usePersistedState<T>(key: string, fallback: T) {
     },
     [key],
   );
-  return [value, set] as const;
+  const reload = useCallback(() => setValue(readSetting(key, fallback)), [key, fallback]);
+  return [value, set, reload] as const;
 }
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
-  const [home, setHome] = usePersistedState<HomeLocation | null>('homeLocation', null);
-  const [trip, setTrip] = usePersistedState<Trip | null>('trip', null);
-  const [recentPlaces, setRecentPlaces] = usePersistedState<HomeLocation[]>('recentPlaces', []);
+  const [home, setHome, reloadHome] = usePersistedState<HomeLocation | null>('homeLocation', null);
+  const [trip, setTrip, reloadTrip] = usePersistedState<Trip | null>('trip', null);
+  const [recentPlaces, setRecentPlaces, reloadRecentPlaces] = usePersistedState<HomeLocation[]>('recentPlaces', []);
   const [doneIds, setDoneIds] = useState(loadDoneIds);
   const [visitedPlaceIds, setVisitedPlaceIds] = useState(loadVisitedPlaceIds);
-  const [saved, setSaved] = usePersistedState<string[]>('savedIds', []);
-  const [hidden, setHidden] = usePersistedState<string[]>('hiddenIds', []);
+  const [saved, setSaved, reloadSaved] = usePersistedState<string[]>('savedIds', []);
+  const [hidden, setHidden, reloadHidden] = usePersistedState<string[]>('hiddenIds', []);
   const [allPlans, setAllPlans] = useState(loadPlans);
   const [customs, setCustoms] = useState(loadCustomActivities);
-  const [filters, setFilters] = usePersistedState<Filters>('exploreFilters', NO_FILTERS);
+  const [filters, setFilters, reloadFilters] = usePersistedState<Filters>('exploreFilters', NO_FILTERS);
   const [weekendNudge, setWeekendNudge] = usePersistedState('weekendNudge', false);
   const savedIds = useMemo(() => new Set(saved), [saved]);
   const hiddenIds = useMemo(() => new Set(hidden), [hidden]);
@@ -268,6 +271,19 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [visitedPlaceIds, setVisited, markDone],
   );
 
+  const reload = useCallback(() => {
+    reloadHome();
+    reloadTrip();
+    reloadRecentPlaces();
+    reloadSaved();
+    reloadHidden();
+    reloadFilters();
+    setDoneIds(loadDoneIds());
+    setVisitedPlaceIds(loadVisitedPlaceIds());
+    setAllPlans(loadPlans());
+    setCustoms(loadCustomActivities());
+  }, [reloadHome, reloadTrip, reloadRecentPlaces, reloadSaved, reloadHidden, reloadFilters]);
+
   const isDone = useCallback((activityId: string) => doneIds.has(activityId), [doneIds]);
 
   const toggleSaved = useCallback(
@@ -315,6 +331,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setFilters,
         plans,
         setPlan,
+        reload,
       }}
     >
       {children}
