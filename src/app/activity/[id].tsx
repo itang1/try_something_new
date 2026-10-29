@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { LEVELS, otherWays, seasonLabel } from '@/data/catalog';
+import { entryHint, kindsOf, LEVELS, otherWays, seasonLabel } from '@/data/catalog';
 import { formatDay } from '@/data/days';
 import { openDirections, searchNearby } from '@/data/directions';
 import { inviteFriend } from '@/data/invite';
@@ -21,7 +21,7 @@ export default function ActivitySheet() {
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { city, origin, driveTimes, isDone, savedIds, toggleSaved, visitedPlaceIds, toggleVisited, plans, findEntry, removeCustom } =
+  const { city, entries, origin, driveTimes, isDone, savedIds, toggleSaved, visitedPlaceIds, toggleVisited, plans, findEntry, removeCustom } =
     useAppState();
   const markDone = useMarkDone();
   const entry = findEntry(id);
@@ -44,6 +44,8 @@ export default function ActivitySheet() {
   const planPlace = plan && places.find(({ place }) => place.id === plan.placeId)?.place;
   const ways = otherWays(entry);
   const sources = placeSources(places.map(({ place }) => place));
+  const kinds = kindsOf(entries, entry);
+  const parent = entry.parent ? findEntry(entry.parent) : undefined;
 
   return (
     <View style={styles.screen}>
@@ -60,6 +62,11 @@ export default function ActivitySheet() {
             </Text>
             {entry.months && (
               <Text style={[styles.meta, { color: colors.secondary }]}>In season {seasonLabel(entry.months)}</Text>
+            )}
+            {parent && (
+              <Pressable onPress={() => router.push(`/activity/${parent.id}`)} accessibilityRole="link" hitSlop={6}>
+                <Text style={[styles.meta, { color: colors.accent }]}>One way to {parent.name[0].toLowerCase() + parent.name.slice(1)}</Text>
+              </Pressable>
             )}
           </View>
           <Pressable
@@ -96,6 +103,36 @@ export default function ActivitySheet() {
           </View>
           <Icon name="chevron_right" size={20} color={colors.tertiary} />
         </Pressable>
+
+        {kinds.length > 0 && (
+          <>
+            <Text style={[styles.section, { color: colors.secondary }]}>Pick one to try</Text>
+            <View style={[styles.list, { backgroundColor: colors.card }]}>
+              {kinds.map((kind, i) => (
+                <Pressable
+                  key={kind.id}
+                  onPress={() => router.push(`/activity/${kind.id}`)}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [
+                    styles.row,
+                    i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
+                    { opacity: pressed ? 0.6 : 1 },
+                  ]}
+                >
+                  <GradientIcon icon={kind.icon} subcategoryId={kind.subcategory} size={32} shape="tile" />
+                  <View style={styles.grow}>
+                    <Text style={[styles.placeName, { color: colors.label }]}>{kind.name}</Text>
+                    <Text style={[styles.meta, { color: colors.secondary }]} numberOfLines={1}>
+                      {(kind.places.length || kind.search) && kind.home ? 'Out or at home' : entryHint(kind)}
+                    </Text>
+                  </View>
+                  {isDone(kind.id) && <Icon name="check_circle" size={20} color={colors.done} />}
+                  <Icon name="chevron_right" size={20} color={colors.tertiary} />
+                </Pressable>
+              ))}
+            </View>
+          </>
+        )}
 
         {places.length > 0 && (
           <>

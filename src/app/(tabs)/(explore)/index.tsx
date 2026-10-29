@@ -5,7 +5,7 @@ import { Stack, useRouter } from 'expo-router';
 import FiltersIcon from '@expo/material-symbols/tune.xml';
 import AboutIcon from '@expo/material-symbols/info.xml';
 import * as Haptics from 'expo-haptics';
-import { inSeason, LEVELS, otherWays, type Entry } from '@/data/catalog';
+import { inSeason, kindsOf, LEVELS, listOr, otherWays, type Entry, type Way } from '@/data/catalog';
 import { addDays, dayKey, formatDay } from '@/data/days';
 import { searchNearby } from '@/data/directions';
 import { allowNudges } from '@/data/nudge';
@@ -25,6 +25,11 @@ import type { IconName } from '@/icons/paths';
 
 function randomItem<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];
+}
+
+function sample<T>(items: T[], n: number): T[] {
+  const rest = [...items];
+  return Array.from({ length: Math.min(n, rest.length) }, () => rest.splice(Math.floor(Math.random() * rest.length), 1)[0]);
 }
 
 export default function ExploreScreen() {
@@ -290,10 +295,16 @@ type CardProps = {
 
 function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onNotForMe, onSave, onDone }: CardProps) {
   const colors = useColors();
-  const { driveTimes } = useAppState();
+  const { driveTimes, entries, filters } = useAppState();
   const sub = subcategory(entry.subcategory);
-  const [nearest, ...others] = placesByDistance(entry, origin, driveTimes);
-  const way = otherWays(entry)[0];
+  // Staying in leads with the home version, even for something that also has places nearby.
+  const stayIn = filters.where === 'home';
+  const [nearest, ...others] = stayIn ? [] : placesByDistance(entry, origin, driveTimes);
+  const ways = otherWays(entry);
+  const homeWay = ways.find((w) => w.kind === 'home');
+  const way = stayIn ? (homeWay ?? ways.find((w) => w.kind === 'host')) : ways[0];
+  // A broad idea like "Try a new craft" offers a few of its kinds. The card remounts for each pick, so they hold still.
+  const [kinds] = useState(() => sample(kindsOf(entries, entry), 3).map((e) => e.name.toLowerCase()));
   const placeLine = [
     nearest?.minutes != null && `${formatMinutes(nearest.minutes)} away`,
     others.length > 0 && `${others.length} more ${others.length === 1 ? 'place' : 'places'}`,
@@ -313,7 +324,15 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onN
       <Text style={[styles.title, { color: colors.label }]}>{entry.name}</Text>
       <Text style={[styles.pill, { color: sub.color, backgroundColor: `${sub.color}26` }]}>{sub.label}</Text>
 
-      {nearest && (
+      {kinds.length > 0 && (
+        <WayRow
+          way={{ kind: 'home', icon: entry.icon, title: 'Pick one', detail: `Like ${listOr(kinds)}` }}
+          hint="Shows every kind"
+          onPress={onOpen}
+        />
+      )}
+
+      {kinds.length === 0 && nearest && (
         <Pressable
           onPress={onOpen}
           accessibilityRole="button"
@@ -331,24 +350,17 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onN
         </Pressable>
       )}
 
-      {!nearest && way && (
-        <Pressable
+      {kinds.length === 0 && !nearest && way && (
+        <WayRow
+          way={way}
+          hint={way.kind === 'search' ? 'Opens your maps app' : 'Shows what you need'}
           onPress={way.kind === 'search' ? () => searchNearby(entry.search!, origin) : onOpen}
-          accessibilityRole="button"
-          accessibilityHint={way.kind === 'search' ? 'Opens your maps app' : 'Shows what you need'}
-          style={({ pressed }) => [styles.place, { backgroundColor: colors.background, opacity: pressed ? 0.7 : 1 }]}
-        >
-          <Icon name={way.icon} size={22} color={colors.accent} />
-          <View style={styles.grow}>
-            <Text style={[styles.placeName, { color: colors.label }]} numberOfLines={1}>
-              {way.title}
-            </Text>
-            <Text style={[styles.placeLine, { color: colors.secondary }]} numberOfLines={2}>
-              {way.detail}
-            </Text>
-          </View>
-          <Icon name="chevron_right" size={20} color={colors.tertiary} />
-        </Pressable>
+        />
+      )}
+
+      {/* Something like pottery can be a studio visit or a kit at home, so offer both. */}
+      {kinds.length === 0 && (nearest || way?.kind === 'search') && homeWay && (
+        <WayRow way={{ ...homeWay, title: 'Or try it at home' }} hint="Shows what you need" onPress={onOpen} />
       )}
 
       <View style={styles.tags}>
@@ -376,6 +388,29 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onN
         />
       </View>
     </View>
+  );
+}
+
+function WayRow({ way, hint, onPress }: { way: Way; hint: string; onPress: () => void }) {
+  const colors = useColors();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityHint={hint}
+      style={({ pressed }) => [styles.place, { backgroundColor: colors.background, opacity: pressed ? 0.7 : 1 }]}
+    >
+      <Icon name={way.icon} size={22} color={colors.accent} />
+      <View style={styles.grow}>
+        <Text style={[styles.placeName, { color: colors.label }]} numberOfLines={1}>
+          {way.title}
+        </Text>
+        <Text style={[styles.placeLine, { color: colors.secondary }]} numberOfLines={2}>
+          {way.detail}
+        </Text>
+      </View>
+      <Icon name="chevron_right" size={20} color={colors.tertiary} />
+    </Pressable>
   );
 }
 
