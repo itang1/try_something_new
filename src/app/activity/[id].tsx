@@ -6,6 +6,7 @@ import { LEVELS, otherWays, seasonLabel } from '@/data/catalog';
 import { formatDay } from '@/data/days';
 import { openDirections, searchNearby } from '@/data/directions';
 import { inviteFriend } from '@/data/invite';
+import { placeSources } from '@/data/credits';
 import { canReport, reportPlace } from '@/data/report';
 import { formatMinutes, placesByDistance } from '@/data/drive';
 import { useAppState } from '@/state/app-state';
@@ -42,6 +43,7 @@ export default function ActivitySheet() {
   const plan = plans.get(entry.id);
   const planPlace = plan && places.find(({ place }) => place.id === plan.placeId)?.place;
   const ways = otherWays(entry);
+  const sources = placeSources(places.map(({ place }) => place));
 
   return (
     <View style={styles.screen}>
@@ -176,6 +178,13 @@ export default function ActivitySheet() {
                 </Pressable>
               )}
             </View>
+            {sources.length > 0 && (
+              <Pressable onPress={() => router.push('/about')} accessibilityRole="link" hitSlop={8}>
+                <Text style={[styles.credit, { color: colors.tertiary }]}>
+                  Places from {sources.map((c) => c.name).join(' and ')}
+                </Text>
+              </Pressable>
+            )}
           </>
         )}
 
@@ -297,6 +306,7 @@ const styles = StyleSheet.create({
   placeName: { fontSize: 16, fontWeight: '600' },
   go: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 36, paddingHorizontal: 12, borderRadius: 18 },
   goText: { fontSize: 15, fontWeight: '600' },
+  credit: { fontSize: 12, marginLeft: 4 },
   footer: {
     flexDirection: 'row',
     gap: 8,
