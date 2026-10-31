@@ -35,6 +35,8 @@ jobs:
           CITY: ${{ inputs.city }}
           BBOX: ${{ inputs.bbox }}
         run: |
+          # Without this, tee hides a failed import and the retry loop moves on as if it worked.
+          set -o pipefail
           if [ "$CITY" = all ]; then
             cities=$(ls data/cities | sed 's/\.json$//')
           else
