@@ -7,7 +7,7 @@ import * as Notifications from 'expo-notifications';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AppStateProvider } from '@/state/app-state';
 import { ToastProvider } from '@/state/toast';
-import { NudgeSync } from '@/state/nudge-sync';
+import { NudgeSync, PlanReminderSync } from '@/state/nudge-sync';
 import { WidgetSync } from '@/state/widget-sync';
 import { useColors } from '@/theme';
 import { CrashScreen } from '@/components/crash-screen';
@@ -15,7 +15,7 @@ import { CrashScreen } from '@/components/crash-screen';
 // A screen that throws while rendering shows a friendly retry screen instead of crashing the app.
 export const ErrorBoundary = wrapErrorBoundary(CrashScreen);
 
-/** Opens the idea a weekend nudge suggested, whether the app was running or not. */
+/** Opens the idea a weekend nudge or plan reminder is about, whether the app was running or not. */
 function useNudgeTaps() {
   useEffect(() => {
     const open = (notification: Notifications.Notification) => {
@@ -49,6 +49,7 @@ function RootLayout() {
         <AppStateProvider>
           <WidgetSync />
           <NudgeSync />
+          <PlanReminderSync />
           <ToastProvider>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(tabs)" />
