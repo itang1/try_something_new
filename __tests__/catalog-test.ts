@@ -76,5 +76,14 @@ describe('catalog', () => {
     expect(withParents(['origami'])).toEqual(['origami', 'try-a-craft']);
     expect(withParents(['origami', 'tie-dye'])).toEqual(['origami', 'tie-dye', 'try-a-craft']);
     expect(withParents(['bowling'])).toEqual(['bowling']);
+    expect(withParents(['make-pasta'])).toEqual(['make-pasta', 'cook-something-new']);
+    expect(withParents(['learn-to-juggle'])).toEqual(['learn-to-juggle', 'learn-a-skill']);
+  });
+
+  it('gives every kind of a broad idea a way to do it without a venue', () => {
+    // Most cities have no place tagged for these, so without a home version they'd never show up.
+    for (const a of activitiesFile.activities.filter((x) => 'parent' in x)) {
+      expect([a.id, Boolean('home' in a || 'search' in a)]).toEqual([a.id, true]);
+    }
   });
 });
