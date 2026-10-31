@@ -59,7 +59,7 @@ In order. These are the ones to start a thread on.
 
 ## Now: before launch
 
-- [~] **Add a Settings screen** · UX · M. Weekend ideas on/off, backup, credits, version and a Send feedback email (PR #21) are in. Left: a privacy policy link, once **Write the privacy policy and store forms** has a page. Miles or kilometers is dropped for now: the app shows drive minutes, never distances.
+- [~] **Add a Settings screen** · UX · M. Weekend ideas on/off, backup, credits, version and a Send feedback email (PR #21) are in, and a Privacy policy row that shows once `EXPO_PUBLIC_WEB_URL` is set (growth PR). Left: set that variable once the website has its domain. Miles or kilometers is dropped for now: the app shows drive minutes, never distances.
 - [~] **Make the tabs easier to get around** · UX · M. PR #11: one header pattern on every tab (the tab's own filter or sort button, then Settings, always top right), Map filters for Not done, Done, Saved and kind, a Checklist grouped by kind with folding sections, and Memories opened from the progress card. Left: check it on a phone.
 - [~] **Protect the drive-time Worker** · Backend · S. Per-IP rate limiting is in, and goes live on the next `npx wrangler deploy`. Left: App Attest / Play Integrity once the app is in the stores.
 - [ ] **Check merged work on a real phone** · Launch · S. See Up next.
@@ -69,17 +69,17 @@ In order. These are the ones to start a thread on.
 - [ ] **Finish the release setup** · Launch · S. Needs your accounts: `eas init`, EAS environment variables, Apple and Play developer accounts, then EAS Update with a fingerprint runtime version. Steps are in PR #2's description and the README.
 - [ ] **Test on a cheap Android phone** · Launch · S. Cold start, parsing the Los Angeles file, and the map with every pin. The map spike only ran in the iOS Simulator.
 - [ ] **Decide on iPad** · UX · S. `supportsTablet` is on, so Apple will review it on iPad. Either give the main screens two columns or turn tablets off for launch.
-- [ ] **Write the privacy policy and store forms** · Launch · S. A short page on GitHub Pages, App Store privacy labels, Play Data safety. Say that a rounded location goes to the drive-time Worker and that crash reports carry no personal data.
-- [ ] **Make the store listing and demo video** · Growth · M. Screenshots per platform, a short description built on "one idea at a time", and a demo video made with brag. Use the name, subtitle and keywords in MARKETING.md section 6, and real shared cards from the beta. From the old TODO.
+- [~] **Write the privacy policy and store forms** · Launch · S. The policy is a page on the website Worker (`/privacy` in `server/web`), and draft App Store privacy labels and Play Data safety answers are in `marketing/store-listing.md`. Left: deploy the website, set `CONTACT_EMAIL`, turn on "Prevent storing of IP addresses" in Sentry, and enter the answers in both consoles.
+- [~] **Make the store listing and demo video** · Growth · M. The copy for both stores, a screenshot plan with real Pasadena places, and a 30-second preview shot list are in `marketing/store-listing.md` (growth PR). Left, needs you: pick the name and subtitle (recommended: "Try Something New: Date Ideas" and "Things to do, one at a time"), capture the screenshots and record the video on a development build, with real shared cards from the beta.
 
 **Marketing and launch** (see [MARKETING.md](MARKETING.md))
 
 - [ ] **Claim the handles and check the store name** · Growth · S. Needs you. The name stays "Try Something New" (decided 2026-10-31). Claim the same handle on TikTok and Instagram, check the name is available in both stores, and pick a store subtitle (see MARKETING.md section 6). Also decided: launch in Los Angeles starting with Pasadena, $0 budget for now, TikTok first with the same videos on Instagram Reels.
 - [?] **Set the launch date** · Growth · S. Recommended: early January, for "try new things" New Year's resolutions, with a beta in November and December.
-- [ ] **Start a beta with a waitlist** · Growth · S. A one-page site with an email signup, TestFlight and Play internal testing, 50 to 200 testers mostly in the launch city. Needs **Finish the release setup**.
-- [ ] **Invite links that open the idea** · Growth · M. "Invite a friend" and the share cards link to a small web page per activity with store buttons, which opens the same idea in the app when it's installed (universal and app links). The link carries the kind of share, never who sent it, and the Worker counts visits and store taps. Put the short link in the share card's corner by setting `SHARE_LINK` in `src/data/share-card.ts`.
+- [~] **Start a beta with a waitlist** · Growth · S. The landing page with an email signup is built (`server/web`, signups go to Supabase's `waitlist` table). Left, needs you: deploy it (`server/web/README.md`), then TestFlight and Play internal testing for 50 to 200 testers mostly in the launch city, which needs **Finish the release setup**.
+- [~] **Invite links that open the idea** · Growth · M. Built in the growth PR: a page per activity at `/activity/<id>?s=<kind>` on the website Worker, visits and button taps counted in Supabase's `link_events`, invites that include the page, the site's host on the share card, and universal and app links from `app.config.ts`. All of it turns on with `EXPO_PUBLIC_WEB_URL`. Left, needs you: deploy the website and pick a domain, set `APPLE_TEAM_ID` and the Play signing fingerprint on the Worker, set `EXPO_PUBLIC_WEB_URL` in EAS, and make a new build.
 - [ ] **Remind on a plan's day** · Feature · S. See Up next.
-- [ ] **Opt-in, privacy-friendly analytics** · Growth · S. Moved up from Next so the beta can measure activation (planned or done in the first 7 days), week 2 and 4 retention, and shares per memory. Anonymous counts with TelemetryDeck or Aptabase, off by default.
+- [x] **Opt-in, privacy-friendly analytics** · Growth · S. Done in the growth PR; see Done.
 - [ ] **Post the weekend video series** · Growth · M. Needs you. "My app picked my weekend" short videos, 3 a week from the beta on, on TikTok and Instagram Reels. Plan in MARKETING.md section 5.
 - [ ] **Launch publicly** · Growth · M. Waitlist email, founder video, city subreddit posts within each sub's rules, local creators and newsletters, and Product Hunt on a weekday, the same week. Launch kit and order in MARKETING.md sections 5 and 9.
 
@@ -142,6 +142,8 @@ In order. These are the ones to start a thread on.
 
 Unsorted ideas. Move them into a horizon at the next refresh.
 
+- The activity count in README and MARKETING.md says 102; the catalog has 122 now.
+- A first-time user who opens an activity link sees the welcome screen on top of the activity. Consider showing the activity first.
 - Let the Map use the Explore filters too (cost, time, level, indoor or outdoor), so the two tabs agree. From PR #11.
 
 ## Storage decision
@@ -150,6 +152,8 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **Opt-in, privacy-friendly analytics** · Growth. "Share anonymous usage counts" in Settings, off by default. Events (`app_open`, `plan_made`, `done_saved`, `memory_saved`, `card_shared`, `invite_sent`) go to Supabase's insert-only `app_events` with the platform, app version and days since first open, which is enough for activation and week 2 and 4 retention without a device id. Our own table instead of TelemetryDeck or Aptabase, so no third party and no extra account. SQL to read them is in `server/web/README.md`. Growth PR.
+- [x] **Round the location on the phone** · Backend. The drive-time request now sends a location rounded to about a kilometer, instead of relying on the Worker to round it. Growth PR.
 - [x] **Ask for a rating at a happy moment** · Growth. The system review prompt (expo-store-review) when the share card closes after a "Loved it", shared or not, at most once every 120 days. Never on launch or after "Not for me". Adds a native module, so it needs a new development build. PR #27.
 - [x] **Add the sync client** · Backend. `sync()` in `src/data/sync.ts` pushes `changesSince` in pages and pulls each table by `(updated_at, id)` into `applyChanges`, saving each cursor only after its step succeeds. Uses `@supabase/supabase-js`, with the session kept in the SQLite key-value store. Nothing calls it until sign-in lands. PR #27.
 - [x] **Share a "tried it" card** · Growth. After Save on the done sheet, and from a share button on each memory: an image card with your photo (or the activity's colors), the activity's icon and name, the place, "Loved it", "#12 in Seattle" and the app's name, in story (1080×1920) and square (1080×1080) sizes, through the share sheet. Adds react-native-view-shot, so it needs a new development build. The short link waits for **Invite links that open the idea**. PR #26.
