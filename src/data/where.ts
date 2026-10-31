@@ -1,10 +1,11 @@
-import { AT_HOME, homeSpotId, type Entry, type Place } from '@/data/catalog';
+import { anywhereSpotId, AT_HOME, homeSpotId, type Entry, type Place } from '@/data/catalog';
 import { formatMinutes } from '@/data/drive';
 
-/** One way to do an idea, as the Explore card offers it: at home, at a place, a maps search for one, or hosting friends. */
+/** One way to do an idea, as the Explore card offers it: at home, at a place, anywhere without a set venue, a maps search for one, or hosting friends. */
 export type WhereOption =
   | { kind: 'home'; id: string; title: string; detail: string }
   | { kind: 'place'; id: string; title: string; detail: string | null; place: Place }
+  | { kind: 'anywhere'; id: string; title: string; detail: string }
   | { kind: 'search'; id: 'search'; title: string; detail: string }
   | { kind: 'host'; id: 'host'; title: string; detail: string };
 
@@ -12,7 +13,8 @@ export type WhereOption =
 export const CARD_PLACES = 4;
 
 /**
- * The card's choices for where to do an entry, in the activity sheet's order: home, the closest places, a maps search, then hosting friends.
+ * The card's choices for where to do an entry, in the activity sheet's order: home, the closest places, anywhere else
+ * (like any public court), a maps search, then hosting friends.
  * `selectedId` keeps a farther place in the list if it was picked elsewhere.
  */
 export function whereOptions(
@@ -34,6 +36,9 @@ export function whereOptions(
       detail: minutes != null ? `${formatMinutes(minutes)} away` : null,
       place,
     })),
+    ...(entry.kind === 'activity' && entry.anywhere
+      ? [{ kind: 'anywhere' as const, id: anywhereSpotId(entry.activityId), title: entry.anywhere.where, detail: entry.anywhere.detail }]
+      : []),
     ...(entry.search
       ? [{ kind: 'search' as const, id: 'search' as const, title: 'Find one near you', detail: `Search maps for “${entry.search}”` }]
       : []),
@@ -41,14 +46,14 @@ export function whereOptions(
   ];
 }
 
-/** What the card shows before anyone changes it: home when staying in, otherwise the closest place, a search, home, or hosting. */
+/** What the card shows before anyone changes it: home when staying in, otherwise the closest place, anywhere, a search, home, or hosting. */
 export function defaultWhere(options: WhereOption[], stayIn: boolean): WhereOption | undefined {
   const of = (kind: WhereOption['kind']) => options.find((o) => o.kind === kind);
-  return (stayIn && of('home')) || of('place') || of('search') || of('home') || of('host');
+  return (stayIn && of('home')) || of('place') || of('anywhere') || of('search') || of('home') || of('host');
 }
 
 /**
- * Where a plan started from the card begins: the place or home it shows. Hosting happens at home when the entry
+ * Where a plan started from the card begins: the place, home, or anywhere it shows. Hosting happens at home when the entry
  * can be done there; a search or a host-only idea leaves the plan to pick.
  */
 export function planSpot(option: WhereOption | undefined, options: WhereOption[]): string | null {

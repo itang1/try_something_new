@@ -319,6 +319,18 @@ describe('catalog aliases', () => {
     expect(storage.readSetting('hiddenIds', [])).toEqual(['osm:new']);
   });
 
+  it('moves doing a renamed activity at home or anywhere onto its new id', () => {
+    const phone = newPhone();
+    const storage = launch(phone);
+    storage.recordVisit('home:old-idea', 'old-idea', true);
+    storage.recordVisit('any:old-idea', 'old-idea', true);
+    storage.recordPlan('columbus', 'old-idea', { placeId: 'any:old-idea', placeName: 'Any park', day: '2026-11-07' });
+    storage.applyAliases(aliases);
+
+    expect(storage.loadVisitedPlaceIds()).toEqual(new Set(['home:new-idea', 'any:new-idea']));
+    expect(storage.loadPlans().get('columbus/new-idea')).toEqual(expect.objectContaining({ placeId: 'any:new-idea' }));
+  });
+
   it('runs once per list of aliases', () => {
     const { phone, storage } = phoneWithHistory();
     storage.applyAliases(aliases);

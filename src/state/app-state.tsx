@@ -1,5 +1,5 @@
 import { createContext, use, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { AT_HOME, customEntry, entriesForCity, isHomeSpot, withParents, type City, type CitySummary, type CustomActivity, type Entry } from '@/data/catalog';
+import { customEntry, entriesForCity, spotName, withParents, type City, type CitySummary, type CustomActivity, type Entry } from '@/data/catalog';
 import {
   applyCatalogAliases,
   citySummary,
@@ -197,8 +197,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const setPlan = useCallback(
     (entryId: string, choice: Pick<Plan, 'placeId' | 'day'> | null) => {
-      const places = entries.find((e) => e.id === entryId)?.places ?? [];
-      const plan = choice && { ...choice, placeName: places.find((p) => p.id === choice.placeId)?.name ?? (isHomeSpot(choice.placeId) ? AT_HOME : null) };
+      const entry = entries.find((e) => e.id === entryId);
+      const plan = choice && { ...choice, placeName: spotName(entry, choice.placeId) };
       recordPlan(city.id, entryId, plan);
       const next = new Map(allPlans);
       if (plan) next.set(planKey(city.id, entryId), { entryId, cityId: city.id, ...plan });
