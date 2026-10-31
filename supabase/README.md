@@ -1,7 +1,7 @@
 # Supabase
 
-The backend for the optional account and cross-device sync. Nothing in the app talks to it yet; the in-app
-"Back up and sync" screen is a separate roadmap item.
+The backend for the optional account and cross-device sync. The sync client is in `src/data/sync.ts` (with the
+client itself in `src/data/supabase.ts`), but nothing calls it until sign-in and the "Back up and sync" screen land.
 
 - **Project:** Try Something New, in the Poodle Strategy organization. URL: https://fueiospwqwukvqmwcfrn.supabase.co
 - **Dashboard:** https://supabase.com/dashboard/project/fueiospwqwukvqmwcfrn
@@ -21,8 +21,10 @@ The backend for the optional account and cross-device sync. Nothing in the app t
 
 - **Push:** `changesSince(cursor)` from `storage.ts`, then for each table an upsert with `ignoreDuplicates: true` for
   the logs and a plain upsert for `custom_activities`. Sending a row twice is harmless.
-- **Pull:** `select * from <table> where updated_at >= <last pull>`, then `applyChanges`. Keep the newest `updated_at`
-  seen as the next cursor. Rows with the same time can come back twice, which `applyChanges` skips.
+- **Pull:** pages of rows ordered by `(updated_at, id)` after the last row read, then `applyChanges`. Each sync starts a
+  minute before the saved mark, in case another transaction committed late, and `applyChanges` skips rows it already has.
+- **Rows:** booleans are 0 and 1 on the phone and real booleans on the server, and pulled `at` times are rewritten in the
+  phone's format so "latest wins" compares them right. `reflections.photo` is sent as null until photo backup lands.
 - **Photos:** upload to `photos/<user id>/<file name>` and store that path in the synced `reflections.photo`. The phone
   keeps showing its local copy.
 - **Delete account:** `supabase.functions.invoke('delete-account', { method: 'POST' })` while signed in, then sign out
