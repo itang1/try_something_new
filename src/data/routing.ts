@@ -39,13 +39,16 @@ export async function refreshDriveTimes(
   return new Map([...cached, ...fresh]);
 }
 
+const round2 = (x: number) => Math.round(x * 100) / 100;
+
 async function fromProxy(origin: Coordinate, places: Place[], signal: AbortSignal): Promise<Map<string, number | null>> {
   const response = await fetch(PROXY_URL!, {
     method: 'POST',
     signal,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      origin: [origin.longitude, origin.latitude],
+      // Rounded to about a kilometer on the phone, so the exact spot never leaves it. The Worker rounds the same way.
+      origin: [round2(origin.longitude), round2(origin.latitude)],
       places: places.map(({ id, lat, lng }) => ({ id, lat, lng })),
     }),
   });
