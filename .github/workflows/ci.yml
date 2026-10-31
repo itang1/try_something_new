@@ -27,3 +27,5 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test -- --ci
+      # Checks the Expo config, native module versions against the SDK, and React Native Directory metadata.
+      - run: npx expo-doctor

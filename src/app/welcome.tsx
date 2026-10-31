@@ -32,7 +32,7 @@ export default function WelcomeScreen() {
           Try Something New
         </Animated.Text>
         <Animated.Text entering={FadeInDown.delay(250)} style={[styles.subtitle, { color: colors.secondary }]}>
-          Ideas for things to do near you, from archery to the city&apos;s must-sees.
+          Ideas for things to try, out around town or at home, from archery to a new craft.
         </Animated.Text>
 
         <View style={styles.points}>
@@ -52,13 +52,14 @@ export default function WelcomeScreen() {
 
       <View style={styles.actions}>
         <Pressable
+          accessibilityRole="button"
           onPress={() => finish(true)}
           style={({ pressed }) => [styles.primary, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
         >
           <Icon name="location_on" size={20} color={colors.onAccent} />
           <Text style={[styles.primaryText, { color: colors.onAccent }]}>Set my location</Text>
         </Pressable>
-        <Pressable onPress={() => finish(false)} hitSlop={8} style={styles.secondary}>
+        <Pressable accessibilityRole="button" onPress={() => finish(false)} hitSlop={8} style={styles.secondary}>
           <Text style={[styles.secondaryText, { color: colors.accent }]}>Not now</Text>
         </Pressable>
       </View>

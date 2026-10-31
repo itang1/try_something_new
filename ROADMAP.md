@@ -46,30 +46,28 @@ The single list of what to build next. It replaces `TODO.md`. Last refreshed 202
 
 In order. These are the ones to start a thread on.
 
-1. [ ] **Test the storage migrations** · Architecture · M. Tests exist for days, drive and filters. The 6 SQLite migrations and alias moves have none, and a bad migration silently wipes someone's history.
-2. [ ] **Prepare the data for sync** · Architecture · M. Client-made UUIDs instead of `AUTOINCREMENT`, saved and hidden lists as events, a device id, and one storage module the sync code plugs into. Cheap now, painful after launch.
-3. [ ] **Store places in indexed SQLite tables** · Architecture · M. Each city is one JSON blob parsed whole, and Seoul makes five. Query by bounding box instead, to cut memory and launch time.
-4. [ ] **Optional account with cross-device sync** · Backend · L. Ask for a plan first and split it into M items here. Builds on the two items above; see Storage decision below.
-5. [~] **Check off the at-home way** · UX · S. Being added to PR #6: one "Where to do it" list with "At home" as the first row, each row with the same checkmark.
-6. [?] **Count a specific craft toward "Try a new craft"** · Feature · S. Open question from PR #6. Recommendation: yes, doing any kind checks off the broad idea once, and the broad idea stops coming back as "try another".
-7. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, and the new Settings and crash screens. None of these has run on a device yet. Needs you and a development build.
-8. [ ] **Finish Seoul's parks and trails** · Data · S. Needs your computer: the cloud can't reach Overpass. Run `node scripts/import-osm.mjs seoul 37.19,126.5,37.95,127.46` and commit the result. Overture has few parks and no bike routes there, so Seoul's outdoors list is mostly hand-picked until then.
-9. [ ] **Do an accessibility pass** · UX · M. About 33 accessibility labels across 4,000 lines. Label chips, pins, rows and icon buttons, give every swipe a button, support large text. Reanimated already skips animations when Reduce Motion is on, so confetti and springs are fine.
-10. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
+1. [ ] **Prepare the data for sync** · Architecture · M. Client-made UUIDs instead of `AUTOINCREMENT`, saved and hidden lists as events, a device id, and one storage module the sync code plugs into. Cheap now, painful after launch. The migration tests make the switch safer.
+2. [ ] **Store places in indexed SQLite tables** · Architecture · M. Each city is one JSON blob parsed whole, and Seoul makes five. Query by bounding box instead, to cut memory and launch time.
+3. [ ] **Optional account with cross-device sync** · Backend · L. Ask for a plan first and split it into M items here. Builds on the two items above; see Storage decision below.
+4. [~] **Check off the at-home way** · UX · S. Being added to PR #6: one "Where to do it" list with "At home" as the first row, each row with the same checkmark.
+5. [?] **Count a specific craft toward "Try a new craft"** · Feature · S. Open question from PR #6. Recommendation: yes, doing any kind checks off the broad idea once, and the broad idea stops coming back as "try another".
+6. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
+7. [ ] **Finish Seoul's parks and trails** · Data · S. Needs your computer: the cloud can't reach Overpass. Run `node scripts/import-osm.mjs seoul 37.19,126.5,37.95,127.46` and commit the result. Overture has few parks and no bike routes there, so Seoul's outdoors list is mostly hand-picked until then.
+8. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
+9. [x] **Run expo-doctor in CI** · Architecture · S. Left over from the CI PR (#3). Add `npx expo-doctor` to `.github/workflows/ci.yml`.
 
 ## Now: before launch
 
 - [~] **Add a Settings screen** · UX · M. Weekend ideas on/off, backup, credits and version are in. Left: miles or kilometers, a privacy policy link, and a feedback link.
+- [~] **Make the tabs easier to get around** · UX · M. PR #11: one header pattern on every tab (the tab's own filter or sort button, then Settings, always top right), Map filters for Not done, Done, Saved and kind, a Checklist grouped by kind with folding sections, and Memories opened from the progress card. Left: check it on a phone.
 - [~] **Protect the drive-time Worker** · Backend · S. Per-IP rate limiting is in, and goes live on the next `npx wrangler deploy`. Left: App Attest / Play Integrity once the app is in the stores.
 - [ ] **Check merged work on a real phone** · Launch · S. See Up next.
-- [ ] **Do an accessibility pass** · UX · M. See Up next.
-- [ ] **Test the storage migrations** · Architecture · M. See Up next.
 - [ ] **Prepare the data for sync** · Architecture · M. See Up next.
 - [ ] **Store places in indexed SQLite tables** · Architecture · M. See Up next.
 - [ ] **Optional account with cross-device sync** · Backend · L. See Up next.
 - [ ] **Finish Seoul's parks and trails** · Data · S. See Up next.
 - [ ] **Build the Android widget** · Feature · M. From the old TODO.
-- [ ] **Run expo-doctor in CI** · Architecture · S. Left over from the CI PR (#3). Add `npx expo-doctor` to `.github/workflows/ci.yml`.
+- [x] **Run expo-doctor in CI** · Architecture · S. See Up next.
 - [ ] **Finish the release setup** · Launch · S. Needs your accounts: `eas init`, EAS environment variables, Apple and Play developer accounts, then EAS Update with a fingerprint runtime version. Steps are in PR #2's description and the README.
 - [ ] **Test on a cheap Android phone** · Launch · S. Cold start, parsing the Los Angeles file, and the map with every pin. The map spike only ran in the iOS Simulator.
 - [ ] **Decide on iPad** · UX · S. `supportsTablet` is on, so Apple will review it on iPad. Either give the main screens two columns or turn tablets off for launch.
@@ -130,7 +128,8 @@ In order. These are the ones to start a thread on.
 
 Unsorted ideas. Move them into a horizon at the next refresh.
 
-- (empty)
+- Remember the Map filter and which Checklist sections are open between launches. From PR #11.
+- Let the Map use the Explore filters too (cost, time, level, indoor or outdoor), so the two tabs agree. From PR #11.
 
 ## Storage decision
 
@@ -138,6 +137,9 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **Test the storage migrations** · Architecture. Each of the 6 SQLite migrations, catalog aliases and restoring a backup onto an upgraded phone, run against a real SQLite seeded like an older version of the app. A new migration needs a test here. PR #9.
+- [x] **One place for header buttons** · UX. Settings moved from the top left of Explore to the top right of every tab, including the Map. PR #11.
+- [x] **Do an accessibility pass** · UX. A role on every button, labels where the icon was the only cue, done states read on map rows, the swipe hint and memory ratings readable, and card buttons that go two by two with large text. Swipes already had buttons and screen reader actions. Still to check on a device. PR #8.
 - [x] **Set up EAS builds** · Launch. Development, preview and production profiles. PR #2.
 - [x] **Add a Google Maps key for Android** · Launch. From the environment, never committed. PR #2.
 - [x] **Credit OpenStreetMap and Overture in the app** · Launch. About screen, map label and activity sheet. PR #1.

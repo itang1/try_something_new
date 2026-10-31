@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { addToCalendar } from '@/data/calendar';
 import { inviteFriend } from '@/data/invite';
 import { dayKey, formatDay, isWeekend, nextWeekendDay, upcomingDays } from '@/data/days';
+import { isHomeSpot, spotsFor } from '@/data/catalog';
 import { placesByDistance } from '@/data/drive';
 import { readSetting, writeSetting } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
@@ -16,18 +17,26 @@ const DAYS_AHEAD = 21;
 export default function PlanSheet() {
   const colors = useColors();
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const { city, origin, driveTimes, plans, setPlan, findEntry } = useAppState();
+  // `spot` is where the Explore card was showing, so a new plan starts there.
+  const { id, spot } = useLocalSearchParams<{ id: string; spot?: string }>();
+  const { city, origin, driveTimes, plans, setPlan, findEntry, filters } = useAppState();
   const entry = findEntry(id);
   const existing = plans.get(id);
   const days = upcomingDays(DAYS_AHEAD);
   const keys = days.map(dayKey);
   const places = entry ? placesByDistance(entry, origin, driveTimes) : [];
+  const shown = places.slice(0, 6);
+  const picked = places.find((p) => p.place.id === spot);
+  if (picked && !shown.includes(picked)) shown.push(picked);
+  const spots = entry ? spotsFor(entry, shown.map((p) => p.place)) : [];
+  const home = spots.find((s) => isHomeSpot(s.id));
 
   const [day, setDay] = useState(() =>
     existing && keys.includes(existing.day) ? existing.day : dayKey(nextWeekendDay()),
   );
-  const [placeId, setPlaceId] = useState<string | null>(existing?.placeId ?? places[0]?.place.id ?? null);
+  const [placeId, setPlaceId] = useState<string | null>(
+    existing?.placeId ?? spots.find((s) => s.id === spot)?.id ?? (filters.where === 'home' ? home?.id : undefined) ?? spots.find((s) => s !== home)?.id ?? home?.id ?? null,
+  );
   const [calendar, setCalendar] = useState(() => readSetting('planAddsToCalendar', true));
 
   if (!entry) return null;
@@ -54,6 +63,7 @@ export default function PlanSheet() {
             </Text>
           </View>
           <Pressable
+            accessibilityRole="button"
             onPress={() => router.back()}
             hitSlop={8}
             accessibilityLabel="Close"
@@ -98,14 +108,15 @@ export default function PlanSheet() {
           })}
         </ScrollView>
 
-        {places.length > 1 && (
+        {spots.length > 1 && (
           <>
             <Text style={[styles.question, { color: colors.label }]}>Where?</Text>
             <View style={styles.chips}>
-              {places.slice(0, 6).map(({ place }) => {
+              {spots.map((place) => {
                 const selected = place.id === placeId;
                 return (
                   <Pressable
+                    accessibilityRole="button"
                     key={place.id}
                     onPress={() => setPlaceId(place.id)}
                     accessibilityState={{ selected }}
@@ -158,6 +169,7 @@ export default function PlanSheet() {
       <View style={[styles.footer, { borderTopColor: colors.separator, backgroundColor: colors.background }]}>
         {existing && (
           <Pressable
+            accessibilityRole="button"
             onPress={() => {
               Haptics.selectionAsync();
               setPlan(entry.id, null);
@@ -169,6 +181,7 @@ export default function PlanSheet() {
           </Pressable>
         )}
         <Pressable
+          accessibilityRole="button"
           onPress={save}
           style={({ pressed }) => [
             styles.button,

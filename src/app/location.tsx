@@ -73,7 +73,7 @@ export default function LocationSheet() {
         <Text style={[styles.title, { color: colors.label }]}>
           {trip ? `Where are you staying in ${city.name}?` : 'Where are you?'}
         </Text>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable accessibilityRole="button" onPress={() => router.back()} hitSlop={12}>
           <Text style={[styles.done, { color: colors.accent }]}>Done</Text>
         </Pressable>
       </View>
@@ -89,6 +89,7 @@ export default function LocationSheet() {
             </Text>
           </View>
           <Pressable
+            accessibilityRole="button"
             onPress={endTrip}
             style={({ pressed }) => [styles.chip, { backgroundColor: colors.fill, opacity: pressed ? 0.6 : 1 }]}
           >
@@ -123,6 +124,7 @@ export default function LocationSheet() {
       {!text && (
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <Pressable
+            accessibilityRole="button"
             onPress={useGps}
             disabled={busy !== null}
             style={({ pressed }) => [styles.option, { opacity: pressed || busy === 'gps' ? 0.6 : 1 }]}
@@ -137,6 +139,7 @@ export default function LocationSheet() {
             const current = place.name === origin?.name;
             return (
               <Pressable
+                accessibilityRole="button"
                 key={place.name}
                 onPress={() => finish(place, true, '')}
                 disabled={busy !== null}
@@ -187,6 +190,7 @@ export default function LocationSheet() {
                 <View style={styles.chips}>
                   {tripCities.map((c) => (
                     <Pressable
+                      accessibilityRole="button"
                       key={c.id}
                       onPress={() => startTrip(c.id)}
                       style={({ pressed }) => [

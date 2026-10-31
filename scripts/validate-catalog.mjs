@@ -53,6 +53,12 @@ for (const a of activities) {
   }
   checkIcon(a.id);
 }
+for (const a of activities) {
+  if (!a.parent) continue;
+  const parent = activities.find((p) => p.id === a.parent);
+  if (!parent) fail(`activity ${a.id}`, `unknown parent "${a.parent}"`);
+  else if (parent.parent) fail(`activity ${a.id}`, `parent "${a.parent}" has a parent of its own; keep it to two levels`);
+}
 
 const km = (a, b) => {
   const rad = Math.PI / 180;

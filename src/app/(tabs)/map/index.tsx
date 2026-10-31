@@ -2,7 +2,11 @@ import { useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import MapView, { Marker, type Region } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
+import { useHeaderHeight } from 'expo-router/react-navigation';
+import type { SFSymbol } from 'expo-symbols';
+import * as Haptics from 'expo-haptics';
+import FiltersIcon from '@expo/material-symbols/tune.xml';
 import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import type { Entry, Place } from '@/data/catalog';
 import { nearestCity } from '@/data/cities';
@@ -10,8 +14,10 @@ import { placeSources } from '@/data/credits';
 import { buildIndex, featuresInRegion, zoomToDelta } from '@/data/clusters';
 import { openDirections } from '@/data/directions';
 import { formatMinutes, haversineKm, minutesTo } from '@/data/drive';
+import { matchesStatus, STATUSES, type Status } from '@/data/status';
 import { useAppState } from '@/state/app-state';
 import { readable, subcategory, useColors } from '@/theme';
+import { settingsButton, toolbarIcon } from '@/components/header-items';
 import { GradientIcon, Icon } from '@/components/icon';
 import { LocationControl } from '@/components/location-control';
 import { ClusterPin, PlacePin } from '@/components/map-pins';
@@ -21,12 +27,23 @@ const NEAR_KM = 150;
 
 type PinPlace = Place & { entries: Entry[] };
 
+const STATUS_ICONS: Record<Status, SFSymbol> = {
+  All: 'mappin.and.ellipse',
+  'Not done': 'circle',
+  Done: 'checkmark.circle',
+  Saved: 'bookmark',
+};
+
 export default function MapScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { city, entries, origin, driveTimes, doneIds } = useAppState();
+  const headerHeight = useHeaderHeight();
+  const { city, entries, origin, driveTimes, doneIds, savedIds } = useAppState();
   const mapRef = useRef<MapView>(null);
-  const [notDoneOnly, setNotDoneOnly] = useState(false);
+  const [status, setStatus] = useState<Status>('All');
+  // The kind remembers its city, so switching cities clears it without an effect.
+  const [kindPick, setKindPick] = useState<{ city: string; kind: string } | null>(null);
+  const kind = kindPick?.city === city.id ? kindPick.kind : null;
   // Selection remembers its city, so switching cities clears it without an effect.
   const [selection, setSelection] = useState<{ city: string; placeId: string } | null>(null);
 
@@ -45,13 +62,23 @@ export default function MapScreen() {
     return city.places.map((p): PinPlace => ({ ...p, entries: byPlace.get(p.id) ?? [] }));
   }, [city, entries]);
 
+  const kinds = useMemo(
+    () => [...new Set(entries.map((e) => e.subcategory))].sort((a, b) => subcategory(a).label.localeCompare(subcategory(b).label)),
+    [entries],
+  );
   const isPlaceDone = (p: PinPlace) => p.entries.length > 0 && p.entries.every((e) => doneIds.has(e.id));
+  // Filtering by kind also narrows each pin to that kind, so its icon and card match the filter.
   const shown = useMemo(
     () =>
-      notDoneOnly ? places.filter((p) => !(p.entries.length > 0 && p.entries.every((e) => doneIds.has(e.id)))) : places,
-    [notDoneOnly, places, doneIds],
+      places
+        .map((p) => (kind ? { ...p, entries: p.entries.filter((e) => e.subcategory === kind) } : p))
+        .filter((p) => p.entries.length > 0)
+        .filter((p) => matchesStatus(p.entries.map((e) => e.id), status, doneIds, savedIds)),
+    [places, kind, status, doneIds, savedIds],
   );
-  const byId = useMemo(() => new Map(places.map((p) => [p.id, p])), [places]);
+  const byId = useMemo(() => new Map(shown.map((p) => [p.id, p])), [shown]);
+  const filtered = status !== 'All' || kind !== null;
+  const filterSummary = [status !== 'All' && status, kind && subcategory(kind).label].filter(Boolean).join(' · ');
   const sources = useMemo(() => placeSources(city.places), [city]);
   const index = useMemo(() => buildIndex(shown), [shown]);
   const features = featuresInRegion(index, region);
@@ -129,22 +156,32 @@ export default function MapScreen() {
         )}
       </MapView>
 
-      <SafeAreaView edges={['top']} style={styles.top} pointerEvents="box-none">
+      <View style={[styles.top, { top: headerHeight }]} pointerEvents="box-none">
         <View style={[styles.control, { backgroundColor: colors.card }]}>
           <LocationControl />
         </View>
-        <Pressable
-          onPress={() => setNotDoneOnly(!notDoneOnly)}
-          accessibilityRole="switch"
-          accessibilityState={{ checked: notDoneOnly }}
-          style={[
-            styles.chip,
-            { backgroundColor: notDoneOnly ? colors.accent : colors.card },
-          ]}
-        >
-          <Text style={[styles.chipText, { color: notDoneOnly ? colors.onAccent : colors.label }]}>Not done</Text>
-        </Pressable>
-      </SafeAreaView>
+        {/* Same pattern as Explore: say what's filtered, tap to change, x to clear. */}
+        {filtered && (
+          <View style={[styles.chip, { backgroundColor: colors.accent }]}>
+            <Icon name="tune" size={16} color={colors.onAccent} />
+            <Text style={[styles.chipText, { color: colors.onAccent }]} numberOfLines={1}>
+              {filterSummary} · {shown.length} {shown.length === 1 ? 'place' : 'places'}
+            </Text>
+            <Pressable
+              onPress={() => {
+                Haptics.selectionAsync();
+                setStatus('All');
+                setKindPick(null);
+              }}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="Clear map filters"
+            >
+              <Icon name="close" size={16} color={colors.onAccent} />
+            </Pressable>
+          </View>
+        )}
+      </View>
 
       <SafeAreaView edges={['bottom']} style={styles.bottom} pointerEvents="box-none">
         {selected && (
@@ -176,6 +213,37 @@ export default function MapScreen() {
           </Pressable>
         )}
       </SafeAreaView>
+
+      <Stack.Toolbar placement="right">
+        <Stack.Toolbar.Menu accessibilityLabel="Filter the map" tintColor={colors.accent}>
+          <Stack.Toolbar.Icon
+            {...toolbarIcon(filtered ? 'line.3.horizontal.decrease.circle.fill' : 'line.3.horizontal.decrease', FiltersIcon)}
+          />
+          <Stack.Toolbar.Menu inline title="Show">
+            {STATUSES.map((s) => (
+              <Stack.Toolbar.MenuAction
+                key={s}
+                icon={process.env.EXPO_OS === 'ios' ? STATUS_ICONS[s] : undefined}
+                isOn={status === s}
+                onPress={() => setStatus(s)}
+              >
+                {s === 'All' ? 'All places' : s}
+              </Stack.Toolbar.MenuAction>
+            ))}
+          </Stack.Toolbar.Menu>
+          <Stack.Toolbar.Menu inline title="Kind">
+            <Stack.Toolbar.MenuAction isOn={!kind} onPress={() => setKindPick(null)}>
+              All kinds
+            </Stack.Toolbar.MenuAction>
+            {kinds.map((k) => (
+              <Stack.Toolbar.MenuAction key={k} isOn={kind === k} onPress={() => setKindPick({ city: city.id, kind: k })}>
+                {subcategory(k).label}
+              </Stack.Toolbar.MenuAction>
+            ))}
+          </Stack.Toolbar.Menu>
+        </Stack.Toolbar.Menu>
+        {settingsButton(colors.accent, router)}
+      </Stack.Toolbar>
     </View>
   );
 }
@@ -211,8 +279,10 @@ function PlaceCard({
 
       {place.entries.slice(0, 3).map((e) => (
         <Pressable
+          accessibilityRole="button"
           key={e.id}
           onPress={() => onOpen(e.id)}
+          accessibilityLabel={doneIds.has(e.id) ? `${e.name}, done` : e.name}
           style={({ pressed }) => [styles.entry, { backgroundColor: colors.fill, opacity: pressed ? 0.7 : 1 }]}
         >
           <Icon
@@ -220,7 +290,7 @@ function PlaceCard({
             size={18}
             color={doneIds.has(e.id) ? colors.done : e.kind === 'icon' ? colors.accent : colors.tertiary}
           />
-          <Text style={[styles.entryName, { color: colors.label }]} numberOfLines={1}>
+          <Text style={[styles.entryName, { color: colors.label }]} numberOfLines={2}>
             {e.name}
           </Text>
           <Icon name="chevron_right" size={18} color={colors.tertiary} />
@@ -228,6 +298,7 @@ function PlaceCard({
       ))}
 
       <Pressable
+        accessibilityRole="button"
         onPress={() => openDirections(place)}
         style={({ pressed }) => [styles.directions, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
       >
@@ -242,8 +313,17 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   top: { position: 'absolute', top: 0, left: 16, right: 16, gap: 8, alignItems: 'flex-start' },
   control: { borderRadius: 22, paddingHorizontal: 12, marginTop: 8, boxShadow: '0 4px 14px rgba(0,0,0,0.12)' },
-  chip: { minHeight: 36, paddingHorizontal: 14, borderRadius: 18, justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' },
-  chipText: { fontSize: 14, fontWeight: '600' },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    minHeight: 36,
+    maxWidth: '100%',
+    paddingHorizontal: 14,
+    borderRadius: 18,
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+  },
+  chipText: { flexShrink: 1, fontSize: 14, fontWeight: '600' },
   origin: { width: 18, height: 18, borderRadius: 9, borderWidth: 3, borderColor: 'white', boxShadow: '0 0 0 8px rgba(47,107,216,0.15)' },
   bottom: { position: 'absolute', left: 12, right: 12, bottom: 0, alignItems: 'center' },
   attribution: { alignSelf: 'flex-end', maxWidth: '100%', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginBottom: 4 },
