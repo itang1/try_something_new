@@ -27,7 +27,7 @@ import type { IconName } from '@/icons/paths';
 export default function SettingsSheet() {
   const colors = useColors();
   const router = useRouter();
-  const { weekendNudge, setWeekendNudge, reload } = useAppState();
+  const { weekendNudge, setWeekendNudge, planReminders, setPlanReminders, reload } = useAppState();
   const showToast = useToast();
   const version = Constants.expoConfig?.version;
 
@@ -44,13 +44,13 @@ export default function SettingsSheet() {
     }
   };
 
-  const toggleNudges = async (on: boolean) => {
+  const toggleNudges = (set: (on: boolean) => void) => async (on: boolean) => {
     if (!on) {
-      setWeekendNudge(false);
+      set(false);
       return;
     }
     const allowed = await allowNudges();
-    setWeekendNudge(allowed);
+    set(allowed);
     if (!allowed) {
       Alert.alert('Notifications are off', 'Turn on notifications for Try Something New in your phone’s settings.', [
         { text: 'Not now', style: 'cancel' },
@@ -147,9 +147,22 @@ export default function SettingsSheet() {
           </View>
           <Switch
             value={weekendNudge}
-            onValueChange={toggleNudges}
+            onValueChange={toggleNudges(setWeekendNudge)}
             trackColor={{ true: colors.accent }}
             accessibilityLabel="Weekend ideas"
+          />
+        </View>
+        <View style={[styles.row, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator }]}>
+          <Icon name="calendar_month" size={22} color={colors.accent} />
+          <View style={styles.grow}>
+            <Text style={[styles.name, { color: colors.label }]}>Plan reminders</Text>
+            <Text style={[styles.use, { color: colors.secondary }]}>At 9 in the morning on the day you planned</Text>
+          </View>
+          <Switch
+            value={planReminders}
+            onValueChange={toggleNudges(setPlanReminders)}
+            trackColor={{ true: colors.accent }}
+            accessibilityLabel="Plan reminders"
           />
         </View>
       </View>
