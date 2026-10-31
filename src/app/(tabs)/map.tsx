@@ -142,7 +142,7 @@ export default function MapScreen() {
             { backgroundColor: notDoneOnly ? colors.accent : colors.card },
           ]}
         >
-          <Text style={[styles.chipText, { color: notDoneOnly ? 'white' : colors.label }]}>Not done</Text>
+          <Text style={[styles.chipText, { color: notDoneOnly ? colors.onAccent : colors.label }]}>Not done</Text>
         </Pressable>
       </SafeAreaView>
 
@@ -231,8 +231,8 @@ function PlaceCard({
         onPress={() => openDirections(place)}
         style={({ pressed }) => [styles.directions, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
       >
-        <Icon name="directions" size={20} color="white" />
-        <Text style={styles.directionsText}>Directions</Text>
+        <Icon name="directions" size={20} color={colors.onAccent} />
+        <Text style={[styles.directionsText, { color: colors.onAccent }]}>Directions</Text>
       </Pressable>
     </View>
   );
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
   control: { borderRadius: 22, paddingHorizontal: 12, marginTop: 8, boxShadow: '0 4px 14px rgba(0,0,0,0.12)' },
   chip: { minHeight: 36, paddingHorizontal: 14, borderRadius: 18, justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' },
   chipText: { fontSize: 14, fontWeight: '600' },
-  origin: { width: 18, height: 18, borderRadius: 9, borderWidth: 3, borderColor: 'white', boxShadow: '0 0 0 8px rgba(0,122,255,0.15)' },
+  origin: { width: 18, height: 18, borderRadius: 9, borderWidth: 3, borderColor: 'white', boxShadow: '0 0 0 8px rgba(47,107,216,0.15)' },
   bottom: { position: 'absolute', left: 12, right: 12, bottom: 0, alignItems: 'center' },
   attribution: { alignSelf: 'flex-end', maxWidth: '100%', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginBottom: 4 },
   attributionText: { fontSize: 11 },
@@ -265,5 +265,5 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 2,
   },
-  directionsText: { color: 'white', fontSize: 16, fontWeight: '600' },
+  directionsText: { fontSize: 16, fontWeight: '600' },
 });

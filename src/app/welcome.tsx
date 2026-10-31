@@ -55,8 +55,8 @@ export default function WelcomeScreen() {
           onPress={() => finish(true)}
           style={({ pressed }) => [styles.primary, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
         >
-          <Icon name="location_on" size={20} color="white" />
-          <Text style={styles.primaryText}>Set my location</Text>
+          <Icon name="location_on" size={20} color={colors.onAccent} />
+          <Text style={[styles.primaryText, { color: colors.onAccent }]}>Set my location</Text>
         </Pressable>
         <Pressable onPress={() => finish(false)} hitSlop={8} style={styles.secondary}>
           <Text style={[styles.secondaryText, { color: colors.accent }]}>Not now</Text>
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
   },
-  primaryText: { color: 'white', fontSize: 17, fontWeight: '600' },
+  primaryText: { fontSize: 17, fontWeight: '600' },
   secondary: { alignItems: 'center', paddingVertical: 12 },
   secondaryText: { fontSize: 16, fontWeight: '600' },
 });

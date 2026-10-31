@@ -84,13 +84,13 @@ export default function PlanSheet() {
                 <Text
                   style={[
                     styles.weekday,
-                    { color: selected ? 'white' : weekend ? colors.accent : colors.secondary },
+                    { color: selected ? colors.onAccent : weekend ? colors.accent : colors.secondary },
                   ]}
                 >
                   {i === 0 ? 'Today' : date.toLocaleDateString(undefined, { weekday: 'short' })}
                 </Text>
-                <Text style={[styles.date, { color: selected ? 'white' : colors.label }]}>{date.getDate()}</Text>
-                <Text style={[styles.month, { color: selected ? 'white' : colors.tertiary }]}>
+                <Text style={[styles.date, { color: selected ? colors.onAccent : colors.label }]}>{date.getDate()}</Text>
+                <Text style={[styles.month, { color: selected ? colors.onAccent : colors.tertiary }]}>
                   {date.toLocaleDateString(undefined, { month: 'short' })}
                 </Text>
               </Pressable>
@@ -176,8 +176,8 @@ export default function PlanSheet() {
             { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 },
           ]}
         >
-          <Icon name="calendar_month" size={20} color="white" />
-          <Text style={[styles.buttonText, { color: 'white' }]}>Plan for {formatDay(day)}</Text>
+          <Icon name="calendar_month" size={20} color={colors.onAccent} />
+          <Text style={[styles.buttonText, { color: colors.onAccent }]}>Plan for {formatDay(day)}</Text>
         </Pressable>
       </View>
     </View>

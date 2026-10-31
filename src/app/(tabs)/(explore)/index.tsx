@@ -13,7 +13,7 @@ import { formatMinutes, placesByDistance } from '@/data/drive';
 import { describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
 import { readSetting, writeSetting } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
-import { readable, subcategory, useColors } from '@/theme';
+import { readable, readableOn, subcategory, useColors } from '@/theme';
 import { toolbarIcon } from '@/components/header-items';
 import { GradientIcon, Icon } from '@/components/icon';
 import { MetadataTag } from '@/components/chips';
@@ -175,7 +175,7 @@ export default function ExploreScreen() {
                 onPress={() => answerNudge(true)}
                 style={({ pressed }) => [styles.nudgeButton, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
               >
-                <Text style={[styles.nudgeButtonText, { color: 'white' }]}>Yes, please</Text>
+                <Text style={[styles.nudgeButtonText, { color: colors.onAccent }]}>Yes, please</Text>
               </Pressable>
             </View>
           </View>
@@ -244,8 +244,8 @@ export default function ExploreScreen() {
           disabled={entries.length === 0}
           style={({ pressed }) => [styles.tryButton, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
         >
-          <Icon name="shuffle" size={22} color="white" />
-          <Text style={styles.tryText}>{activity ? 'Show me another' : 'Show me something'}</Text>
+          <Icon name="shuffle" size={22} color={colors.onAccent} />
+          <Text style={[styles.tryText, { color: colors.onAccent }]}>{activity ? 'Show me another' : 'Show me something'}</Text>
         </Pressable>
         {activity && (
           <View style={styles.swipeHint} accessibilityLabel="Or swipe the card: left to skip, right to save">
@@ -417,7 +417,7 @@ function WayRow({ way, hint, onPress }: { way: Way; hint: string; onPress: () =>
 type ActionProps = { icon: IconName; label: string; onPress: () => void; tint: string; selected?: boolean };
 
 function CardAction({ icon, label, onPress, tint, selected }: ActionProps) {
-  const color = selected ? 'white' : tint;
+  const color = selected ? readableOn(tint) : tint;
   return (
     <Pressable
       onPress={onPress}
@@ -492,7 +492,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tryText: { color: 'white', fontSize: 17, fontWeight: '600' },
+  tryText: { fontSize: 17, fontWeight: '600' },
   swipeHint: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 },
   swipeHintText: { fontSize: 13, fontWeight: '600' },
 });

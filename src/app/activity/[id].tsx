@@ -298,8 +298,8 @@ export default function ActivitySheet() {
             { backgroundColor: saved ? colors.accent : `${colors.accent}1F`, opacity: pressed ? 0.7 : 1 },
           ]}
         >
-          <Icon name="bookmark" size={20} color={saved ? 'white' : colors.accent} />
-          <Text style={[styles.buttonText, { color: saved ? 'white' : colors.accent }]}>
+          <Icon name="bookmark" size={20} color={saved ? colors.onAccent : colors.accent} />
+          <Text style={[styles.buttonText, { color: saved ? colors.onAccent : colors.accent }]}>
             {saved ? 'Saved' : 'Save'}
           </Text>
         </Pressable>
@@ -315,8 +315,8 @@ export default function ActivitySheet() {
             { backgroundColor: done ? `${colors.done}26` : colors.done, opacity: pressed ? 0.7 : 1 },
           ]}
         >
-          <Icon name={done ? 'check_circle' : 'radio_button_unchecked'} size={20} color={done ? colors.done : 'white'} />
-          <Text style={[styles.buttonText, { color: done ? colors.done : 'white' }]}>
+          <Icon name={done ? 'check_circle' : 'radio_button_unchecked'} size={20} color={done ? colors.done : colors.onDone} />
+          <Text style={[styles.buttonText, { color: done ? colors.done : colors.onDone }]}>
             {done ? 'Done!' : 'Mark as Done'}
           </Text>
         </Pressable>

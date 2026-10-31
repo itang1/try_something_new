@@ -208,7 +208,7 @@ export default function FiltersSheet() {
             { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 },
           ]}
         >
-          <Text style={[styles.buttonText, { color: 'white' }]}>
+          <Text style={[styles.buttonText, { color: colors.onAccent }]}>
             {matchCount === 0 ? 'Nothing matches' : `Show ${matchCount} ${matchCount === 1 ? 'idea' : 'ideas'}`}
           </Text>
         </Pressable>

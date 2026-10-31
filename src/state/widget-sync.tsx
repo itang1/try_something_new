@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { inSeason } from '@/data/catalog';
 import { addDays, dayKey } from '@/data/days';
 import { useAppState } from '@/state/app-state';
-import { subcategory } from '@/theme';
+import { SUBCATEGORIES, subcategory } from '@/theme';
 import IdeaWidget, { type IdeaProps } from '@/widgets/idea-widget';
 
 const DAYS = 7;
@@ -44,7 +44,7 @@ export function WidgetSync() {
           name: `You've tried everything in ${city.name}!`,
           meta: 'Add your own ideas in the app',
           city: city.name,
-          colors: ['#34C759', '#30B0C7'],
+          colors: [...SUBCATEGORIES.outdoors.gradient],
         });
         return;
       }
