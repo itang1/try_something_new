@@ -1,5 +1,7 @@
 import {
   anywhereSpotId,
+  entriesForCity,
+  type City,
   homeSpotId,
   isAnywhereSpot,
   isHomeSpot,
@@ -78,5 +80,14 @@ describe('catalog', () => {
     expect(withParents(['bowling'])).toEqual(['bowling']);
     expect(withParents(['make-pasta'])).toEqual(['make-pasta', 'cook-something-new']);
     expect(withParents(['learn-chess'])).toEqual(['learn-chess', 'learn-a-skill']);
+  });
+
+  it('still has ideas for a city with no places', () => {
+    const nowhere: City = { id: 'anywhere', name: 'your area', country: '', lat: 0, lng: 0, icons: [], places: [] };
+    const entries = entriesForCity(nowhere);
+    expect(entries.length).toBeGreaterThan(20);
+    expect(entries.every((e) => e.places.length === 0 && (e.home || e.anywhere || e.host || e.search))).toBe(true);
+    expect(entries.some((e) => e.home)).toBe(true);
+    expect(entries.some((e) => e.host)).toBe(true);
   });
 });
