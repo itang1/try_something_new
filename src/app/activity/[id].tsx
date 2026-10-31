@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { AT_HOME, entryHint, homeSpotId, kindsOf, LEVELS, otherWays, seasonLabel } from '@/data/catalog';
+import { anywhereSpotId, AT_HOME, entryHint, homeSpotId, kindsOf, LEVELS, otherWays, seasonLabel } from '@/data/catalog';
 import { formatDay } from '@/data/days';
 import { openDirections, searchNearby } from '@/data/directions';
 import { inviteFriend } from '@/data/invite';
@@ -45,11 +45,14 @@ export default function ActivitySheet() {
   const planPlace = plan && places.find(({ place }) => place.id === plan.placeId)?.place;
   const ways = otherWays(entry);
   const homeWay = ways.find((w) => w.kind === 'home');
+  const anywhereWay = ways.find((w) => w.kind === 'anywhere');
   const hostWay = ways.find((w) => w.kind === 'host');
   const searchWay = ways.find((w) => w.kind === 'search');
   // Doing it at home checks off like a place of its own.
   const homeId = homeSpotId(entry.activityId);
-  const hasSpots = !!homeWay || places.length > 0 || !!searchWay;
+  // So does doing it anywhere without a set venue, like a backyard or any public court.
+  const anywhereId = anywhereSpotId(entry.activityId);
+  const hasSpots = !!homeWay || places.length > 0 || !!anywhereWay || !!searchWay;
   const placeCount = `${places.length} ${places.length === 1 ? 'place' : 'places'} in ${city.name}`;
   const spotsTitle =
     homeWay && places.length ? `At home or ${placeCount}` : places.length ? placeCount : 'Where to do it';
@@ -223,12 +226,31 @@ export default function ActivitySheet() {
                   <Icon name="keyboard_arrow_down" size={20} color={colors.accent} />
                 </Pressable>
               )}
+              {anywhereWay && (
+                <View
+                  style={[
+                    styles.row,
+                    (homeWay || places.length > 0) && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
+                  ]}
+                >
+                  <VisitCheck
+                    checked={visitedPlaceIds.has(anywhereId)}
+                    label={`Did it: ${anywhereWay.title}`}
+                    onPress={() => toggleVisited(anywhereId, entry.activityId)}
+                  />
+                  <View style={styles.grow}>
+                    <Text style={[styles.placeName, { color: colors.label }]}>{anywhereWay.title}</Text>
+                    <Text style={[styles.meta, { color: colors.secondary }]}>{anywhereWay.detail}</Text>
+                  </View>
+                  <Icon name="explore" size={20} color={colors.tertiary} />
+                </View>
+              )}
               {/* Venues open map data can't list, like paint-your-own pottery studios. */}
               {searchWay && (
                 <View
                   style={[
                     styles.row,
-                    (homeWay || places.length > 0) && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
+                    (homeWay || places.length > 0 || anywhereWay) && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
                   ]}
                 >
                   <Icon name="search" size={24} color={colors.accent} />

@@ -29,6 +29,28 @@ describe('whereOptions', () => {
   });
 });
 
+const pickleball = {
+  kind: 'activity',
+  activityId: 'pickleball',
+  anywhere: { where: 'A backyard or any tennis court', detail: 'Paddles and a ball' },
+} as Entry;
+
+describe('anywhere', () => {
+  it('lists anywhere after the places and before a search', () => {
+    const options = whereOptions({ ...pickleball, search: 'pickleball court' } as Entry, rows(2));
+    expect(options.map((o) => o.id)).toEqual(['p0', 'p1', 'any:pickleball', 'search']);
+    expect(options[2]).toMatchObject({ kind: 'anywhere', title: 'A backyard or any tennis court', detail: 'Paddles and a ball' });
+  });
+
+  it('starts at anywhere when there is no place, and plans there', () => {
+    const options = whereOptions(pickleball, []);
+    const where = defaultWhere(options, false);
+    expect(where?.id).toBe('any:pickleball');
+    expect(planSpot(where, options)).toBe('any:pickleball');
+    expect(defaultWhere(whereOptions(pickleball, rows(1)), false)?.id).toBe('p0');
+  });
+});
+
 describe('defaultWhere', () => {
   it('starts at the closest place, or home when staying in', () => {
     const options = whereOptions(pottery, rows(2));

@@ -40,8 +40,14 @@ export type Activity = {
   parent?: string;
 } & Ways;
 
-/** Ways to do an activity without one of its places: what you'd need at home, how to host it, or a maps search. */
-export type Ways = { home?: string; host?: string; search?: string };
+/**
+ * Ways to do an activity without one of its places: what you'd need at home, anywhere that works without a set venue
+ * (like any public court for pickleball), how to host it, or a maps search.
+ */
+export type Ways = { home?: string; anywhere?: Anywhere; host?: string; search?: string };
+
+/** Somewhere that isn't one place, like "A backyard or any tennis court", and what to bring. */
+export type Anywhere = { where: string; detail: string };
 
 export const LEVELS: Record<Level, { label: string; icon: IconName; rank: number }> = {
   easy: { label: 'Easy', icon: 'eco', rank: 0 },
@@ -167,7 +173,7 @@ function entry(own: Activity | CityIcon, kind: Entry['kind'], activityId: string
     places,
     custom: false,
     months,
-    ...(kind === 'activity' && { home: base.home, host: base.host, search: base.search, parent: base.parent }),
+    ...(kind === 'activity' && { home: base.home, anywhere: base.anywhere, host: base.host, search: base.search, parent: base.parent }),
   };
 }
 
@@ -201,7 +207,7 @@ function buildEntries(city: City): Entry[] {
   const placeById = new Map(city.places.map((p) => [p.id, p]));
   const activities = [...ACTIVITIES.values()]
     // Activities that need no venue show up in every city.
-    .filter((a) => placesByActivity.has(a.id) || a.home || a.host || a.search)
+    .filter((a) => placesByActivity.has(a.id) || a.home || a.anywhere || a.host || a.search)
     .filter((a) => !a.needsWinter || city.warmMonths)
     .map((a) => entry(a, 'activity', a.id, placesByActivity.get(a.id) ?? [], seasonIn(city, a)));
   // A city file newer than the app can name an activity this build doesn't have yet.
@@ -249,12 +255,31 @@ export function isHomeSpot(id: string | null | undefined): boolean {
   return !!id?.startsWith('home:');
 }
 
+/** Doing it anywhere that isn't a set venue, like a backyard or any public court, checks off like a place of its own too. */
+export function anywhereSpotId(activityId: string): string {
+  return `any:${activityId}`;
+}
+
+export function isAnywhereSpot(id: string | null | undefined): boolean {
+  return !!id?.startsWith('any:');
+}
+
 export type Spot = { id: string; name: string };
 
-/** What to pick from when planning or looking back: home first when it can be done there, then its places. */
+/** What to pick from when planning or looking back: home first when it can be done there, then its places, then anywhere else. */
 export function spotsFor(entry: Entry, places: Place[]): Spot[] {
-  const home = entry.kind === 'activity' && entry.home ? [{ id: homeSpotId(entry.activityId), name: AT_HOME }] : [];
-  return [...home, ...places.map((p) => ({ id: p.id, name: p.name }))];
+  const own = entry.kind === 'activity';
+  const home = own && entry.home ? [{ id: homeSpotId(entry.activityId), name: AT_HOME }] : [];
+  const anywhere = own && entry.anywhere ? [{ id: anywhereSpotId(entry.activityId), name: entry.anywhere.where }] : [];
+  return [...home, ...places.map((p) => ({ id: p.id, name: p.name })), ...anywhere];
+}
+
+/** The name to keep with a plan or memory: the place's, or what doing it at home or anywhere is called. */
+export function spotName(entry: Entry | undefined, id: string | null | undefined): string | null {
+  if (!id) return null;
+  if (isHomeSpot(id)) return AT_HOME;
+  if (isAnywhereSpot(id)) return entry?.anywhere?.where ?? null;
+  return entry?.places.find((p) => p.id === id)?.name ?? null;
 }
 
 /** The specific activities under a broad one, like origami and tie-dye under "Try a new craft". */
@@ -286,6 +311,7 @@ export function otherWays(entry: Entry): Way[] {
   const ways: (Way | false)[] = [
     !!entry.search && { kind: 'search', icon: 'search', title: 'Find one near you', detail: `Search maps for “${entry.search}”` },
     !!entry.home && { kind: 'home', icon: 'cottage', title: 'Try it at home', detail: entry.home },
+    !!entry.anywhere && { kind: 'anywhere', icon: 'explore', title: entry.anywhere.where, detail: entry.anywhere.detail },
     !!entry.host && { kind: 'host', icon: 'groups', title: 'Host friends', detail: entry.host },
   ];
   return ways.filter((w): w is Way => !!w);
