@@ -1,14 +1,15 @@
-import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import FiltersIcon from '@expo/material-symbols/tune.xml';
 import * as Haptics from 'expo-haptics';
-import { inSeason, isHomeSpot, kindsOf, LEVELS, listOr, otherWays, type Entry, type Way } from '@/data/catalog';
+import { entryHint, inSeason, isHomeSpot, kindsOf, LEVELS, listOr, otherWays, type Entry } from '@/data/catalog';
 import { addDays, dayKey, formatDay } from '@/data/days';
-import { searchNearby } from '@/data/directions';
+import { openDirections, searchNearby } from '@/data/directions';
 import { allowNudges } from '@/data/nudge';
-import { formatMinutes, placesByDistance } from '@/data/drive';
+import { placesByDistance } from '@/data/drive';
+import { CARD_PLACES, defaultWhere, whereOptions, type WhereOption } from '@/data/where';
 import { describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
 import { readSetting, writeSetting } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
@@ -200,8 +201,9 @@ export default function ExploreScreen() {
                 done={isDone(activity.id)}
                 saved={savedIds.has(activity.id)}
                 planned={plans.has(activity.id)}
-                onPlan={() => router.push(`/plan/${activity.id}`)}
+                onPlan={(spot) => router.push({ pathname: '/plan/[id]', params: spot ? { id: activity.id, spot } : { id: activity.id } })}
                 onOpen={() => router.push(`/activity/${activity.id}`)}
+                onPickKind={(id) => setPick({ id, city: city.id, n: (pick?.n ?? 0) + 1, nudge: false })}
                 onNotForMe={() => {
                   hide(activity.id);
                   toast(`Hid ${activity.name}`, { type: 'hide', id: activity.id }, toastBottom);
@@ -285,14 +287,15 @@ type CardProps = {
   done: boolean;
   saved: boolean;
   planned: boolean;
-  onPlan: () => void;
+  onPlan: (spotId: string | null) => void;
   onOpen: () => void;
+  onPickKind: (id: string) => void;
   onNotForMe: () => void;
   onSave: () => void;
   onDone: () => void;
 };
 
-function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onNotForMe, onSave, onDone }: CardProps) {
+function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onPickKind, onNotForMe, onSave, onDone }: CardProps) {
   const colors = useColors();
   const { driveTimes, entries, filters } = useAppState();
   // With large text, four buttons in a row would squeeze their labels, so they go two by two.
@@ -301,18 +304,20 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onN
   const sub = subcategory(entry.subcategory);
   // Staying in leads with the home version, even for something that also has places nearby.
   const stayIn = filters.where === 'home';
-  const [nearest, ...others] = stayIn ? [] : placesByDistance(entry, origin, driveTimes);
-  const ways = otherWays(entry);
-  const homeWay = ways.find((w) => w.kind === 'home');
-  const way = stayIn ? (homeWay ?? ways.find((w) => w.kind === 'host')) : ways[0];
+  const places = placesByDistance(entry, origin, driveTimes);
+  const [whereId, setWhereId] = useState<string | null>(null);
+  const options = whereOptions(entry, places, whereId);
+  const where = options.find((o) => o.id === whereId) ?? defaultWhere(options, stayIn);
+  const hostWay = otherWays(entry).find((w) => w.kind === 'host');
   // A broad idea like "Try a new craft" offers a few of its kinds. The card remounts for each pick, so they hold still.
-  const [kinds] = useState(() => sample(kindsOf(entries, entry), 3).map((e) => e.name.toLowerCase()));
-  const placeLine = [
-    nearest?.minutes != null && `${formatMinutes(nearest.minutes)} away`,
-    others.length > 0 && `${others.length} more ${others.length === 1 ? 'place' : 'places'}`,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  const allKinds = kindsOf(entries, entry);
+  const [kinds] = useState(() => sample(allKinds, KINDS_ON_CARD));
+  const [open, setOpen] = useState(false);
+
+  const toggle = () => {
+    Haptics.selectionAsync();
+    setOpen(!open);
+  };
 
   return (
     <View style={[styles.card, { backgroundColor: colors.card }]}>
@@ -326,43 +331,78 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onN
       <Text style={[styles.title, { color: colors.label }]}>{entry.name}</Text>
       <Text style={[styles.pill, { color: sub.color, backgroundColor: `${sub.color}26` }]}>{sub.label}</Text>
 
-      {kinds.length > 0 && (
-        <WayRow
-          way={{ kind: 'home', icon: entry.icon, title: 'Pick one', detail: `Like ${listOr(kinds)}` }}
-          hint="Shows every kind"
-          onPress={onOpen}
-        />
-      )}
-
-      {kinds.length === 0 && nearest && (
-        <Pressable
-          onPress={onOpen}
-          accessibilityRole="button"
-          accessibilityHint="Shows every place and directions"
-          style={({ pressed }) => [styles.place, { backgroundColor: colors.background, opacity: pressed ? 0.7 : 1 }]}
+      {kinds.length > 0 ? (
+        <ChoiceBox
+          label="Pick one"
+          open={open}
+          canChange
+          changeLabel="Choose"
+          onToggle={toggle}
+          summary={
+            <ChoiceRow
+              icon={entry.icon}
+              title={`Like ${listOr(kinds.slice(0, 3).map((k) => k.name.toLowerCase()))}`}
+              detail={`${allKinds.length} kinds to try`}
+            />
+          }
+          more={allKinds.length > kinds.length ? `See all ${allKinds.length} kinds` : 'See details'}
+          onMore={onOpen}
         >
-          <Icon name="location_on" size={22} color={colors.accent} />
-          <View style={styles.grow}>
-            <Text style={[styles.placeName, { color: colors.label }]} numberOfLines={2}>
-              {nearest.place.name}
-            </Text>
-            {!!placeLine && <Text style={[styles.placeLine, { color: colors.secondary }]}>{placeLine}</Text>}
-          </View>
-          <Icon name="chevron_right" size={20} color={colors.tertiary} />
-        </Pressable>
-      )}
-
-      {kinds.length === 0 && !nearest && way && (
-        <WayRow
-          way={way}
-          hint={way.kind === 'search' ? 'Opens your maps app' : 'Shows what you need'}
-          onPress={way.kind === 'search' ? () => searchNearby(entry.search!, origin) : onOpen}
-        />
-      )}
-
-      {/* Something like pottery can be a studio visit or a kit at home, so offer both. */}
-      {kinds.length === 0 && (nearest || way?.kind === 'search') && homeWay && (
-        <WayRow way={{ ...homeWay, title: 'Or try it at home' }} hint="Shows what you need" onPress={onOpen} />
+          {kinds.map((kind) => (
+            <ChoiceRow
+              key={kind.id}
+              icon={kind.icon}
+              title={kind.name}
+              detail={entryHint(kind)}
+              trailing="chevron"
+              onPress={() => {
+                Haptics.selectionAsync();
+                onPickKind(kind.id);
+              }}
+              hint="Shows this one on the card instead"
+            />
+          ))}
+        </ChoiceBox>
+      ) : where ? (
+        <ChoiceBox
+          label={where.kind === 'home' ? 'Where: at home' : 'Where'}
+          open={open}
+          canChange={options.length > 1}
+          changeLabel="Change"
+          onToggle={toggle}
+          summary={
+            <ChoiceRow
+              icon={whereIcon(where)}
+              title={where.title}
+              detail={where.detail}
+              action={whereAction(where, entry, origin)}
+            />
+          }
+          more={places.length > CARD_PLACES ? `See all ${places.length} places` : 'See details'}
+          onMore={onOpen}
+        >
+          {options.map((o) => (
+            <ChoiceRow
+              key={o.id}
+              icon={whereIcon(o)}
+              title={o.title}
+              detail={o.detail}
+              trailing={o.id === where.id ? 'selected' : 'unselected'}
+              onPress={() => {
+                Haptics.selectionAsync();
+                setWhereId(o.id);
+                setOpen(false);
+              }}
+              hint="Shows this on the card"
+            />
+          ))}
+        </ChoiceBox>
+      ) : (
+        hostWay && (
+          <ChoiceBox label="Where" open={false} canChange={false} changeLabel="" onToggle={toggle}>
+            <ChoiceRow icon={hostWay.icon} title={hostWay.title} detail={hostWay.detail} />
+          </ChoiceBox>
+        )
       )}
 
       <View style={styles.tags}>
@@ -377,7 +417,7 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onN
         <CardAction
           icon="calendar_month"
           label={planned ? 'Planned' : 'Plan'}
-          onPress={onPlan}
+          onPress={() => onPlan(where && where.kind !== 'search' ? where.id : null)}
           tint={colors.blue}
           selected={planned}
           roomy={roomy}
@@ -391,29 +431,140 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onN
           roomy={roomy}
         />
       </View>
+
+      <Pressable
+        onPress={onOpen}
+        accessibilityRole="button"
+        accessibilityHint="Opens every place, directions and check-offs"
+        hitSlop={8}
+        style={({ pressed }) => [styles.details, { opacity: pressed ? 0.6 : 1 }]}
+      >
+        <Icon name="info" size={16} color={colors.secondary} />
+        <Text style={[styles.detailsText, { color: colors.secondary }]}>Details</Text>
+      </Pressable>
     </View>
   );
 }
 
-function WayRow({ way, hint, onPress }: { way: Way; hint: string; onPress: () => void }) {
+const KINDS_ON_CARD = 5;
+
+function whereIcon(o: WhereOption): IconName {
+  return o.kind === 'home' ? 'cottage' : o.kind === 'search' ? 'search' : 'location_on';
+}
+
+function whereAction(o: WhereOption, entry: Entry, origin: CardProps['origin']): RowAction | undefined {
+  if (o.kind === 'place') return { icon: 'directions', label: 'Go', a11y: `Directions to ${o.title}`, onPress: () => openDirections(o.place) };
+  if (o.kind === 'search') return { icon: 'search', label: 'Search', a11y: `Search maps for ${entry.search}`, onPress: () => searchNearby(entry.search!, origin) };
+  return undefined;
+}
+
+type ChoiceBoxProps = {
+  label: string;
+  open: boolean;
+  canChange: boolean;
+  changeLabel: string;
+  onToggle: () => void;
+  /** The current choice, shown while the list is closed. */
+  summary?: ReactNode;
+  /** The choices, shown while the list is open. */
+  children: ReactNode;
+  more?: string;
+  onMore?: () => void;
+};
+
+/** "Where" or "Pick one" on the card: the current choice, and a Change button that opens the other choices in place. */
+function ChoiceBox({ label, open, canChange, changeLabel, onToggle, summary, children, more, onMore }: ChoiceBoxProps) {
   const colors = useColors();
+  return (
+    <View style={[styles.choice, { backgroundColor: colors.background }]}>
+      <View style={styles.choiceHead}>
+        <Text style={[styles.choiceLabel, { color: colors.secondary }]}>{label}</Text>
+        {canChange && (
+          <Pressable
+            onPress={onToggle}
+            accessibilityRole="button"
+            accessibilityState={{ expanded: open }}
+            hitSlop={10}
+            style={({ pressed }) => [styles.change, { backgroundColor: colors.accentSoft, opacity: pressed ? 0.6 : 1 }]}
+          >
+            <Text style={[styles.changeText, { color: colors.accent }]}>{open ? 'Close' : changeLabel}</Text>
+            <View style={open && styles.flip}>
+              <Icon name="keyboard_arrow_down" size={18} color={colors.accent} />
+            </View>
+          </Pressable>
+        )}
+      </View>
+      {open ? children : (summary ?? children)}
+      {open && more && onMore && (
+        <Pressable onPress={onMore} accessibilityRole="button" hitSlop={6} style={({ pressed }) => [styles.more, { opacity: pressed ? 0.6 : 1 }]}>
+          <Text style={[styles.moreText, { color: colors.accent }]}>{more}</Text>
+          <Icon name="chevron_right" size={18} color={colors.accent} />
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+type RowAction = { icon: IconName; label: string; a11y: string; onPress: () => void };
+
+type ChoiceRowProps = {
+  icon: IconName;
+  title: string;
+  detail?: string | null;
+  action?: RowAction;
+  trailing?: 'selected' | 'unselected' | 'chevron';
+  onPress?: () => void;
+  hint?: string;
+};
+
+function ChoiceRow({ icon, title, detail, action, trailing, onPress, hint }: ChoiceRowProps) {
+  const colors = useColors();
+  const selected = trailing === 'selected';
+  const body = (
+    <>
+      <Icon name={icon} size={22} color={colors.accent} />
+      <View style={styles.grow}>
+        <Text style={[styles.placeName, { color: colors.label }]} numberOfLines={2}>
+          {title}
+        </Text>
+        {!!detail && (
+          <Text style={[styles.placeLine, { color: colors.secondary }]} numberOfLines={2}>
+            {detail}
+          </Text>
+        )}
+      </View>
+      {action && (
+        <Pressable
+          onPress={action.onPress}
+          accessibilityRole="button"
+          accessibilityLabel={action.a11y}
+          hitSlop={6}
+          style={({ pressed }) => [styles.go, { backgroundColor: colors.accentSoft, opacity: pressed ? 0.6 : 1 }]}
+        >
+          <Icon name={action.icon} size={16} color={colors.accent} />
+          <Text style={[styles.goText, { color: colors.accent }]}>{action.label}</Text>
+        </Pressable>
+      )}
+      {trailing === 'chevron' && <Icon name="chevron_right" size={20} color={colors.tertiary} />}
+      {(trailing === 'selected' || trailing === 'unselected') && (
+        <Icon
+          name={selected ? 'check_circle' : 'radio_button_unchecked'}
+          size={22}
+          color={selected ? colors.accent : colors.tertiary}
+        />
+      )}
+    </>
+  );
+  if (!onPress) return <View style={styles.choiceRow}>{body}</View>;
   return (
     <Pressable
       onPress={onPress}
-      accessibilityRole="button"
+      accessibilityRole={trailing === 'chevron' ? 'button' : 'radio'}
+      accessibilityState={trailing === 'chevron' ? undefined : { selected }}
       accessibilityHint={hint}
-      style={({ pressed }) => [styles.place, { backgroundColor: colors.background, opacity: pressed ? 0.7 : 1 }]}
+      style={({ pressed }) => [styles.choiceRow, { opacity: pressed ? 0.6 : 1 }]}
     >
-      <Icon name={way.icon} size={22} color={colors.accent} />
-      <View style={styles.grow}>
-        <Text style={[styles.placeName, { color: colors.label }]} numberOfLines={2}>
-          {way.title}
-        </Text>
-        <Text style={[styles.placeLine, { color: colors.secondary }]} numberOfLines={2}>
-          {way.detail}
-        </Text>
-      </View>
-      <Icon name="chevron_right" size={20} color={colors.tertiary} />
+      {body}
     </Pressable>
   );
 }
@@ -457,7 +608,19 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     overflow: 'hidden',
   },
-  place: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 14 },
+  choice: { alignSelf: 'stretch', borderRadius: 14, paddingVertical: 10, paddingHorizontal: 12, gap: 4 },
+  choiceHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 28 },
+  choiceLabel: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
+  change: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingLeft: 10, paddingRight: 6, paddingVertical: 4, borderRadius: 999 },
+  changeText: { fontSize: 14, fontWeight: '600' },
+  flip: { transform: [{ rotate: '180deg' }] },
+  choiceRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 44, paddingVertical: 6 },
+  go: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 32, paddingHorizontal: 10, borderRadius: 16 },
+  goText: { fontSize: 14, fontWeight: '600' },
+  more: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingTop: 6 },
+  moreText: { fontSize: 14, fontWeight: '600' },
+  details: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingTop: 4 },
+  detailsText: { fontSize: 14, fontWeight: '600' },
   placeName: { fontSize: 15, fontWeight: '600' },
   placeLine: { fontSize: 13, marginTop: 2 },
   grow: { flex: 1 },
