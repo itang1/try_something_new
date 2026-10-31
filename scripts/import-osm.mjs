@@ -12,6 +12,8 @@ const CUISINES =
   'korean|lebanese|malaysian|moroccan|nepalese|nigerian|persian|peruvian|senegalese|somali|sri_lankan|taiwanese|turkish|' +
   'ukrainian|uzbek|venezuelan|vietnamese|west_african';
 const NEW_CUISINE = new RegExp(`\\b(${CUISINES})\\b`);
+// A city's own cuisine isn't new there: Seoul has thousands of Korean restaurants.
+const LOCAL_CUISINE = { KR: 'korean' };
 
 const QUERY = `[out:json][timeout:90];
 (
@@ -44,7 +46,7 @@ async function fetchElements() {
   return (await response.json()).elements;
 }
 
-function activitiesFor(t) {
+function activitiesFor(t, country) {
   const name = (t.name ?? '').toLowerCase();
   const sport = t.sport ?? '';
   const { leisure = '', tourism = '', amenity = '', shop = '' } = t;
@@ -77,7 +79,7 @@ function activitiesFor(t) {
   add(leisure === 'ice_rink' || sport.includes('ice_skating'), 'ice-skating');
   add(leisure === 'horse_riding' || sport.includes('equestrian'), 'horseback-riding');
   add(leisure === 'fishing', 'fishing');
-  const hike = leisure === 'nature_reserve' || (leisure === 'park' && /metro park|preserve|nature|woods|ravine|trail/.test(name));
+  const hike = leisure === 'nature_reserve' || (leisure === 'park' && /metro park|preserve|nature|woods|ravine|trail|둘레길|숲길|자연공원/.test(name));
   add(hike, 'hike-a-trail');
   add(leisure === 'stadium' || (tourism === 'attraction' && name.includes('stadium')), 'sports-game');
   add(leisure === 'dance' || sport.includes('dance'), 'dance-class');
@@ -107,7 +109,8 @@ function activitiesFor(t) {
   add(['fabric', 'sewing'].includes(shop), 'sewing-class');
   add(['wool', 'yarn'].includes(shop) || name.includes('yarn'), 'knitting-or-crocheting');
   add(t.craft === 'pottery' || /pottery|ceramic/.test(name), 'pottery-class');
-  add(NEW_CUISINE.test(t.cuisine ?? ''), 'new-cuisine');
+  const cuisine = (t.cuisine ?? '').replace(new RegExp(`\\b${LOCAL_CUISINE[country] ?? '-'}\\b`, 'g'), '');
+  add(NEW_CUISINE.test(cuisine), 'new-cuisine');
   add(t.man_made === 'observatory' || name.includes('observatory'), 'stargazing');
   add(t.route === 'bicycle', 'bike-path');
   add(/\baxe\b/.test(name), 'axe-throwing');
@@ -119,7 +122,10 @@ function activitiesFor(t) {
 // Matches the validator's limit.
 const MAX_KM = 300;
 const SPREAD_OUT = new Set(['hike-a-trail', 'bike-path', 'city-park']);
-const normal = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '');
+// Keeps letters in any script, so two different Korean names don't both normalize to an empty string.
+const normal = (name) => name.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
+// Fields and courts are often named just "1" or "A". Two Korean, Chinese or Japanese characters already make a name.
+const REAL_NAME = /[a-z]{3}|[\p{Script=Hangul}\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]{2}/iu;
 
 function km(a, b) {
   const rad = Math.PI / 180;
@@ -136,17 +142,17 @@ let merged = 0;
 
 for (const e of await fetchElements()) {
   const t = e.tags ?? {};
-  const activities = activitiesFor(t);
+  const activities = activitiesFor(t, city.country);
   const center = e.center ?? e;
-  // Fields and courts are often named just "1" or "A".
-  if (!activities.size || !/[a-z]{3}/i.test(t.name ?? '') || center.lat == null) continue;
+  if (!activities.size || !REAL_NAME.test(t.name ?? '') || center.lat == null) continue;
   // Sites spread across states, like some national parks, have a center far outside the city.
   if (km(city, { lat: center.lat, lng: center.lon }) > MAX_KM) continue;
   const place = {
     // OSM ids, unlike names, survive renames and tell apart places that share a name. No city in them, so a place
     // keeps its id however the catalog is split up.
     id: `osm:${e.type[0]}${e.id}`,
-    name: t.name,
+    // Where the local name isn't in the Latin alphabet, like in Seoul, the English one when OSM has it.
+    name: /\p{Script=Latin}/u.test(t.name) ? t.name : (t['name:en'] ?? t.name),
     lat: Math.round(center.lat * 1e4) / 1e4,
     lng: Math.round(center.lon * 1e4) / 1e4,
     activities: [...activities].sort(),
