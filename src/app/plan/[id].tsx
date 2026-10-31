@@ -7,6 +7,7 @@ import { inviteFriend } from '@/data/invite';
 import { dayKey, formatDay, isWeekend, nextWeekendDay, upcomingDays } from '@/data/days';
 import { isHomeSpot, spotsFor } from '@/data/catalog';
 import { placesByDistance } from '@/data/drive';
+import { allowNudges } from '@/data/nudge';
 import { readSetting, writeSetting } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
 import { useColors } from '@/theme';
@@ -19,7 +20,7 @@ export default function PlanSheet() {
   const router = useRouter();
   // `spot` is where the Explore card was showing, so a new plan starts there.
   const { id, spot } = useLocalSearchParams<{ id: string; spot?: string }>();
-  const { city, origin, driveTimes, plans, setPlan, findEntry, filters } = useAppState();
+  const { city, origin, driveTimes, plans, setPlan, findEntry, filters, planReminders } = useAppState();
   const entry = findEntry(id);
   const existing = plans.get(id);
   const days = upcomingDays(DAYS_AHEAD);
@@ -43,6 +44,8 @@ export default function PlanSheet() {
 
   const save = async () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    // Asked here, the first time someone makes a plan, so the morning reminder can go out. Before saving, so it's scheduled.
+    if (planReminders) await allowNudges().catch(() => false);
     setPlan(entry.id, { placeId, day });
     if (calendar) {
       const place = places.find((p) => p.place.id === placeId)?.place;
