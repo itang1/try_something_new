@@ -56,7 +56,8 @@ export default function DoneSheet() {
     if (placeId && entry.kind === 'activity' && !visitedPlaceIds.has(placeId)) toggleVisited(placeId, entry.activityId);
     const placeName = spots.find((s) => s.id === placeId)?.name ?? null;
     recordReflection({ entryId: entry.id, placeId, placeName, rating, note: note.trim(), photo });
-    router.back();
+    // Saving is the moment worth sharing, so offer the card in place of this sheet.
+    router.replace({ pathname: '/share/[id]', params: { id: entry.id } });
   };
 
   return (
