@@ -58,12 +58,12 @@ environment variables (`.env.local` or EAS), the same way as `GOOGLE_MAPS_ANDROI
 ### Dashboard setup
 
 - **Authentication > URL Configuration > Redirect URLs:** add `trysomethingnew://auth-callback`.
-- **Authentication > Sign In / Providers > Apple:** turn it on. **Client IDs:** `com.pastureraised.trysomethingnew` (the
-  bundle id, for the iPhone sheet), plus the Services ID (`com.pastureraised.trysomethingnew.signin`) for the browser
+- **Authentication > Sign In / Providers > Apple:** turn it on. **Client IDs:** `com.poodlestrategy.trysomethingnew` (the
+  bundle id, for the iPhone sheet), plus the Services ID (`com.poodlestrategy.trysomethingnew.signin`) for the browser
   flow on Android. **Secret Key (for OAuth):** a JWT made from the Sign in with Apple key (.p8), its Key ID and the Team
   ID. It expires after 6 months, so set a reminder to make a new one.
-- **Apple Developer > Identifiers:** the App ID `com.pastureraised.trysomethingnew` has Sign in with Apple on (EAS
-  turns it on during the first build with `usesAppleSignIn`). A Services ID `com.pastureraised.trysomethingnew.signin`
+- **Apple Developer > Identifiers:** the App ID `com.poodlestrategy.trysomethingnew` has Sign in with Apple on (EAS
+  turns it on during the first build with `usesAppleSignIn`). A Services ID `com.poodlestrategy.trysomethingnew.signin`
   with Sign in with Apple configured: primary App ID as above, domain `fueiospwqwukvqmwcfrn.supabase.co`, return URL
   `https://fueiospwqwukvqmwcfrn.supabase.co/auth/v1/callback`. **Keys:** one key with Sign in with Apple, for the JWT.
 - **Authentication > Sign In / Providers > Google:** turn it on with the web client id
