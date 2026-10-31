@@ -1,6 +1,6 @@
 # Try Something New: Roadmap
 
-The single list of what to build next. It replaces `TODO.md`. Last refreshed 2026-10-31, against `main` at `7256db5`. Growth items come from [MARKETING.md](MARKETING.md), the marketing and launch plan.
+The single list of what to build next. It replaces `TODO.md`. Last refreshed 2026-10-31, against `main` at `9f0138a` (PR #29). Growth items come from [MARKETING.md](MARKETING.md), the marketing and launch plan.
 
 At a glance: the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquBL) shows Up next, what's in progress, decisions and the inbox.
 
@@ -34,7 +34,7 @@ At a glance: the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquB
 
 **Finishing an item:** the PR that finishes it also ticks it here (`[x]`), moves it to Done with the PR number, and pulls the next item into Up next. A PR that only does part of an item marks it `[~]` and says what's left.
 
-**Keeping the Roadmap page fresh:** the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquBL) is built from this file, and an artifact can't read GitHub when you open it, so it only changes when someone republishes it. Any thread whose merged PR changed `ROADMAP.md` does this as its last step: on up-to-date `main`, run `npm run roadmap-page` (writes `dist/roadmap.html`), then publish that file as a new version of artifact `7e2bc319-4297-4cad-9526-45be58589527` (publish_files with `slug` and the live `base_version` from get_artifact). Don't create a new artifact. The page's header shows the commit it was built from, so a stale page is easy to spot.
+**Keeping the Roadmap page fresh:** the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquBL) is built from this file and only changes when someone republishes it. Every PR that finishes, starts or changes an item updates this file in the same PR, and after it merges the thread republishes the page. The exact steps are under **Roadmap page** in [AGENTS.md](AGENTS.md), which `CLAUDE.md` loads into every thread. The page's header shows the commit it was built from, so a stale page is easy to spot.
 
 **Refreshing:** every few weeks, or after a batch of PRs merges, re-check statuses against merged PRs, re-order Up next, and update the date at the top.
 
@@ -145,7 +145,7 @@ Unsorted ideas. Move them into a horizon at the next refresh.
 
 ## Storage decision
 
-Recommendation: **Supabase** (Postgres with row-level security, Sign in with Apple and Google, Storage for photos), with a small hand-written push/pull of the existing append-only logs. Cloudflare D1 + R2 is the runner-up: cheapest, but more to build. Add PowerSync only if shared plans make conflicts real. Do **Prepare the data for sync** first, whichever backend wins. Offering Google sign-in means also offering Sign in with Apple, and any app with accounts needs in-app account deletion. The full comparison is on the [roadmap page](https://claude.ai/code/artifact/4e24e846-bd46-4e59-b7b8-1c71c340fc67).
+Recommendation: **Supabase** (Postgres with row-level security, Sign in with Apple and Google, Storage for photos), with a small hand-written push/pull of the existing append-only logs. Cloudflare D1 + R2 is the runner-up: cheapest, but more to build. Add PowerSync only if shared plans make conflicts real. Do **Prepare the data for sync** first, whichever backend wins. Offering Google sign-in means also offering Sign in with Apple, and any app with accounts needs in-app account deletion. The full comparison is on the [old storage comparison page](https://claude.ai/code/artifact/4e24e846-bd46-4e59-b7b8-1c71c340fc67).
 
 ## Done
 
