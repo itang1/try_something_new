@@ -4,12 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import FiltersIcon from '@expo/material-symbols/tune.xml';
 import * as Haptics from 'expo-haptics';
-import { entryHint, inSeason, isHomeSpot, kindsOf, LEVELS, listOr, otherWays, type Entry } from '@/data/catalog';
+import { entryHint, inSeason, isHomeSpot, kindsOf, LEVELS, listOr, type Entry } from '@/data/catalog';
 import { addDays, dayKey, formatDay } from '@/data/days';
 import { openDirections, searchNearby } from '@/data/directions';
+import { inviteFriend } from '@/data/invite';
 import { allowNudges } from '@/data/nudge';
 import { placesByDistance } from '@/data/drive';
-import { CARD_PLACES, defaultWhere, whereOptions, type WhereOption } from '@/data/where';
+import { CARD_PLACES, defaultWhere, planSpot, whereOptions, type WhereOption } from '@/data/where';
 import { describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
 import { readSetting, writeSetting } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
@@ -308,7 +309,6 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onP
   const [whereId, setWhereId] = useState<string | null>(null);
   const options = whereOptions(entry, places, whereId);
   const where = options.find((o) => o.id === whereId) ?? defaultWhere(options, stayIn);
-  const hostWay = otherWays(entry).find((w) => w.kind === 'host');
   // A broad idea like "Try a new craft" offers a few of its kinds. The card remounts for each pick, so they hold still.
   const allKinds = kindsOf(entries, entry);
   const [kinds] = useState(() => sample(allKinds, KINDS_ON_CARD));
@@ -365,7 +365,7 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onP
         </ChoiceBox>
       ) : where ? (
         <ChoiceBox
-          label={where.kind === 'home' ? 'Where: at home' : 'Where'}
+          label={where.kind === 'home' ? 'Where: at home' : where.kind === 'host' ? 'Where: with friends' : 'Where'}
           open={open}
           canChange={options.length > 1}
           changeLabel="Change"
@@ -397,13 +397,7 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onP
             />
           ))}
         </ChoiceBox>
-      ) : (
-        hostWay && (
-          <ChoiceBox label="Where" open={false} canChange={false} changeLabel="" onToggle={toggle}>
-            <ChoiceRow icon={hostWay.icon} title={hostWay.title} detail={hostWay.detail} />
-          </ChoiceBox>
-        )
-      )}
+      ) : null}
 
       <View style={styles.tags}>
         <MetadataTag icon="schedule" text={entry.duration} />
@@ -417,7 +411,7 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onP
         <CardAction
           icon="calendar_month"
           label={planned ? 'Planned' : 'Plan'}
-          onPress={() => onPlan(where && where.kind !== 'search' ? where.id : null)}
+          onPress={() => onPlan(planSpot(where, options))}
           tint={colors.blue}
           selected={planned}
           roomy={roomy}
@@ -448,13 +442,16 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onP
 
 const KINDS_ON_CARD = 5;
 
+const WHERE_ICONS: Record<WhereOption['kind'], IconName> = { home: 'cottage', place: 'location_on', search: 'search', host: 'groups' };
+
 function whereIcon(o: WhereOption): IconName {
-  return o.kind === 'home' ? 'cottage' : o.kind === 'search' ? 'search' : 'location_on';
+  return WHERE_ICONS[o.kind];
 }
 
 function whereAction(o: WhereOption, entry: Entry, origin: CardProps['origin']): RowAction | undefined {
   if (o.kind === 'place') return { icon: 'directions', label: 'Go', a11y: `Directions to ${o.title}`, onPress: () => openDirections(o.place) };
   if (o.kind === 'search') return { icon: 'search', label: 'Search', a11y: `Search maps for ${entry.search}`, onPress: () => searchNearby(entry.search!, origin) };
+  if (o.kind === 'host') return { icon: 'person_add', label: 'Invite', a11y: `Invite friends to ${entry.name}`, onPress: () => inviteFriend(entry, null, null) };
   return undefined;
 }
 
