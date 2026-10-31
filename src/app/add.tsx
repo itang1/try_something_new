@@ -34,6 +34,7 @@ export default function AddSheet() {
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.label }]}>Add your own</Text>
           <Pressable
+            accessibilityRole="button"
             onPress={() => router.back()}
             hitSlop={8}
             accessibilityLabel="Close"
@@ -103,6 +104,7 @@ export default function AddSheet() {
 
       <View style={[styles.footer, { borderTopColor: colors.separator, backgroundColor: colors.background }]}>
         <Pressable
+          accessibilityRole="button"
           onPress={add}
           disabled={!trimmed}
           style={({ pressed }) => [

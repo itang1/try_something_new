@@ -48,22 +48,21 @@ In order. These are the ones to start a thread on.
 
 1. [~] **Check off the at-home way** · UX · S. Being added to PR #6: one "Where to do it" list with "At home" as the first row, each row with the same checkmark.
 2. [?] **Count a specific craft toward "Try a new craft"** · Feature · S. Open question from PR #6. Recommendation: yes, doing any kind checks off the broad idea once, and the broad idea stops coming back as "try another".
-3. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, and the new Settings and crash screens. None of these has run on a device yet. Needs you and a development build.
-4. [ ] **Do an accessibility pass** · UX · M. About 33 accessibility labels across 4,000 lines. Label chips, pins, rows and icon buttons, give every swipe a button, support large text. Reanimated already skips animations when Reduce Motion is on, so confetti and springs are fine.
-5. [ ] **Test the storage migrations** · Architecture · M. Tests exist for days, drive and filters. The 6 SQLite migrations and alias moves have none, and a bad migration silently wipes someone's history.
-6. [ ] **Prepare the data for sync** · Architecture · M. Client-made UUIDs instead of `AUTOINCREMENT`, saved and hidden lists as events, a device id, and one storage module the sync code plugs into. Cheap now, painful after launch.
-7. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
+3. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
+4. [ ] **Test the storage migrations** · Architecture · M. Tests exist for days, drive and filters. The 6 SQLite migrations and alias moves have none, and a bad migration silently wipes someone's history.
+5. [ ] **Prepare the data for sync** · Architecture · M. Client-made UUIDs instead of `AUTOINCREMENT`, saved and hidden lists as events, a device id, and one storage module the sync code plugs into. Cheap now, painful after launch.
+6. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
+7. [ ] **Run expo-doctor in CI** · Architecture · S. Left over from the CI PR (#3). Add `npx expo-doctor` to `.github/workflows/ci.yml`.
 
 ## Now: before launch
 
 - [~] **Add a Settings screen** · UX · M. Weekend ideas on/off, backup, credits and version are in. Left: miles or kilometers, a privacy policy link, and a feedback link.
 - [~] **Protect the drive-time Worker** · Backend · S. Per-IP rate limiting is in, and goes live on the next `npx wrangler deploy`. Left: App Attest / Play Integrity once the app is in the stores.
 - [ ] **Check merged work on a real phone** · Launch · S. See Up next.
-- [ ] **Do an accessibility pass** · UX · M. See Up next.
 - [ ] **Test the storage migrations** · Architecture · M. See Up next.
 - [ ] **Prepare the data for sync** · Architecture · M. See Up next.
 - [ ] **Build the Android widget** · Feature · M. From the old TODO.
-- [ ] **Run expo-doctor in CI** · Architecture · S. Left over from the CI PR (#3). Add `npx expo-doctor` to `.github/workflows/ci.yml`.
+- [ ] **Run expo-doctor in CI** · Architecture · S. See Up next.
 - [ ] **Finish the release setup** · Launch · S. Needs your accounts: `eas init`, EAS environment variables, Apple and Play developer accounts, then EAS Update with a fingerprint runtime version. Steps are in PR #2's description and the README.
 - [ ] **Test on a cheap Android phone** · Launch · S. Cold start, parsing the Los Angeles file, and the map with every pin. The map spike only ran in the iOS Simulator.
 - [ ] **Decide on iPad** · UX · S. `supportsTablet` is on, so Apple will review it on iPad. Either give the main screens two columns or turn tablets off for launch.
@@ -130,6 +129,7 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **Do an accessibility pass** · UX. A role on every button, labels where the icon was the only cue, done states read on map rows, the swipe hint and memory ratings readable, and card buttons that go two by two with large text. Swipes already had buttons and screen reader actions. Still to check on a device. PR #PRNUM.
 - [x] **Set up EAS builds** · Launch. Development, preview and production profiles. PR #2.
 - [x] **Add a Google Maps key for Android** · Launch. From the environment, never committed. PR #2.
 - [x] **Credit OpenStreetMap and Overture in the app** · Launch. About screen, map label and activity sheet. PR #1.

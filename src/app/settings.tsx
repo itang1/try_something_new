@@ -60,6 +60,7 @@ export default function SettingsSheet() {
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.label }]}>Settings</Text>
         <Pressable
+          accessibilityRole="button"
           onPress={() => router.back()}
           hitSlop={8}
           accessibilityLabel="Close"
