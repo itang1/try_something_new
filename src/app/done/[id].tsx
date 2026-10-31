@@ -56,8 +56,9 @@ export default function DoneSheet() {
     if (placeId && entry.kind === 'activity' && !visitedPlaceIds.has(placeId)) toggleVisited(placeId, entry.activityId);
     const placeName = spots.find((s) => s.id === placeId)?.name ?? null;
     recordReflection({ entryId: entry.id, placeId, placeName, rating, note: note.trim(), photo });
-    // Saving is the moment worth sharing, so offer the card in place of this sheet.
-    router.replace({ pathname: '/share/[id]', params: { id: entry.id } });
+    // Saving is the moment worth sharing, so offer the card in place of this sheet. After a "Loved it",
+    // closing the card is also when the app may ask for a rating.
+    router.replace({ pathname: '/share/[id]', params: { id: entry.id, ...(rating === 'loved' && { justLoved: '1' }) } });
   };
 
   return (

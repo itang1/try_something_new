@@ -50,10 +50,10 @@ At a glance: the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquB
 
 In order. These are the ones to start a thread on.
 
-1. [~] **Optional account with cross-device sync** · Backend · L. The Supabase backend is set up (see `supabase/README.md`). Left, as M items: **Turn on Apple and Google sign-in** (needs you: Google OAuth client ids, and the bundle id entered for Apple in the Supabase dashboard), **Add the sync client** (`@supabase/supabase-js`, push with `changesSince`, pull with `applyChanges`), and **Add Back up and sync to Settings** (sign in, sync now, sign out, delete account through the `delete-account` function).
-2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
-3. [ ] **Ask for a rating at a happy moment** · Growth · S. The system review prompt (expo-store-review) right after someone rates an activity "Loved it", which now also offers the share card. Never on launch or after "Not for me". MARKETING.md plans it for the same beta week as the share card.
-4. [ ] **Finish Seoul's parks and trails** · Data · S. Needs your computer: the cloud can't reach Overpass. Run `node scripts/import-osm.mjs seoul 37.19,126.5,37.95,127.46` and commit the result. Overture has few parks and no bike routes there, so Seoul's outdoors list is mostly hand-picked until then.
+1. [~] **Optional account with cross-device sync** · Backend · L. The Supabase backend and the sync client (`src/data/sync.ts`, PR #27) are in. Left, as M items: **Turn on Apple and Google sign-in** (needs you: Google OAuth client ids, and the bundle id entered for Apple in the Supabase dashboard), and **Add Back up and sync to Settings** (sign in, sync now, sign out with `resetSync`, delete account through the `delete-account` function). Set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env.local` and EAS first (see `supabase/README.md`).
+2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), the rating prompt after closing the card for a "Loved it", and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
+3. [ ] **Finish Seoul's parks and trails** · Data · S. Needs your computer: the cloud can't reach Overpass. Run `node scripts/import-osm.mjs seoul 37.19,126.5,37.95,127.46` and commit the result. Overture has few parks and no bike routes there, so Seoul's outdoors list is mostly hand-picked until then.
+4. [ ] **Remind on a plan's day** · Feature · S. A local notification the morning of a planned activity, using the weekend ideas notification setup.
 5. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
 6. [ ] **Use the app without a city** · Feature · M. Someone outside the 5 cities, or who skips location, should still get at-home and host-friends ideas instead of an empty Explore.
 
@@ -63,7 +63,7 @@ In order. These are the ones to start a thread on.
 - [~] **Make the tabs easier to get around** · UX · M. PR #11: one header pattern on every tab (the tab's own filter or sort button, then Settings, always top right), Map filters for Not done, Done, Saved and kind, a Checklist grouped by kind with folding sections, and Memories opened from the progress card. Left: check it on a phone.
 - [~] **Protect the drive-time Worker** · Backend · S. Per-IP rate limiting is in, and goes live on the next `npx wrangler deploy`. Left: App Attest / Play Integrity once the app is in the stores.
 - [ ] **Check merged work on a real phone** · Launch · S. See Up next.
-- [~] **Optional account with cross-device sync** · Backend · L. Backend done; see Up next.
+- [~] **Optional account with cross-device sync** · Backend · L. Backend and sync client done; see Up next.
 - [ ] **Finish Seoul's parks and trails** · Data · S. See Up next.
 - [ ] **Build the Android widget** · Feature · M. From the old TODO.
 - [ ] **Finish the release setup** · Launch · S. Needs your accounts: `eas init`, EAS environment variables, Apple and Play developer accounts, then EAS Update with a fingerprint runtime version. Steps are in PR #2's description and the README.
@@ -77,9 +77,8 @@ In order. These are the ones to start a thread on.
 - [ ] **Claim the handles and check the store name** · Growth · S. Needs you. The name stays "Try Something New" (decided 2026-10-31). Claim the same handle on TikTok and Instagram, check the name is available in both stores, and pick a store subtitle (see MARKETING.md section 6). Also decided: launch in Los Angeles starting with Pasadena, $0 budget for now, TikTok first with the same videos on Instagram Reels.
 - [?] **Set the launch date** · Growth · S. Recommended: early January, for "try new things" New Year's resolutions, with a beta in November and December.
 - [ ] **Start a beta with a waitlist** · Growth · S. A one-page site with an email signup, TestFlight and Play internal testing, 50 to 200 testers mostly in the launch city. Needs **Finish the release setup**.
-- [ ] **Ask for a rating at a happy moment** · Growth · S. See Up next.
 - [ ] **Invite links that open the idea** · Growth · M. "Invite a friend" and the share cards link to a small web page per activity with store buttons, which opens the same idea in the app when it's installed (universal and app links). The link carries the kind of share, never who sent it, and the Worker counts visits and store taps. Put the short link in the share card's corner by setting `SHARE_LINK` in `src/data/share-card.ts`.
-- [ ] **Remind on a plan's day** · Feature · S. A local notification the morning of a planned activity, using the weekend ideas notification setup.
+- [ ] **Remind on a plan's day** · Feature · S. See Up next.
 - [ ] **Opt-in, privacy-friendly analytics** · Growth · S. Moved up from Next so the beta can measure activation (planned or done in the first 7 days), week 2 and 4 retention, and shares per memory. Anonymous counts with TelemetryDeck or Aptabase, off by default.
 - [ ] **Post the weekend video series** · Growth · M. Needs you. "My app picked my weekend" short videos, 3 a week from the beta on, on TikTok and Instagram Reels. Plan in MARKETING.md section 5.
 - [ ] **Launch publicly** · Growth · M. Waitlist email, founder video, city subreddit posts within each sub's rules, local creators and newsletters, and Product Hunt on a weekday, the same week. Launch kit and order in MARKETING.md sections 5 and 9.
@@ -93,7 +92,7 @@ In order. These are the ones to start a thread on.
 
 **Accounts and sync**
 
-- [~] **Optional account with cross-device sync** · Backend · L. Backend done; see Up next. "Back up and sync" in Settings with Sign in with Apple or Google, push and pull the logs, merge by latest event, in-app account deletion. Recommended backend: Supabase (see Storage decision below). From the old TODO.
+- [~] **Optional account with cross-device sync** · Backend · L. Backend and sync client done; see Up next. "Back up and sync" in Settings with Sign in with Apple or Google, push and pull the logs, merge by latest event, in-app account deletion. Recommended backend: Supabase (see Storage decision below). From the old TODO.
 - [ ] **Back up memory photos** · Backend · M. The private `photos` bucket is ready, one folder per account. Resize to about 1600 px, upload on Wi-Fi in the background, keep the local copy as the one shown.
 
 **Better suggestions**
@@ -151,6 +150,8 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **Ask for a rating at a happy moment** · Growth. The system review prompt (expo-store-review) when the share card closes after a "Loved it", shared or not, at most once every 120 days. Never on launch or after "Not for me". Adds a native module, so it needs a new development build. PR #27.
+- [x] **Add the sync client** · Backend. `sync()` in `src/data/sync.ts` pushes `changesSince` in pages and pulls each table by `(updated_at, id)` into `applyChanges`, saving each cursor only after its step succeeds. Uses `@supabase/supabase-js`, with the session kept in the SQLite key-value store. Nothing calls it until sign-in lands. PR #27.
 - [x] **Share a "tried it" card** · Growth. After Save on the done sheet, and from a share button on each memory: an image card with your photo (or the activity's colors), the activity's icon and name, the place, "Loved it", "#12 in Seattle" and the app's name, in story (1080×1920) and square (1080×1080) sizes, through the share sheet. Adds react-native-view-shot, so it needs a new development build. The short link waits for **Invite links that open the idea**. PR #26.
 - [x] **Set up Supabase for sync** · Backend. Project "Try Something New" (free plan, us-west-1). Tables mirror the synced SQLite tables with `owner_id` and a server `updated_at`, row-level security per account, a private photos bucket, and a `delete-account` Edge Function. Schema in `supabase/migrations`, keys and setup in `supabase/README.md`.
 - [x] **More broad ideas like crafts** · Data. "Cook something new" (dumplings, sushi, kimchi, tortillas, no-churn ice cream, plus bread, pasta and cooking classes) and "Learn a new skill" (a language, chess, sign language, a card trick, juggling, first aid, code, plus music lessons), on the same parent model as "Try a new craft". PR #19.

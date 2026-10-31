@@ -1,12 +1,13 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { FilterChip } from '@/components/chips';
 import { Icon } from '@/components/icon';
 import { CARD_ASPECT, TriedCard, type CardView } from '@/components/tried-card';
 import { memoryItems, triedNumber } from '@/data/memories';
 import { keptPhotoUri } from '@/data/photos';
 import { shareCard, type CardShape } from '@/data/share-card';
+import { askForReviewAfterLoved } from '@/data/review';
 import { loadMemories } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
 import { useColors } from '@/theme';
@@ -20,7 +21,8 @@ const SHAPES: { id: CardShape; label: string }[] = [
 export default function ShareCardSheet() {
   const colors = useColors();
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const navigation = useNavigation<{ addListener(event: 'beforeRemove', listener: () => void): () => void }>();
+  const { id, justLoved } = useLocalSearchParams<{ id: string; justLoved?: string }>();
   const { findAnyEntry } = useAppState();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const card = useRef<CardView>(null);
@@ -32,6 +34,15 @@ export default function ShareCardSheet() {
     const item = items.find((i) => i.entry.id === id);
     return item && { item, number: triedNumber(items, item) };
   }, [findAnyEntry, id]);
+
+  // Right after saving something they loved, ask for a rating once this sheet closes, whether they
+  // shared or not, so the prompt never covers the card.
+  useEffect(() => {
+    if (justLoved !== '1') return;
+    return navigation.addListener('beforeRemove', () => {
+      setTimeout(() => void askForReviewAfterLoved(), 600);
+    });
+  }, [justLoved, navigation]);
 
   if (!memory) return null;
   const { item, number } = memory;
