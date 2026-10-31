@@ -34,6 +34,14 @@ The single list of what to build next. It replaces `TODO.md`. Last refreshed 202
 
 **Refreshing:** every few weeks, or after a batch of PRs merges, re-check statuses against merged PRs, re-order Up next, and update the date at the top.
 
+**Working on it with Claude, cheaply**
+
+- One item per thread. From the project chat, say something like: *"Start a thread for the next item in ROADMAP.md's Up next."* or *"Do 'Run expo-doctor in CI' from ROADMAP.md."* The item's line is the whole brief, so the thread doesn't need to re-read the repo to decide what to build.
+- Batch S items that touch the same area into one thread and one PR ("Do the three Data S items in Next").
+- Ask for a plan first on L and XL items, and split them into M items here before building.
+- Keep the thread focused: merge or close its PR, then start a fresh thread for the next item instead of continuing a long one.
+- When credits run low: pick the item yourself, and run Claude Code locally in this repo with the same prompt. `AGENTS.md` and this file give it the same context.
+
 ## Up next
 
 In order. These are the ones to start a thread on.
