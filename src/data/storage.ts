@@ -4,7 +4,75 @@ import type { CustomActivity } from './catalog';
 
 const db = openDatabaseSync('app.db');
 
-// Completions are an append-only log, so history survives and syncing later only has to send new rows.
+// Everything the user makes, and that sync and backups carry. Each table also has `seq`, which never leaves the phone.
+const SYNCED_TABLES = {
+  completion_events: ['id', 'device_id', 'activity_id', 'done', 'earlier', 'at'],
+  place_visits: ['id', 'device_id', 'place_id', 'activity_id', 'visited', 'at'],
+  reflections: ['id', 'device_id', 'entry_id', 'place_id', 'place_name', 'rating', 'note', 'photo', 'at'],
+  plans: ['id', 'device_id', 'entry_id', 'city_id', 'place_id', 'place_name', 'day', 'at'],
+  custom_activities: ['id', 'device_id', 'city_id', 'name', 'subcategory', 'duration', 'cost', 'deleted', 'at'],
+  list_events: ['id', 'device_id', 'list', 'entry_id', 'added', 'at'],
+} as const;
+
+export type SyncedTable = keyof typeof SYNCED_TABLES;
+type Row = Record<string, string | number | null>;
+
+// Column definitions after seq, id and device_id, in the order of SYNCED_TABLES.
+const TABLE_COLUMNS: Record<SyncedTable, string> = {
+  completion_events: 'activity_id TEXT NOT NULL, done INTEGER NOT NULL, earlier INTEGER NOT NULL DEFAULT 0, at TEXT NOT NULL',
+  place_visits: 'place_id TEXT NOT NULL, activity_id TEXT NOT NULL, visited INTEGER NOT NULL, at TEXT NOT NULL',
+  reflections: 'entry_id TEXT NOT NULL, place_id TEXT, place_name TEXT, rating TEXT, note TEXT, photo TEXT, at TEXT NOT NULL',
+  plans: 'entry_id TEXT NOT NULL, city_id TEXT NOT NULL, place_id TEXT, place_name TEXT, day TEXT, at TEXT NOT NULL',
+  custom_activities:
+    'city_id TEXT NOT NULL, name TEXT NOT NULL, subcategory TEXT NOT NULL, duration TEXT NOT NULL, cost TEXT NOT NULL, deleted INTEGER NOT NULL DEFAULT 0, at TEXT NOT NULL',
+  // A saved or hidden idea. Added is 1 when it went onto the list and 0 when it came off.
+  list_events: 'list TEXT NOT NULL, entry_id TEXT NOT NULL, added INTEGER NOT NULL, at TEXT NOT NULL',
+};
+
+const createTable = (table: SyncedTable) =>
+  `CREATE TABLE IF NOT EXISTS ${table} (seq INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT NOT NULL UNIQUE, device_id TEXT NOT NULL, ${TABLE_COLUMNS[table]});`;
+
+// The latest event wins, so each log is read newest first by time, with seq breaking ties between rows from the same moment.
+const INDEXES = `
+  CREATE INDEX IF NOT EXISTS completion_events_activity ON completion_events (activity_id, at, seq);
+  CREATE INDEX IF NOT EXISTS place_visits_place ON place_visits (place_id, at, seq);
+  CREATE INDEX IF NOT EXISTS reflections_entry ON reflections (entry_id, at, seq);
+  CREATE INDEX IF NOT EXISTS plans_entry ON plans (city_id, entry_id, at, seq);
+  CREATE INDEX IF NOT EXISTS list_events_entry ON list_events (list, entry_id, at, seq);
+`;
+
+/** A random version 4 UUID, made by SQLite so no extra native module is needed. */
+const NEW_ID = `lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' || substr(hex(randomblob(2)), 2) || '-'
+  || substr('89ab', 1 + abs(random()) % 4, 1) || substr(hex(randomblob(2)), 2) || '-' || hex(randomblob(6)))`;
+
+export function newId(): string {
+  return db.getFirstSync<{ id: string }>(`SELECT ${NEW_ID} AS id`)!.id;
+}
+
+/** Made once per install and never backed up, so a restored phone still counts as its own device. */
+export function deviceId(): string {
+  let id = readSetting<string | null>('deviceId', null);
+  if (!id) {
+    id = newId();
+    writeSetting('deviceId', id);
+  }
+  return id;
+}
+
+const now = () => new Date().toISOString();
+
+/** Adds one row the user just made, with a fresh id, this device and the time. */
+function insertRow(table: SyncedTable, row: Row): void {
+  const full: Row = { id: newId(), device_id: deviceId(), ...row, at: now() };
+  const columns = Object.keys(full);
+  db.runSync(`INSERT INTO ${table} (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`, Object.values(full));
+}
+
+/** The row of a log that holds the current state for the key columns. */
+const latest = (table: SyncedTable, alias: string, keys: string[]) =>
+  `${alias}.seq = (SELECT seq FROM ${table} WHERE ${keys.map((k) => `${k} = ${alias}.${k}`).join(' AND ')} ORDER BY at DESC, seq DESC LIMIT 1)`;
+
+// The tables as the first version of the app made them. The steps below bring them up to date.
 db.execSync(`
   CREATE TABLE IF NOT EXISTS completion_events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -145,6 +213,36 @@ if (version < 6) {
   db.execSync('PRAGMA user_version = 6');
 }
 
+// Version 7 gets the data ready to sync between devices. Every row the user makes gets a random id made on the phone,
+// so two devices never hand out the same one, and the device that made it. The old number becomes `seq`, which only
+// orders rows on this phone and tells sync what changed since it last ran. Saved and hidden ideas become events too.
+if (version < 7) {
+  const device = deviceId();
+  db.withTransactionSync(() => {
+    for (const [table, columns] of Object.entries(SYNCED_TABLES) as [SyncedTable, readonly string[]][]) {
+      if (table === 'list_events') continue;
+      const content = columns.filter((c) => c !== 'id' && c !== 'device_id');
+      const custom = table === 'custom_activities';
+      db.execSync(`ALTER TABLE ${table} RENAME TO ${table}_v6; ${createTable(table)}`);
+      db.runSync(
+        `INSERT INTO ${table} (${custom ? '' : 'seq, '}id, device_id, ${content.join(', ')})
+         SELECT ${custom ? 'id' : `id, ${NEW_ID}`}, ?, ${content.join(', ')} FROM ${table}_v6 ORDER BY ${custom ? 'at, rowid' : 'id'}`,
+        [device],
+      );
+      db.execSync(`DROP TABLE ${table}_v6`);
+    }
+    db.execSync(createTable('list_events'));
+    for (const [list, key] of [
+      ['saved', 'savedIds'],
+      ['hidden', 'hiddenIds'],
+    ] as const) {
+      for (const entryId of readSetting<string[]>(key, [])) recordListChange(list, entryId, true);
+      Storage.removeItemSync(key);
+    }
+    db.execSync(`${INDEXES} PRAGMA user_version = 7;`);
+  });
+}
+
 /** Moves stored ids onto their new ones when the catalog renames or merges something. Runs only when the list changes. */
 export function applyAliases(aliases: Record<string, string>): void {
   const key = JSON.stringify(aliases);
@@ -158,6 +256,7 @@ export function applyAliases(aliases: Record<string, string>): void {
       db.runSync('UPDATE reflections SET place_id = ? WHERE place_id = ?', [to, from]);
       db.runSync('UPDATE plans SET entry_id = ? WHERE entry_id = ?', [to, from]);
       db.runSync('UPDATE plans SET place_id = ? WHERE place_id = ?', [to, from]);
+      db.runSync('UPDATE list_events SET entry_id = ? WHERE entry_id = ?', [to, from]);
       db.runSync('DELETE FROM drive_times WHERE place_id = ?', [from]);
       // Doing an activity at home or anywhere is stored as a visit to home:<activity> or any:<activity>, so those ids follow a rename too.
       for (const table of ['place_visits', 'reflections', 'plans']) {
@@ -167,48 +266,48 @@ export function applyAliases(aliases: Record<string, string>): void {
       }
     }
   });
-  for (const list of ['savedIds', 'hiddenIds']) {
-    writeSetting(list, [...new Set(readSetting<string[]>(list, []).map((id) => aliases[id] ?? id))]);
-  }
   writeSetting('appliedAliases', key);
 }
 
 export function loadDoneIds(): Set<string> {
-  const rows = db.getAllSync<{ activity_id: string }>(`
-    SELECT e.activity_id FROM completion_events e
-    WHERE e.id = (SELECT MAX(id) FROM completion_events WHERE activity_id = e.activity_id)
-      AND e.done = 1
-  `);
+  const rows = db.getAllSync<{ activity_id: string }>(
+    `SELECT e.activity_id FROM completion_events e WHERE ${latest('completion_events', 'e', ['activity_id'])} AND e.done = 1`,
+  );
   return new Set(rows.map((r) => r.activity_id));
 }
 
 /** Earlier means done before using the app: it counts as done but isn't a memory. */
 export function recordCompletion(activityId: string, done: boolean, earlier = false): void {
-  db.runSync('INSERT INTO completion_events (activity_id, done, earlier, at) VALUES (?, ?, ?, ?)', [
-    activityId,
-    done ? 1 : 0,
-    earlier ? 1 : 0,
-    new Date().toISOString(),
-  ]);
+  insertRow('completion_events', { activity_id: activityId, done: done ? 1 : 0, earlier: earlier ? 1 : 0 });
 }
 
 export function loadVisitedPlaceIds(): Set<string> {
-  const rows = db.getAllSync<{ place_id: string }>(`
-    SELECT v.place_id FROM place_visits v
-    WHERE v.id = (SELECT MAX(id) FROM place_visits WHERE place_id = v.place_id)
-      AND v.visited = 1
-  `);
+  const rows = db.getAllSync<{ place_id: string }>(
+    `SELECT v.place_id FROM place_visits v WHERE ${latest('place_visits', 'v', ['place_id'])} AND v.visited = 1`,
+  );
   return new Set(rows.map((r) => r.place_id));
 }
 
 /** Same append-only shape as completions. The activity is kept so a visit can be credited to it later. */
 export function recordVisit(placeId: string, activityId: string, visited: boolean): void {
-  db.runSync('INSERT INTO place_visits (place_id, activity_id, visited, at) VALUES (?, ?, ?, ?)', [
-    placeId,
-    activityId,
-    visited ? 1 : 0,
-    new Date().toISOString(),
-  ]);
+  insertRow('place_visits', { place_id: placeId, activity_id: activityId, visited: visited ? 1 : 0 });
+}
+
+export type ListName = 'saved' | 'hidden';
+
+/** Ideas on a list (saved, or hidden as "Not for me"), in the order they were added. */
+export function loadList(list: ListName): string[] {
+  const rows = db.getAllSync<{ entry_id: string }>(
+    `SELECT l.entry_id FROM list_events l WHERE l.list = ? AND ${latest('list_events', 'l', ['list', 'entry_id'])} AND l.added = 1
+     ORDER BY l.at, l.seq`,
+    [list],
+  );
+  return rows.map((r) => r.entry_id);
+}
+
+/** Saved and hidden ideas are logs too, so a phone that unsaves something can tell the others. */
+export function recordListChange(list: ListName, entryId: string, added: boolean): void {
+  insertRow('list_events', { list, entry_id: entryId, added: added ? 1 : 0 });
 }
 
 export type Rating = 'loved' | 'fine' | 'not-for-me';
@@ -223,15 +322,14 @@ export type Reflection = {
 };
 
 export function recordReflection(r: Reflection): void {
-  db.runSync('INSERT INTO reflections (entry_id, place_id, place_name, rating, note, photo, at) VALUES (?, ?, ?, ?, ?, ?, ?)', [
-    r.entryId,
-    r.placeId,
-    r.placeName,
-    r.rating,
-    r.note || null,
-    r.photo,
-    new Date().toISOString(),
-  ]);
+  insertRow('reflections', {
+    entry_id: r.entryId,
+    place_id: r.placeId,
+    place_name: r.placeName,
+    rating: r.rating,
+    note: r.note || null,
+    photo: r.photo,
+  });
 }
 
 export type Memory = {
@@ -249,9 +347,8 @@ export function loadMemories(): Memory[] {
   return db.getAllSync<Memory>(`
     SELECT c.activity_id AS entryId, c.at, r.place_id AS placeId, r.place_name AS placeName, r.rating, r.note, r.photo
     FROM completion_events c
-    LEFT JOIN reflections r ON r.id = (SELECT MAX(id) FROM reflections WHERE entry_id = c.activity_id)
-    WHERE c.id = (SELECT MAX(id) FROM completion_events WHERE activity_id = c.activity_id)
-      AND c.done = 1 AND c.earlier = 0
+    LEFT JOIN reflections r ON r.seq = (SELECT seq FROM reflections WHERE entry_id = c.activity_id ORDER BY at DESC, seq DESC LIMIT 1)
+    WHERE ${latest('completion_events', 'c', ['activity_id'])} AND c.done = 1 AND c.earlier = 0
     ORDER BY c.at DESC
   `);
 }
@@ -259,20 +356,24 @@ export function loadMemories(): Memory[] {
 export function loadCustomActivities(): CustomActivity[] {
   return db.getAllSync<CustomActivity>(`
     SELECT id, city_id AS cityId, name, subcategory, duration, cost FROM custom_activities
-    WHERE deleted = 0 ORDER BY at
+    WHERE deleted = 0 ORDER BY at, seq
   `);
 }
 
 export function saveCustomActivity(c: CustomActivity): void {
-  db.runSync(
-    'INSERT INTO custom_activities (id, city_id, name, subcategory, duration, cost, at) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [c.id, c.cityId, c.name, c.subcategory, c.duration, c.cost, new Date().toISOString()],
-  );
+  insertRow('custom_activities', { id: c.id, city_id: c.cityId, name: c.name, subcategory: c.subcategory, duration: c.duration, cost: c.cost });
 }
 
-/** Kept as a row so a later sync can tell other devices it was deleted. */
+/**
+ * Kept as a row so a later sync can tell other devices it was deleted.
+ * The row is replaced rather than updated, so it gets a new seq and sync sees the change.
+ */
 export function deleteCustomActivity(id: string): void {
-  db.runSync('UPDATE custom_activities SET deleted = 1, at = ? WHERE id = ?', [new Date().toISOString(), id]);
+  db.runSync(
+    `INSERT OR REPLACE INTO custom_activities (id, device_id, city_id, name, subcategory, duration, cost, deleted, at)
+     SELECT id, ?, city_id, name, subcategory, duration, cost, 1, ? FROM custom_activities WHERE id = ?`,
+    [deviceId(), now(), id],
+  );
 }
 
 /** A day is a local YYYY-MM-DD key. Activity ids repeat across cities, so plans are kept per city. */
@@ -281,11 +382,10 @@ export type Plan = { entryId: string; cityId: string; placeId: string | null; pl
 export const planKey = (cityId: string, entryId: string) => `${cityId}/${entryId}`;
 
 export function loadPlans(): Map<string, Plan> {
-  const rows = db.getAllSync<{ entry_id: string; city_id: string; place_id: string | null; place_name: string | null; day: string }>(`
-    SELECT p.entry_id, p.city_id, p.place_id, p.place_name, p.day FROM plans p
-    WHERE p.id = (SELECT MAX(id) FROM plans WHERE city_id = p.city_id AND entry_id = p.entry_id)
-      AND p.day IS NOT NULL
-  `);
+  const rows = db.getAllSync<{ entry_id: string; city_id: string; place_id: string | null; place_name: string | null; day: string }>(
+    `SELECT p.entry_id, p.city_id, p.place_id, p.place_name, p.day FROM plans p
+     WHERE ${latest('plans', 'p', ['city_id', 'entry_id'])} AND p.day IS NOT NULL`,
+  );
   return new Map(
     rows.map((r) => [
       planKey(r.city_id, r.entry_id),
@@ -296,14 +396,13 @@ export function loadPlans(): Map<string, Plan> {
 
 /** Append-only like the other logs. A row with no day clears the plan. */
 export function recordPlan(cityId: string, entryId: string, plan: Pick<Plan, 'placeId' | 'placeName' | 'day'> | null): void {
-  db.runSync('INSERT INTO plans (entry_id, city_id, place_id, place_name, day, at) VALUES (?, ?, ?, ?, ?, ?)', [
-    entryId,
-    cityId,
-    plan?.placeId ?? null,
-    plan?.placeName ?? null,
-    plan?.day ?? null,
-    new Date().toISOString(),
-  ]);
+  insertRow('plans', {
+    entry_id: entryId,
+    city_id: cityId,
+    place_id: plan?.placeId ?? null,
+    place_name: plan?.placeName ?? null,
+    day: plan?.day ?? null,
+  });
 }
 
 export function readSetting<T>(key: string, fallback: T): T {
@@ -362,95 +461,114 @@ export function saveCachedCity(id: string, hash: string, json: string): void {
   ]);
 }
 
-// Backups carry the user's own rows and settings. Drive times and downloaded cities are caches that refill on their own.
-const BACKUP_TABLES = {
-  completion_events: ['activity_id', 'done', 'earlier', 'at'],
-  place_visits: ['place_id', 'activity_id', 'visited', 'at'],
-  reflections: ['entry_id', 'place_id', 'place_name', 'rating', 'note', 'photo', 'at'],
-  plans: ['entry_id', 'city_id', 'place_id', 'place_name', 'day', 'at'],
-  custom_activities: ['id', 'city_id', 'name', 'subcategory', 'duration', 'cost', 'deleted', 'at'],
-} as const;
+// Sync plugs in here. Every table in SYNCED_TABLES is a log of rows with a global id, or for custom activities one row
+// per activity where the newer one wins. Pushing is "everything after my cursor", pulling is "add what I don't have",
+// and both are safe to repeat.
 
-type BackupTable = keyof typeof BACKUP_TABLES;
-type Row = Record<string, string | number | null>;
+export type Changes = Record<SyncedTable, Row[]>;
+/** How far this phone's changes have been sent, per table. */
+export type SyncCursor = Partial<Record<SyncedTable, number>>;
 
-// Lists merge with what's on the phone. The rest only fill in what the phone doesn't have yet.
-// The weekend nudge is left out, since notification permission belongs to each phone.
-const MERGED_SETTINGS = ['savedIds', 'hiddenIds'];
+const tables = () => Object.entries(SYNCED_TABLES) as [SyncedTable, readonly string[]][];
+
+/**
+ * Rows made or changed on this phone after the cursor, and the cursor to save once they are sent.
+ * Rows pulled from other devices show up here too. Sending them back is harmless, since every write is by id.
+ */
+export function changesSince(cursor: SyncCursor = {}): { changes: Changes; cursor: SyncCursor } {
+  const changes = {} as Changes;
+  const next: SyncCursor = {};
+  for (const [table, columns] of tables()) {
+    const rows = db.getAllSync<Row>(`SELECT seq, ${columns.join(', ')} FROM ${table} WHERE seq > ? ORDER BY seq`, [cursor[table] ?? 0]);
+    next[table] = rows.length ? Number(rows[rows.length - 1].seq) : (cursor[table] ?? 0);
+    changes[table] = rows.map(({ seq: _seq, ...row }) => row);
+  }
+  return { changes, cursor: next };
+}
+
+/**
+ * Adds rows from another device or a backup. A row already here is skipped, and a custom activity only
+ * replaces an older version of itself. Returns how many rows were new.
+ */
+export function applyChanges(changes: Partial<Record<SyncedTable, unknown[]>>): number {
+  let added = 0;
+  db.withTransactionSync(() => {
+    for (const [table, columns] of tables()) {
+      const incoming = (changes[table] ?? []).map((r) => pick(r, columns));
+      if (!incoming.length) continue;
+      const placeholders = columns.map(() => '?').join(', ');
+      const legacy = incoming.some((r) => r.id == null) ? contentKeys(table) : null;
+      for (const row of incoming) {
+        row.device_id ??= deviceId();
+        if (row.id == null) {
+          // A backup from before version 7 has no ids, so a row counts as already here when everything else matches.
+          const key = contentKey(table, row);
+          if (legacy!.has(key)) continue;
+          legacy!.add(key);
+          row.id = newId();
+        }
+        const values = columns.map((c) => row[c]);
+        if (table === 'custom_activities') {
+          const existing = db.getFirstSync<{ at: string }>('SELECT at FROM custom_activities WHERE id = ?', [row.id]);
+          if (existing && existing.at >= row.at!) continue;
+          db.runSync(`INSERT OR REPLACE INTO ${table} (${columns.join(', ')}) VALUES (${placeholders})`, values);
+          added++;
+          continue;
+        }
+        added += db.runSync(`INSERT OR IGNORE INTO ${table} (${columns.join(', ')}) VALUES (${placeholders})`, values).changes;
+      }
+    }
+  });
+  return added;
+}
+
+const contentColumns = (table: SyncedTable) => SYNCED_TABLES[table].filter((c) => c !== 'id' && c !== 'device_id');
+const contentKey = (table: SyncedTable, row: Row) => JSON.stringify(contentColumns(table).map((c) => row[c] ?? null));
+
+function contentKeys(table: SyncedTable): Set<string> {
+  const rows = db.getAllSync<Row>(`SELECT ${contentColumns(table).join(', ')} FROM ${table}`);
+  return new Set(rows.map((r) => contentKey(table, r)));
+}
+
+// Backups carry the synced tables and a few settings. Drive times and downloaded cities are caches that refill on their own.
+// Settings only fill in what the phone doesn't have yet. The weekend nudge and the device id belong to each phone.
 const FILLED_SETTINGS = ['homeLocation', 'trip', 'recentPlaces', 'exploreFilters', 'onboarded', 'planAddsToCalendar', 'swipeNudged'];
 
 /** Everything the user made, in the shape of the current schema. */
 export type UserData = {
   schema: number;
-  tables: Record<BackupTable, Row[]>;
+  tables: Partial<Changes>;
   settings: Record<string, unknown>;
 };
 
 export function exportUserData(): UserData {
-  const tables = {} as UserData['tables'];
-  for (const [table, columns] of Object.entries(BACKUP_TABLES) as [BackupTable, readonly string[]][]) {
-    tables[table] = db.getAllSync<Row>(`SELECT ${columns.join(', ')} FROM ${table} ORDER BY ${table === 'custom_activities' ? 'at' : 'id'}`);
-  }
   const settings: Record<string, unknown> = {};
-  for (const key of [...MERGED_SETTINGS, ...FILLED_SETTINGS]) {
+  for (const key of FILLED_SETTINGS) {
     const value = readSetting<unknown>(key, undefined);
     if (value !== undefined) settings[key] = value;
   }
-  return { schema: schemaVersion(), tables, settings };
+  return { schema: schemaVersion(), tables: changesSince().changes, settings };
 }
 
 function schemaVersion(): number {
   return db.getFirstSync<{ user_version: number }>('PRAGMA user_version')!.user_version;
 }
 
-/**
- * Adds a backup's rows to what's on the phone, so restoring never loses anything newer.
- * The logs are rewritten in time order, since the latest row per id is the current state.
- * Returns how many rows were new.
- */
+/** Adds a backup's rows to what's on the phone, so restoring never loses anything newer. Returns how many rows were new. */
 export function mergeUserData(data: UserData): number {
   // A migration that changes stored ids has to upgrade older backups here before they merge.
   if (data.schema > schemaVersion()) throw new Error('This backup is from a newer version of the app. Update the app, then try again.');
-  let added = 0;
-  db.withTransactionSync(() => {
-    for (const [table, columns] of Object.entries(BACKUP_TABLES) as [BackupTable, readonly string[]][]) {
-      const incoming = (data.tables[table] ?? []).map((r) => pick(r, columns));
-      if (!incoming.length) continue;
-      const placeholders = columns.map(() => '?').join(', ');
-      if (table === 'custom_activities') {
-        // One row per activity, so the newer edit wins.
-        const updates = columns.filter((c) => c !== 'id').map((c) => `${c} = excluded.${c}`);
-        for (const row of incoming) {
-          const { changes } = db.runSync(
-            `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${placeholders})
-             ON CONFLICT (id) DO UPDATE SET ${updates.join(', ')} WHERE excluded.at > ${table}.at`,
-            columns.map((c) => row[c]),
-          );
-          added += changes;
-        }
-        continue;
-      }
-      const local = db.getAllSync<Row>(`SELECT ${columns.join(', ')} FROM ${table} ORDER BY id`);
-      const seen = new Set(local.map((r) => JSON.stringify(columns.map((c) => r[c]))));
-      const fresh = incoming.filter((r) => {
-        const key = JSON.stringify(columns.map((c) => r[c]));
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
-      if (!fresh.length) continue;
-      added += fresh.length;
-      // Stable, so rows with the same time keep their order.
-      const merged = [...local, ...fresh].sort((a, b) => (a.at! < b.at! ? -1 : a.at! > b.at! ? 1 : 0));
-      db.runSync(`DELETE FROM ${table}`);
-      for (const row of merged) {
-        db.runSync(`INSERT INTO ${table} (${columns.join(', ')}) VALUES (${placeholders})`, columns.map((c) => row[c]));
-      }
-    }
-  });
-  for (const key of MERGED_SETTINGS) {
+  const added = applyChanges(data.tables);
+  // Before version 7, saved and hidden ideas were plain lists. One that this phone has no record of goes on its list.
+  for (const [list, key] of [
+    ['saved', 'savedIds'],
+    ['hidden', 'hiddenIds'],
+  ] as const) {
     const ids = data.settings[key];
-    if (Array.isArray(ids)) writeSetting(key, [...new Set([...readSetting<string[]>(key, []), ...ids.map(String)])]);
+    if (!Array.isArray(ids)) continue;
+    for (const id of new Set(ids.map(String))) {
+      if (!db.getFirstSync('SELECT 1 FROM list_events WHERE list = ? AND entry_id = ?', [list, id])) recordListChange(list, id, true);
+    }
   }
   for (const key of FILLED_SETTINGS) {
     if (data.settings[key] !== undefined && readSetting<unknown>(key, undefined) === undefined) writeSetting(key, data.settings[key]);

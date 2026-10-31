@@ -17,7 +17,7 @@ const SAFE_NAME = /^[\w-][\w.-]*$/;
 export async function shareBackup(): Promise<void> {
   const data = exportUserData();
   const photos: Record<string, string> = {};
-  for (const row of data.tables.reflections) {
+  for (const row of data.tables.reflections ?? []) {
     if (typeof row.photo !== 'string') continue;
     const file = new File(keptPhotoUri(row.photo));
     if (file.exists && SAFE_NAME.test(file.name)) photos[file.name] = await file.base64();
