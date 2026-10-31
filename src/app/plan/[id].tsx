@@ -17,21 +17,25 @@ const DAYS_AHEAD = 21;
 export default function PlanSheet() {
   const colors = useColors();
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  // `spot` is where the Explore card was showing, so a new plan starts there.
+  const { id, spot } = useLocalSearchParams<{ id: string; spot?: string }>();
   const { city, origin, driveTimes, plans, setPlan, findEntry, filters } = useAppState();
   const entry = findEntry(id);
   const existing = plans.get(id);
   const days = upcomingDays(DAYS_AHEAD);
   const keys = days.map(dayKey);
   const places = entry ? placesByDistance(entry, origin, driveTimes) : [];
-  const spots = entry ? spotsFor(entry, places.slice(0, 6).map((p) => p.place)) : [];
+  const shown = places.slice(0, 6);
+  const picked = places.find((p) => p.place.id === spot);
+  if (picked && !shown.includes(picked)) shown.push(picked);
+  const spots = entry ? spotsFor(entry, shown.map((p) => p.place)) : [];
   const home = spots.find((s) => isHomeSpot(s.id));
 
   const [day, setDay] = useState(() =>
     existing && keys.includes(existing.day) ? existing.day : dayKey(nextWeekendDay()),
   );
   const [placeId, setPlaceId] = useState<string | null>(
-    existing?.placeId ?? (filters.where === 'home' ? home?.id : undefined) ?? spots.find((s) => s !== home)?.id ?? home?.id ?? null,
+    existing?.placeId ?? spots.find((s) => s.id === spot)?.id ?? (filters.where === 'home' ? home?.id : undefined) ?? spots.find((s) => s !== home)?.id ?? home?.id ?? null,
   );
   const [calendar, setCalendar] = useState(() => readSetting('planAddsToCalendar', true));
 
