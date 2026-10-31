@@ -1,6 +1,6 @@
 # Try Something New: Roadmap
 
-The single list of what to build next. It replaces `TODO.md`. Last refreshed 2026-10-31, against `main` at `7256db5`.
+The single list of what to build next. It replaces `TODO.md`. Last refreshed 2026-10-31, against `main` at `7256db5`. Growth items come from [MARKETING.md](MARKETING.md), the marketing and launch plan.
 
 At a glance: the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquBL) shows Up next, what's in progress, decisions and the inbox.
 
@@ -51,14 +51,15 @@ At a glance: the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquB
 In order. These are the ones to start a thread on.
 
 1. [ ] **Optional account with cross-device sync** · Backend · L. Ask for a plan first and split it into M items here. Builds on **Store places in indexed SQLite tables** and **Prepare the data for sync** (both done); see Storage decision below.
-2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts, the new Cook something new and Learn a new skill ideas, and the Where picker, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
-3. [ ] **Finish Seoul's parks and trails** · Data · S. Needs your computer: the cloud can't reach Overpass. Run `node scripts/import-osm.mjs seoul 37.19,126.5,37.95,127.46` and commit the result. Overture has few parks and no bike routes there, so Seoul's outdoors list is mostly hand-picked until then.
-4. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
-5. [ ] **Use the app without a city** · Feature · M. Someone outside the 5 cities, or who skips location, should still get at-home and host-friends ideas instead of an empty Explore. There are now three broad ideas and dozens of home versions to fill it.
+2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
+3. [ ] **Share a "tried it" card** · Growth · M. See Now. The main way the app spreads, and it should be in the beta.
+4. [ ] **More broad ideas like crafts** · Data · S. Use the same parent model as "Try a new craft" for "Cook something new" and "Learn a new skill" now that PR #6 is in.
+5. [ ] **Finish Seoul's parks and trails** · Data · S. Needs your computer: the cloud can't reach Overpass. Run `node scripts/import-osm.mjs seoul 37.19,126.5,37.95,127.46` and commit the result. Overture has few parks and no bike routes there, so Seoul's outdoors list is mostly hand-picked until then.
+6. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
 
 ## Now: before launch
 
-- [~] **Add a Settings screen** · UX · M. Weekend ideas on/off, backup, credits and version are in. Left: miles or kilometers, a privacy policy link, and a feedback link.
+- [~] **Add a Settings screen** · UX · M. Weekend ideas on/off, backup, credits, version and a Send feedback email (PR #21) are in. Left: a privacy policy link, once **Write the privacy policy and store forms** has a page. Miles or kilometers is dropped for now: the app shows drive minutes, never distances.
 - [~] **Make the tabs easier to get around** · UX · M. PR #11: one header pattern on every tab (the tab's own filter or sort button, then Settings, always top right), Map filters for Not done, Done, Saved and kind, a Checklist grouped by kind with folding sections, and Memories opened from the progress card. Left: check it on a phone.
 - [~] **Protect the drive-time Worker** · Backend · S. Per-IP rate limiting is in, and goes live on the next `npx wrangler deploy`. Left: App Attest / Play Integrity once the app is in the stores.
 - [ ] **Check merged work on a real phone** · Launch · S. See Up next.
@@ -69,13 +70,28 @@ In order. These are the ones to start a thread on.
 - [ ] **Test on a cheap Android phone** · Launch · S. Cold start, parsing the Los Angeles file, and the map with every pin. The map spike only ran in the iOS Simulator.
 - [ ] **Decide on iPad** · UX · S. `supportsTablet` is on, so Apple will review it on iPad. Either give the main screens two columns or turn tablets off for launch.
 - [ ] **Write the privacy policy and store forms** · Launch · S. A short page on GitHub Pages, App Store privacy labels, Play Data safety. Say that a rounded location goes to the drive-time Worker and that crash reports carry no personal data.
-- [ ] **Make the store listing and demo video** · Growth · M. Screenshots per platform, a short description built on "one idea at a time", and a demo video made with brag. From the old TODO.
+- [ ] **Make the store listing and demo video** · Growth · M. Screenshots per platform, a short description built on "one idea at a time", and a demo video made with brag. Use the name, subtitle and keywords in MARKETING.md section 6, and real shared cards from the beta. From the old TODO.
+
+**Marketing and launch** (see [MARKETING.md](MARKETING.md))
+
+- [?] **Pick the name, handles and launch city** · Growth · S. Keep "Try Something New" or pick a distinctive name with it as the tagline, check it's free in both stores, claim the same handle on TikTok, Instagram, Threads, X and YouTube, and choose the first city (recommended: the one you live in) and a budget.
+- [?] **Set the launch date** · Growth · S. Recommended: early January, for "try new things" New Year's resolutions, with a beta in November and December.
+- [ ] **Start a beta with a waitlist** · Growth · S. A one-page site with an email signup, TestFlight and Play internal testing, 50 to 200 testers mostly in the launch city. Needs **Finish the release setup**.
+- [ ] **Share a "tried it" card** · Growth · M. After saving a memory, offer an image card (photo, activity icon and name, city, rating, "#12 in Seattle") in story and square sizes with the app name and a short link, through the share sheet. The app's main way to spread.
+- [ ] **Ask for a rating at a happy moment** · Growth · S. The system review prompt (expo-store-review) right after someone rates an activity "Loved it". Never on launch or after "Not for me".
+- [ ] **Invite links that open the idea** · Growth · M. "Invite a friend" and the share cards link to a small web page per activity with store buttons, which opens the same idea in the app when it's installed (universal and app links). The link carries the kind of share, never who sent it, and the Worker counts visits and store taps.
+- [ ] **Remind on a plan's day** · Feature · S. A local notification the morning of a planned activity, using the weekend ideas notification setup.
+- [ ] **Opt-in, privacy-friendly analytics** · Growth · S. Moved up from Next so the beta can measure activation (planned or done in the first 7 days), week 2 and 4 retention, and shares per memory. Anonymous counts with TelemetryDeck or Aptabase, off by default.
+- [ ] **Post the weekend video series** · Growth · M. Needs you. "My app picked my weekend" short videos, 3 a week from the beta on, on TikTok and Instagram Reels. Plan in MARKETING.md section 5.
+- [ ] **Launch publicly** · Growth · M. Waitlist email, founder video, city subreddit posts within each sub's rules, local creators and newsletters, and Product Hunt on a weekday, the same week. Launch kit and order in MARKETING.md sections 5 and 9.
 
 ## Next: 1 to 3 months after launch
 
 **Location-agnostic and at-home ideas** (building on PR #6)
 
-- [ ] **Use the app without a city** · Feature · M. See Up next.
+- [ ] **Use the app without a city** · Feature · M. Someone outside the 5 cities, or who skips location, should still get at-home and host-friends ideas instead of an empty Explore.
+- [ ] **More broad ideas like crafts** · Data · S. See Up next.
+- [~] **More at-home and DIY versions** · Data · S. Add a `home` line to activities that can work at home and don't have one yet, and a few new home-only crafts. PR #16: home versions for 12 more activities (yoga, karaoke, hot pot, mini golf in the backyard and more), a new "anywhere" option for 11 that need no set venue (pickleball in a backyard or any tennis court, tennis, roller skating, disc golf and more) that checks off like a place, and a host line for run club. Left: a few new home-only crafts.
 - [ ] **Draw custom icons for crafts** · UX · S. The activities without a Material Symbol, mostly crafts, in the same style.
 
 **Accounts and sync**
@@ -98,19 +114,27 @@ In order. These are the ones to start a thread on.
 **Data**
 
 - [ ] **Directions in Korea** · UX · S. Google Maps has no driving directions in South Korea, so on Android open Naver Map or KakaoMap for Seoul places, with Google Maps as the fallback.
-- [ ] **Show kilometers outside the US** · UX · S. Default to kilometers for cities like Seoul, alongside the miles or kilometers setting.
+- [ ] **Show kilometers outside the US** · UX · S. Default to kilometers for cities like Seoul, alongside a miles or kilometers setting. Only needed once the app shows distances; today it shows drive minutes.
 - [ ] **English names for Seoul places** · Data · M. Overture only has Korean names there. Options: OpenStreetMap's `name:en` (comes with the OSM import), or the Korea Tourism Organization's English TourAPI, which needs a free key from data.go.kr.
 - [ ] **Add more cities** · Data · M. The 25 largest US metros, then a few international ones. Re-import monthly from a scheduled Action.
 - [ ] **Show opening hours where known** · Data · M. OpenStreetMap `opening_hours`, an "Open now" badge, never hiding places without hours.
 - [ ] **Wheelchair and stroller access** · Data · S. Read OpenStreetMap's `wheelchair` tag and add an "Accessible" filter.
 - [ ] **Report a place through a form** · Data · S. A Worker endpoint that opens a GitHub issue with the place id, instead of email.
-- [ ] **Opt-in, privacy-friendly analytics** · Growth · S. Anonymous counts (shown, saved, planned, done) with TelemetryDeck or Aptabase. Off by default.
+
+**Growth after launch**
+
+- [ ] **Share your city bucket list** · Growth · S. The checklist as a poster image with done items lit up, from the progress card.
+- [ ] **Year in review** · Feature · M. A story-style recap each December: things tried, kinds, favorite memory, photos. Builds on the monthly recap; share as cards.
+- [ ] **Make a kit for local partners** · Growth · S. A "Featured on Try Something New" sticker and poster with a QR code, and a page per partner that opens their activity. For studios, gyms, run clubs and cafés in the launch city.
+- [ ] **Web pages for each city** · Growth · L. Moved up from Later: "Things to try in Seattle" pages built from the catalog, for search, Reddit and partners. Start with the launch city's page only (S), then the rest.
+- [ ] **Hold a monthly try-along** · Growth · S. Needs you. Everyone tries the same idea in a month and shares cards; partners join in. Later, a gallery of shared cards.
+- [ ] **Launch in a second city** · Growth · M. Once the first city's activation and share rate look good. Pick it from installs and requests; repeat the city launch kit.
+- [ ] **Launch in Seoul with a Korean listing** · Growth · M. Korean store listing and screenshots, Korean-language posts on Instagram, Threads and Naver blogs. Needs **English names for Seoul places** and **Directions in Korea** first.
 
 ## Later: once people stick around
 
 - [ ] **Shared plans with "I'm in"** · Feature · L. A web page per plan with add-to-calendar and an RSVP. Needs the backend and push.
 - [ ] **Friends and couples mode** · Feature · XL. A shared checklist with a partner or group.
-- [ ] **Web pages for each city** · Growth · L. "Things to try in Seattle" pages built from the catalog.
 - [ ] **Siri, App Shortcuts and lock screen widgets** · Feature · M. "Give me an idea" by voice, StandBy widgets, a Live Activity on a plan's day.
 - [ ] **Translate the app** · Growth · L. Spanish first, with local units and prices.
 - [ ] **Trip planner** · Feature · M. Turn trip mode into a day-by-day weekend plan.
@@ -122,7 +146,6 @@ In order. These are the ones to start a thread on.
 
 Unsorted ideas. Move them into a horizon at the next refresh.
 
-- Remember the Map filter and which Checklist sections are open between launches. From PR #11.
 - Let the Map use the Explore filters too (cost, time, level, indoor or outdoor), so the two tabs agree. From PR #11.
 
 ## Storage decision
@@ -131,8 +154,8 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
-- [x] **More broad ideas like crafts** · Data. "Cook something new" with 8 kinds (pasta, bread and a cooking class, plus new sushi, dumplings, tortillas, ice cream and pickles) and "Learn a new skill" with 7 (juggling, a card trick, sign language, phrases in a new language, chess, constellations and knots). Every kind has a home version, and doing any one checks off the broad idea. PR #22.
-- [x] **More at-home and DIY versions** · Data. Home versions for 12 more activities and an "anywhere" option for 11 in PR #16, then four new home-only crafts (block printing, a terrarium, bookbinding and pressed flowers) in PR #22.
+- [x] **Remember the Map filter and Checklist sections** · UX. The Map's status and kind filter, and the Checklist's filter, sort, grouping and open sections, stay the same after the app restarts. From the Inbox. PR #21.
+- [x] **Send feedback from Settings** · UX. An email with the app version and platform filled in, shown when the report address is set. PR #21.
 - [x] **Store places in indexed SQLite tables** · Architecture. Migration 8 moves each downloaded city out of its JSON blob into `catalog_places` and `catalog_place_activities`, indexed by position, activity and place id, with the city's own fields in a small `catalog_cities` row. Launch now reads only those small rows for aliases and the nearest city, and loads just the city in use instead of parsing every downloaded one. Drive times take the nearest places from a growing bounding box, and Memories reads only the places it needs from other cities. The bundled city is seeded into the same tables. Left: the Map still clusters the whole city in memory. PR #18.
 - [x] **Offer Host friends in the Where picker** · UX. The Explore card's Change list ends with Host friends wherever an activity has it, with an Invite button. PR #14.
 - [x] **Run expo-doctor in CI** · Architecture. Plus the Expo package patch versions it asked for. PR #12.
