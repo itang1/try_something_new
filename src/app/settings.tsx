@@ -2,20 +2,26 @@ import { useState } from 'react';
 import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Constants from 'expo-constants';
+import { ANALYTICS_SETTING } from '@/data/analytics';
 import { restoreBackup, shareBackup } from '@/data/backup';
 import { CREDITS, openCredit } from '@/data/credits';
 import { allowNudges } from '@/data/nudge';
 import { canReport, sendFeedback } from '@/data/report';
+import { privacyLink } from '@/data/web-links';
 import { useAppState } from '@/state/app-state';
+import { useSetting } from '@/state/use-setting';
 import { useToast } from '@/state/toast';
 import { readable, useColors } from '@/theme';
 import { Icon } from '@/components/icon';
 import type { IconName } from '@/icons/paths';
 
+const PRIVACY_URL = privacyLink();
+
 export default function SettingsSheet() {
   const colors = useColors();
   const router = useRouter();
   const { weekendNudge, setWeekendNudge, reload } = useAppState();
+  const [shareCounts, setShareCounts] = useSetting(ANALYTICS_SETTING, false);
   const showToast = useToast();
   const version = Constants.expoConfig?.version;
 
@@ -108,6 +114,42 @@ export default function SettingsSheet() {
       <Text style={[styles.footnote, { color: colors.secondary }]}>
         Everything stays on this phone. A backup is the way to move it to a new one.
       </Text>
+
+      <Text style={[styles.section, { color: colors.secondary }]}>Privacy</Text>
+      <View style={[styles.list, { backgroundColor: colors.card }]}>
+        <View style={styles.row}>
+          <Icon name="trending_up" size={22} color={colors.accent} />
+          <View style={styles.grow}>
+            <Text style={[styles.name, { color: colors.label }]}>Share anonymous usage counts</Text>
+            <Text style={[styles.use, { color: colors.secondary }]}>
+              Off by default. Only counts like “made a plan”, with the app version and days since install.
+            </Text>
+          </View>
+          <Switch
+            value={shareCounts}
+            onValueChange={setShareCounts}
+            trackColor={{ true: colors.accent }}
+            accessibilityLabel="Share anonymous usage counts"
+          />
+        </View>
+        {PRIVACY_URL && (
+          <Pressable
+            onPress={() => Linking.openURL(PRIVACY_URL)}
+            accessibilityRole="link"
+            accessibilityHint="Opens the privacy policy in your browser"
+            style={({ pressed }) => [
+              styles.row,
+              { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator, opacity: pressed ? 0.6 : 1 },
+            ]}
+          >
+            <Icon name="info" size={22} color={colors.accent} />
+            <View style={styles.grow}>
+              <Text style={[styles.name, { color: colors.label }]}>Privacy policy</Text>
+            </View>
+            <Icon name="open_in_new" size={18} color={colors.accent} />
+          </Pressable>
+        )}
+      </View>
 
       <Text style={[styles.section, { color: colors.secondary }]}>Data and credits</Text>
       <View style={[styles.list, { backgroundColor: colors.card }]}>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { anywhereSpotId, AT_HOME, entryHint, homeSpotId, kindsOf, LEVELS, otherWays, seasonLabel } from '@/data/catalog';
+import { ACTIVITY_ALIASES, anywhereSpotId, AT_HOME, entryHint, homeSpotId, kindsOf, LEVELS, otherWays, seasonLabel } from '@/data/catalog';
 import { formatDay } from '@/data/days';
 import { openDirections, searchNearby } from '@/data/directions';
 import { inviteFriend } from '@/data/invite';
@@ -25,7 +25,10 @@ export default function ActivitySheet() {
   const { city, entries, origin, driveTimes, isDone, savedIds, toggleSaved, visitedPlaceIds, toggleVisited, plans, findEntry, removeCustom } =
     useAppState();
   const markDone = useMarkDone();
-  const entry = findEntry(id);
+  // Links from the website and old shares carry an activity id, which may have been renamed or merged since, and
+  // may only be in this city as a landmark. Anything else in the link, like ?s=invite, is for the website's counts.
+  const activityId = ACTIVITY_ALIASES[id] ?? id;
+  const entry = findEntry(activityId) ?? entries.find((e) => e.activityId === activityId);
   const [showAll, setShowAll] = useState(false);
 
   if (!entry) {
