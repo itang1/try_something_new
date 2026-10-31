@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* Layout: one narrow column, summary strip, then Up next as a numbered queue, then status lists, then horizons. Colors from the app's Dusk Ember theme. */
+/* Layout: one narrow column, summary strip, then Waiting on you, then Up next as a numbered queue, then status lists, then horizons. Colors from the app's Dusk Ember theme. */
 :root {
   --bg: #FCF5F4; --card: #FFFFFF; --ink: #23151A; --muted: #6E5A5E; --line: #EADCDD;
   --accent: #B8274A; --accent-soft: #F8E3E8; --done: #1E8048; --done-soft: #E2F2E8;
@@ -154,7 +154,9 @@ for (const it of [...up, ...horizons.flatMap(h => h.items)]) {
 }
 const upTitles = new Set(up.map(i => i.title));
 const wip = [...all.values()].filter(i => i.mark === "~" && !upTitles.has(i.title));
-const ask = [...all.values()].filter(i => i.mark === "?" && !upTitles.has(i.title));
+// Waiting on you: every open item that needs a decision, an account, a device or anything else only you can do.
+// Up next first, then Now, Next and Later, in the file's order.
+const waiting = [...all.values()].filter(i => i.mark === "?" || needsYou(i));
 
 const fmtDate = d => { const t = new Date(d + "T12:00:00"); return isNaN(t) ? d : t.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }); };
 
@@ -163,16 +165,18 @@ h += '<div class="meta">Roadmap last refreshed ' + esc(fmtDate(refreshed)) + " Â
 h += '<nav class="strip" aria-label="Sections">' +
   '<a href="#up-next"><b>' + up.length + "</b> up next</a>" +
   '<a href="#in-progress"><b>' + wip.length + "</b> in progress</a>" +
-  '<a href="#decisions"><b>' + ask.length + "</b> to decide</a>" +
+  '<a href="#waiting"><b>' + waiting.length + "</b> waiting on you</a>" +
   '<a href="#inbox"><b>' + inbox.length + "</b> in the inbox</a>" +
   '<a href="#done"><b>' + done.length + "</b> done</a></nav></header>";
+
+h += '<section id="waiting"><h2>Waiting on you <span class="n">' + waiting.length + "</span></h2>" +
+  (waiting.length ? list(waiting) : '<p class="empty">Nothing is waiting on you right now.</p>') + "</section>";
 
 h += '<section id="up-next"><h2>Up next <span class="n">in order</span></h2>';
 h += up.length ? '<ol class="queue">' + up.map(it => "<li>" + itemHTML(it) + "</li>").join("") + "</ol>" : '<p class="empty">Up next is empty. Pull items in from Now.</p>';
 h += "</section>";
 
 h += '<section id="in-progress"><h2>In progress <span class="n">' + wip.length + "</span></h2>" + list(wip) + "</section>";
-h += '<section id="decisions"><h2>Needs your decision <span class="n">' + ask.length + "</span></h2>" + list(ask) + "</section>";
 h += '<section id="inbox"><h2>Inbox <span class="n">unsorted ideas</span></h2>' +
   (inbox.length ? '<ul class="items">' + inbox.map(t => '<li><div class="desc" style="color:var(--ink)">' + inline(t) + "</div></li>").join("") + "</ul>" : '<p class="empty">Inbox is empty.</p>') + "</section>";
 
