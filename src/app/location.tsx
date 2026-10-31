@@ -2,15 +2,13 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { cityLabel } from '@/data/catalog';
-import { cityIndex, nearestCity } from '@/data/cities';
+import { AREA_KM, cityIdFor, cityIndex, nearestCity } from '@/data/cities';
 import { haversineKm } from '@/data/drive';
 import { currentLocation, geocodeAddress } from '@/data/location';
 import { useAppState, type HomeLocation } from '@/state/app-state';
 import { useColors } from '@/theme';
 import { Icon } from '@/components/icon';
 
-// Farther than this from every city center, a place gets no "area" label.
-const AREA_KM = 150;
 // With more cities than this, the trip picker searches instead of listing them all.
 const MAX_TRIP_CHIPS = 8;
 
@@ -52,7 +50,8 @@ export default function LocationSheet() {
     finish(await geocodeAddress(trimmed), true, `Couldn't find "${trimmed}".`);
   };
 
-  const homeCityId = home ? nearestCity(home).city.id : null;
+  // Far from every city, the nearest one is still a trip.
+  const homeCityId = home ? cityIdFor(home) : null;
   const otherCities = cityIndex().filter((c) => c.id !== homeCityId);
   const searchable = otherCities.length > MAX_TRIP_CHIPS;
   const query = cityQuery.trim().toLocaleLowerCase();

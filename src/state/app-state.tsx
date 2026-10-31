@@ -4,6 +4,7 @@ import {
   applyCatalogAliases,
   citySummary,
   cityWithoutPlaces,
+  cityIdFor,
   DEFAULT_CITY_ID,
   downloadCity,
   findEntryAnywhere,
@@ -86,8 +87,13 @@ type AppState = {
   /** Explore's filters, kept across launches. */
   filters: Filters;
   setFilters: (filters: Filters) => void;
+  /** Whether to send a reminder the morning of a planned day. On unless the person turns it off. */
+  planReminders: boolean;
+  setPlanReminders: (on: boolean) => void;
   /** Plans in the current city, by entry id. */
   plans: Map<string, Plan>;
+  /** Plans in every city, by `planKey`. */
+  allPlans: Map<string, Plan>;
   /** Pass null to clear the plan. */
   setPlan: (entryId: string, plan: Pick<Plan, 'placeId' | 'day'> | null) => void;
   /** Reads everything from storage again, after a backup is restored. */
@@ -112,11 +118,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [customs, setCustoms] = useState(loadCustomActivities);
   const [filters, setFilters, reloadFilters] = useSetting<Filters>('exploreFilters', NO_FILTERS);
   const [weekendNudge, setWeekendNudge] = useSetting('weekendNudge', false);
+  const [planReminders, setPlanReminders] = useSetting('planReminders', true);
   const savedIds = useMemo(() => new Set(saved), [saved]);
   const hiddenIds = useMemo(() => new Set(hidden), [hidden]);
 
   const [catalogVersion, setCatalogVersion] = useState(0);
-  const wantedId = trip?.cityId ?? (home ? nearestCity(home).city.id : DEFAULT_CITY_ID);
+  const wantedId = trip?.cityId ?? cityIdFor(home);
   const wanted = localCity(wantedId);
   const wantedSummary = citySummary(wantedId);
   const standIn = wantedSummary && nearestCity({ latitude: wantedSummary.lat, longitude: wantedSummary.lng }, true).city.id;
@@ -347,7 +354,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         setWeekendNudge,
         filters,
         setFilters,
+        planReminders,
+        setPlanReminders,
         plans,
+        allPlans,
         setPlan,
         reload,
       }}

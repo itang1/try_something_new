@@ -22,6 +22,24 @@ const BUNDLED = [seedCity] as City[];
 
 export const DEFAULT_CITY_ID = 'los-angeles';
 
+/** Farther than this from every city center, a place has no city: the app offers ideas that need no venue. */
+export const AREA_KM = 150;
+
+export const ANYWHERE_ID = 'anywhere';
+
+/**
+ * Stands in for a city when there's no location, or it's far from every city. With no places, its list is just the ideas
+ * that work anywhere: at home, hosting friends, anywhere outside, or a maps search. One object, so its entries are cached.
+ */
+export const ANYWHERE: City = { id: ANYWHERE_ID, name: 'your area', country: '', lat: 39.8, lng: -98.6, icons: [], places: [] };
+
+/** The city a location belongs to, or `ANYWHERE_ID` without one or when it's far from every city. */
+export function cityIdFor(point: Coordinate | null): string {
+  if (!point) return ANYWHERE_ID;
+  const { city, km } = nearestCity(point);
+  return km <= AREA_KM ? city.id : ANYWHERE_ID;
+}
+
 const summary = ({ id, name, region, country, lat, lng }: CitySummary): CitySummary => ({ id, name, region, country, lat, lng });
 
 /** Every city on the device, without places, and the hash of its download. Bundled cities have a null hash. */
@@ -61,6 +79,7 @@ export function citySummary(id: string): CitySummary | undefined {
 
 /** The city if it's on the device, downloaded or bundled. */
 export function localCity(id: string): City | undefined {
+  if (id === ANYWHERE_ID) return ANYWHERE;
   if (loaded?.id === id) return loaded;
   const stored = onDevice.get(id);
   if (!stored) return undefined;
@@ -130,6 +149,7 @@ const SEARCH_KM = [3, 10, 30, 100];
 
 /** The city's nearest places, without reading the whole city. */
 export function nearestPlaces(cityId: string, point: Coordinate, count: number): Place[] {
+  if (cityId === ANYWHERE_ID) return [];
   for (const km of SEARCH_KM) {
     const near = placesNear(cityId, point, km);
     if (near.length >= count) return near.slice(0, count);
@@ -139,6 +159,7 @@ export function nearestPlaces(cityId: string, point: Coordinate, count: number):
 
 /** A city's own fields with no places, for entries the user added there. */
 export function cityWithoutPlaces(id: string): City | undefined {
+  if (id === ANYWHERE_ID) return ANYWHERE;
   const meta = onDevice.get(id)?.meta;
   return meta && { ...meta, places: [] };
 }
@@ -165,7 +186,8 @@ export function findEntryAnywhere(id: string, placeId?: string | null): { entry:
     const found = city && findEntry(city, id);
     if (found) return { entry: found, city: city! };
   }
-  return undefined;
+  const found = findEntry(ANYWHERE, id);
+  return found && { entry: found, city: ANYWHERE };
 }
 
 /** Before anything reads stored ids, so renamed activities and places keep their history. Downloaded aliases apply on the next launch. */

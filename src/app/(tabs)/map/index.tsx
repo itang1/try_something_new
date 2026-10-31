@@ -9,7 +9,7 @@ import * as Haptics from 'expo-haptics';
 import FiltersIcon from '@expo/material-symbols/tune.xml';
 import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import type { Entry, Place } from '@/data/catalog';
-import { nearestCity } from '@/data/cities';
+import { ANYWHERE_ID, nearestCity } from '@/data/cities';
 import { placeSources } from '@/data/credits';
 import { buildIndex, featuresInRegion, zoomToDelta } from '@/data/clusters';
 import { openDirections } from '@/data/directions';
@@ -47,10 +47,13 @@ export default function MapScreen() {
   // Selection remembers its city, so switching cities clears it without an effect.
   const [selection, setSelection] = useState<{ city: string; placeId: string } | null>(null);
 
-  const start = origin && nearestCity(origin).city.id === city.id && haversineKm(origin, city.lat, city.lng) < NEAR_KM
+  // With no city, the map has no pins: it opens on you, or zoomed out with no location.
+  const anywhere = city.id === ANYWHERE_ID;
+  const start = origin && (anywhere || (nearestCity(origin).city.id === city.id && haversineKm(origin, city.lat, city.lng) < NEAR_KM))
     ? origin
     : { latitude: city.lat, longitude: city.lng };
-  const initialRegion = { ...start, latitudeDelta: 0.35, longitudeDelta: 0.35 };
+  const delta = anywhere && !origin ? 40 : 0.35;
+  const initialRegion = { ...start, latitudeDelta: delta, longitudeDelta: delta };
   const [region, setRegion] = useState<Region>(initialRegion);
 
   const places = useMemo(() => {
@@ -186,6 +189,22 @@ export default function MapScreen() {
       </View>
 
       <SafeAreaView edges={['bottom']} style={styles.bottom} pointerEvents="box-none">
+        {anywhere && (
+          <View style={[styles.card, styles.cardBody, { backgroundColor: colors.card }]}>
+            <Text style={[styles.placeName, { color: colors.label }]}>No places mapped near you yet</Text>
+            <Text style={[styles.meta, { color: colors.secondary }]}>
+              Explore still has ideas for home and anywhere. Visiting a city? Start a trip there to see its places.
+            </Text>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => router.push('/location')}
+              style={({ pressed }) => [styles.directions, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
+            >
+              <Icon name={origin ? 'flight' : 'location_on'} size={20} color={colors.onAccent} />
+              <Text style={[styles.directionsText, { color: colors.onAccent }]}>{origin ? 'Start a trip' : 'Set my location'}</Text>
+            </Pressable>
+          </View>
+        )}
         {selected && (
           <Animated.View
             key={selected.id}
