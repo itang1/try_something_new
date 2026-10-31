@@ -57,6 +57,7 @@ In order. These are the ones to start a thread on.
 ## Now: before launch
 
 - [~] **Add a Settings screen** · UX · M. Weekend ideas on/off, backup, credits and version are in. Left: miles or kilometers, a privacy policy link, and a feedback link.
+- [~] **Make the tabs easier to get around** · UX · M. PR #11: one header pattern on every tab (the tab's own filter or sort button, then Settings, always top right), Map filters for Not done, Done, Saved and kind, a Checklist grouped by kind with folding sections, and Memories opened from the progress card. Left: check it on a phone.
 - [~] **Protect the drive-time Worker** · Backend · S. Per-IP rate limiting is in, and goes live on the next `npx wrangler deploy`. Left: App Attest / Play Integrity once the app is in the stores.
 - [ ] **Check merged work on a real phone** · Launch · S. See Up next.
 - [ ] **Test the storage migrations** · Architecture · M. See Up next.
@@ -121,7 +122,8 @@ In order. These are the ones to start a thread on.
 
 Unsorted ideas. Move them into a horizon at the next refresh.
 
-- (empty)
+- Remember the Map filter and which Checklist sections are open between launches. From PR #11.
+- Let the Map use the Explore filters too (cost, time, level, indoor or outdoor), so the two tabs agree. From PR #11.
 
 ## Storage decision
 
@@ -129,6 +131,7 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **One place for header buttons** · UX. Settings moved from the top left of Explore to the top right of every tab, including the Map. PR #11.
 - [x] **Do an accessibility pass** · UX. A role on every button, labels where the icon was the only cue, done states read on map rows, the swipe hint and memory ratings readable, and card buttons that go two by two with large text. Swipes already had buttons and screen reader actions. Still to check on a device. PR #8.
 - [x] **Set up EAS builds** · Launch. Development, preview and production profiles. PR #2.
 - [x] **Add a Google Maps key for Android** · Launch. From the environment, never committed. PR #2.
