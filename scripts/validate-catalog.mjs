@@ -51,6 +51,14 @@ for (const a of activities) {
   for (const way of ['home', 'host', 'search']) {
     if (way in a && !a[way]?.trim()) fail(where, `empty ${way}`);
   }
+  if ('anywhere' in a) {
+    const { where: spot, detail, ...rest } = a.anywhere ?? {};
+    if (typeof spot !== 'string' || !spot.trim()) fail(where, 'anywhere needs a where, like "Any public court"');
+    // It's a chip when planning, so it has to stay short.
+    else if (spot.length > 36) fail(where, `anywhere.where is ${spot.length} characters; keep it to 36`);
+    if (typeof detail !== 'string' || !detail.trim()) fail(where, 'anywhere needs a detail, like what to bring');
+    if (Object.keys(rest).length) fail(where, `unknown anywhere keys: ${Object.keys(rest).join(', ')}`);
+  }
   checkIcon(a.id);
 }
 for (const a of activities) {

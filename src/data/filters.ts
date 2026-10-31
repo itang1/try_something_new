@@ -39,7 +39,7 @@ export const WHERE_OPTIONS: { where: Where; label: string; icon: IconName }[] = 
 ];
 
 export function matchesWhere(entry: Entry, where: Where): boolean {
-  return where === 'out' ? entry.places.length > 0 || !!entry.search : !!entry.home || !!entry.host;
+  return where === 'out' ? entry.places.length > 0 || !!entry.anywhere || !!entry.search : !!entry.home || !!entry.host;
 }
 
 export const SETTING_OPTIONS: { setting: Setting; label: string; icon: IconName }[] = [
@@ -84,7 +84,8 @@ export function matchesFilters(
   if (filters.maxCost != null && entry.costLevel > filters.maxCost) return false;
   if (filters.maxDuration != null && entry.durationMinutes > filters.maxDuration) return false;
   // Without a starting point there are no drive times, so the drive filter waits until there is one.
-  const minutes = driveMinutes(entry, origin, times);
+  // Something that works anywhere, like pickleball at any public court, is always close enough.
+  const minutes = entry.anywhere ? null : driveMinutes(entry, origin, times);
   if (filters.maxDrive != null && minutes != null && minutes > filters.maxDrive) return false;
   return true;
 }

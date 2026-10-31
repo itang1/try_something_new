@@ -298,9 +298,11 @@ export function applyAliases(aliases: Record<string, string>): void {
       db.runSync('UPDATE plans SET place_id = ? WHERE place_id = ?', [to, from]);
       db.runSync('UPDATE list_events SET entry_id = ? WHERE entry_id = ?', [to, from]);
       db.runSync('DELETE FROM drive_times WHERE place_id = ?', [from]);
-      // Doing an activity at home is stored as a visit to home:<activity>, so that id follows a rename too.
+      // Doing an activity at home or anywhere is stored as a visit to home:<activity> or any:<activity>, so those ids follow a rename too.
       for (const table of ['place_visits', 'reflections', 'plans']) {
-        db.runSync(`UPDATE ${table} SET place_id = ? WHERE place_id = ?`, [`home:${to}`, `home:${from}`]);
+        for (const prefix of ['home:', 'any:']) {
+          db.runSync(`UPDATE ${table} SET place_id = ? WHERE place_id = ?`, [`${prefix}${to}`, `${prefix}${from}`]);
+        }
       }
     }
   });
