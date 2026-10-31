@@ -164,7 +164,7 @@ export default function MapScreen() {
         )}
         {sources.length > 0 && (
           <Pressable
-            onPress={() => router.push('/about')}
+            onPress={() => router.push('/settings')}
             accessibilityRole="link"
             accessibilityLabel={`Place data ${sources.map((c) => c.notice).join(', ')}. Opens credits.`}
             hitSlop={8}
@@ -211,8 +211,10 @@ function PlaceCard({
 
       {place.entries.slice(0, 3).map((e) => (
         <Pressable
+          accessibilityRole="button"
           key={e.id}
           onPress={() => onOpen(e.id)}
+          accessibilityLabel={doneIds.has(e.id) ? `${e.name}, done` : e.name}
           style={({ pressed }) => [styles.entry, { backgroundColor: colors.fill, opacity: pressed ? 0.7 : 1 }]}
         >
           <Icon
@@ -220,7 +222,7 @@ function PlaceCard({
             size={18}
             color={doneIds.has(e.id) ? colors.done : e.kind === 'icon' ? colors.accent : colors.tertiary}
           />
-          <Text style={[styles.entryName, { color: colors.label }]} numberOfLines={1}>
+          <Text style={[styles.entryName, { color: colors.label }]} numberOfLines={2}>
             {e.name}
           </Text>
           <Icon name="chevron_right" size={18} color={colors.tertiary} />
@@ -228,6 +230,7 @@ function PlaceCard({
       ))}
 
       <Pressable
+        accessibilityRole="button"
         onPress={() => openDirections(place)}
         style={({ pressed }) => [styles.directions, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
       >

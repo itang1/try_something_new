@@ -1,6 +1,14 @@
-// Deploy with `npx wrangler deploy` from this folder, after `npx wrangler secret put ORS_KEY`.
 {
   "name": "try-something-new-drive-times",
   "main": "index.js",
-  "compatibility_date": "2026-10-01"
+  "compatibility_date": "2026-10-01",
+  // Each app launch asks for at most a few batches, so 30 a minute per IP leaves plenty of room for real people.
+  // namespace_id is any number unique to this account's rate limiters.
+  "ratelimits": [
+    {
+      "name": "LIMITER",
+      "namespace_id": "1001",
+      "simple": { "limit": 30, "period": 60 }
+    }
+  ]
 }

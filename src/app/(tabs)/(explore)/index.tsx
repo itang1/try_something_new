@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import FiltersIcon from '@expo/material-symbols/tune.xml';
-import AboutIcon from '@expo/material-symbols/info.xml';
+import SettingsIcon from '@expo/material-symbols/settings.xml';
 import * as Haptics from 'expo-haptics';
 import { inSeason, isHomeSpot, kindsOf, LEVELS, listOr, otherWays, type Entry, type Way } from '@/data/catalog';
 import { addDays, dayKey, formatDay } from '@/data/days';
@@ -116,11 +116,12 @@ export default function ExploreScreen() {
               style={styles.filterText}
             >
               <Icon name="tune" size={18} color={colors.accent} />
-              <Text style={[styles.filterLabel, { color: colors.label }]} numberOfLines={1}>
+              <Text style={[styles.filterLabel, { color: colors.label }]} numberOfLines={2}>
                 {activeFilters.join(' · ')}
               </Text>
             </Pressable>
             <Pressable
+              accessibilityRole="button"
               onPress={() => {
                 Haptics.selectionAsync();
                 setFilters(NO_FILTERS);
@@ -166,12 +167,14 @@ export default function ExploreScreen() {
             </View>
             <View style={styles.nudgeButtons}>
               <Pressable
+                accessibilityRole="button"
                 onPress={() => answerNudge(false)}
                 style={({ pressed }) => [styles.nudgeButton, { backgroundColor: colors.fill, opacity: pressed ? 0.7 : 1 }]}
               >
                 <Text style={[styles.nudgeButtonText, { color: colors.label }]}>No thanks</Text>
               </Pressable>
               <Pressable
+                accessibilityRole="button"
                 onPress={() => answerNudge(true)}
                 style={({ pressed }) => [styles.nudgeButton, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
               >
@@ -219,7 +222,7 @@ export default function ExploreScreen() {
             <View style={styles.empty}>
               <Icon name="tune" size={60} color={colors.tertiary} />
               <Text style={[styles.emptyTitle, { color: colors.secondary }]}>Nothing matches your filters</Text>
-              <Pressable onPress={() => router.push('/filters')} hitSlop={8}>
+              <Pressable accessibilityRole="button" onPress={() => router.push('/filters')} hitSlop={8}>
                 <Text style={[styles.emptyLink, { color: colors.accent }]}>Change filters</Text>
               </Pressable>
             </View>
@@ -240,6 +243,7 @@ export default function ExploreScreen() {
         onLayout={() => footer.current?.measureInWindow((_x, y) => setToastBottom(height - y + 8))}
       >
         <Pressable
+          accessibilityRole="button"
           onPress={() => showAnother()}
           disabled={entries.length === 0}
           style={({ pressed }) => [styles.tryButton, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
@@ -248,7 +252,11 @@ export default function ExploreScreen() {
           <Text style={[styles.tryText, { color: colors.onAccent }]}>{activity ? 'Show me another' : 'Show me something'}</Text>
         </Pressable>
         {activity && (
-          <View style={styles.swipeHint} accessibilityLabel="Or swipe the card: left to skip, right to save">
+          <View
+            style={styles.swipeHint}
+            accessible
+            accessibilityLabel="Or swipe the card: left to skip, right to save. With a screen reader, use the card's actions."
+          >
             <Icon name="arrow_back" size={16} color={colors.secondary} />
             <Text style={[styles.swipeHintText, { color: colors.secondary }]}>Skip</Text>
             <Text style={[styles.swipeHintText, { color: colors.tertiary }]}>swipe</Text>
@@ -260,11 +268,11 @@ export default function ExploreScreen() {
 
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.Button
-          accessibilityLabel="About"
+          accessibilityLabel="Settings"
           tintColor={colors.accent}
-          onPress={() => router.push('/about')}
+          onPress={() => router.push('/settings')}
         >
-          <Stack.Toolbar.Icon {...toolbarIcon('info.circle', AboutIcon)} />
+          <Stack.Toolbar.Icon {...toolbarIcon('gearshape', SettingsIcon)} />
         </Stack.Toolbar.Button>
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">
@@ -296,6 +304,9 @@ type CardProps = {
 function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onNotForMe, onSave, onDone }: CardProps) {
   const colors = useColors();
   const { driveTimes, entries, filters } = useAppState();
+  // With large text, four buttons in a row would squeeze their labels, so they go two by two.
+  const { fontScale } = useWindowDimensions();
+  const roomy = fontScale >= 1.3;
   const sub = subcategory(entry.subcategory);
   // Staying in leads with the home version, even for something that also has places nearby.
   const stayIn = filters.where === 'home';
@@ -341,7 +352,7 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onN
         >
           <Icon name="location_on" size={22} color={colors.accent} />
           <View style={styles.grow}>
-            <Text style={[styles.placeName, { color: colors.label }]} numberOfLines={1}>
+            <Text style={[styles.placeName, { color: colors.label }]} numberOfLines={2}>
               {nearest.place.name}
             </Text>
             {!!placeLine && <Text style={[styles.placeLine, { color: colors.secondary }]}>{placeLine}</Text>}
@@ -370,14 +381,15 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onN
       </View>
 
       <View style={styles.actions}>
-        <CardAction icon="block" label="Not for me" onPress={onNotForMe} tint={colors.red} />
-        <CardAction icon="bookmark" label={saved ? 'Saved' : 'Save'} onPress={onSave} tint={colors.accent} selected={saved} />
+        <CardAction icon="block" label="Not for me" onPress={onNotForMe} tint={colors.red} roomy={roomy} />
+        <CardAction icon="bookmark" label={saved ? 'Saved' : 'Save'} onPress={onSave} tint={colors.accent} selected={saved} roomy={roomy} />
         <CardAction
           icon="calendar_month"
           label={planned ? 'Planned' : 'Plan'}
           onPress={onPlan}
           tint={colors.blue}
           selected={planned}
+          roomy={roomy}
         />
         <CardAction
           icon={done ? 'check_circle' : 'radio_button_unchecked'}
@@ -385,6 +397,7 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onN
           onPress={onDone}
           tint={colors.done}
           selected={done}
+          roomy={roomy}
         />
       </View>
     </View>
@@ -402,7 +415,7 @@ function WayRow({ way, hint, onPress }: { way: Way; hint: string; onPress: () =>
     >
       <Icon name={way.icon} size={22} color={colors.accent} />
       <View style={styles.grow}>
-        <Text style={[styles.placeName, { color: colors.label }]} numberOfLines={1}>
+        <Text style={[styles.placeName, { color: colors.label }]} numberOfLines={2}>
           {way.title}
         </Text>
         <Text style={[styles.placeLine, { color: colors.secondary }]} numberOfLines={2}>
@@ -414,9 +427,9 @@ function WayRow({ way, hint, onPress }: { way: Way; hint: string; onPress: () =>
   );
 }
 
-type ActionProps = { icon: IconName; label: string; onPress: () => void; tint: string; selected?: boolean };
+type ActionProps = { icon: IconName; label: string; onPress: () => void; tint: string; selected?: boolean; roomy?: boolean };
 
-function CardAction({ icon, label, onPress, tint, selected }: ActionProps) {
+function CardAction({ icon, label, onPress, tint, selected, roomy }: ActionProps) {
   const color = selected ? readableOn(tint) : tint;
   return (
     <Pressable
@@ -425,11 +438,12 @@ function CardAction({ icon, label, onPress, tint, selected }: ActionProps) {
       accessibilityState={{ selected }}
       style={({ pressed }) => [
         styles.action,
+        roomy && styles.actionRoomy,
         { backgroundColor: selected ? tint : `${tint}1F`, opacity: pressed ? 0.7 : 1 },
       ]}
     >
       <Icon name={icon} size={20} color={color} />
-      <Text style={[styles.actionText, { color }]} numberOfLines={1}>
+      <Text style={[styles.actionText, { color }]} numberOfLines={2}>
         {label}
       </Text>
     </Pressable>
@@ -457,7 +471,7 @@ const styles = StyleSheet.create({
   placeLine: { fontSize: 13, marginTop: 2 },
   grow: { flex: 1 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 8 },
-  actions: { alignSelf: 'stretch', flexDirection: 'row', gap: 8, marginTop: 4 },
+  actions: { alignSelf: 'stretch', flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   action: {
     flex: 1,
     minHeight: 52,
@@ -465,8 +479,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 3,
+    paddingHorizontal: 4,
+    paddingVertical: 6,
   },
-  actionText: { fontSize: 12, fontWeight: '600' },
+  actionRoomy: { flexBasis: '40%' },
+  actionText: { fontSize: 12, fontWeight: '600', textAlign: 'center' },
   soon: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 12, borderRadius: 16 },
   nudge: { padding: 14, borderRadius: 16, gap: 12 },
   nudgeTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
