@@ -18,11 +18,14 @@ import {
   deleteCustomActivity,
   loadCustomActivities,
   loadDoneIds,
+  loadList,
   loadPlans,
   loadVisitedPlaceIds,
+  newId,
   planKey,
   readSetting,
   recordCompletion,
+  recordListChange,
   recordPlan,
   recordVisit,
   saveCustomActivity,
@@ -115,8 +118,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [recentPlaces, setRecentPlaces, reloadRecentPlaces] = usePersistedState<HomeLocation[]>('recentPlaces', []);
   const [doneIds, setDoneIds] = useState(loadDoneIds);
   const [visitedPlaceIds, setVisitedPlaceIds] = useState(loadVisitedPlaceIds);
-  const [saved, setSaved, reloadSaved] = usePersistedState<string[]>('savedIds', []);
-  const [hidden, setHidden, reloadHidden] = usePersistedState<string[]>('hiddenIds', []);
+  const [saved, setSaved] = useState(() => loadList('saved'));
+  const [hidden, setHidden] = useState(() => loadList('hidden'));
   const [allPlans, setAllPlans] = useState(loadPlans);
   const [customs, setCustoms] = useState(loadCustomActivities);
   const [filters, setFilters, reloadFilters] = usePersistedState<Filters>('exploreFilters', NO_FILTERS);
@@ -176,7 +179,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   );
   const addCustom = useCallback(
     (activity: Omit<CustomActivity, 'id' | 'cityId'>) => {
-      const created = { ...activity, id: `custom-${Date.now().toString(36)}`, cityId: city.id };
+      const created = { ...activity, id: `custom-${newId()}`, cityId: city.id };
       saveCustomActivity(created);
       setCustoms([...customs, created]);
       return customEntry(created);
@@ -275,24 +278,50 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     reloadHome();
     reloadTrip();
     reloadRecentPlaces();
-    reloadSaved();
-    reloadHidden();
+    setSaved(loadList('saved'));
+    setHidden(loadList('hidden'));
     reloadFilters();
     setDoneIds(loadDoneIds());
     setVisitedPlaceIds(loadVisitedPlaceIds());
     setAllPlans(loadPlans());
     setCustoms(loadCustomActivities());
-  }, [reloadHome, reloadTrip, reloadRecentPlaces, reloadSaved, reloadHidden, reloadFilters]);
+  }, [reloadHome, reloadTrip, reloadRecentPlaces, reloadFilters]);
 
   const isDone = useCallback((activityId: string) => doneIds.has(activityId), [doneIds]);
 
+  // Saved and hidden ideas are logs, so only real changes are recorded.
   const toggleSaved = useCallback(
-    (id: string) => setSaved(saved.includes(id) ? saved.filter((s) => s !== id) : [...saved, id]),
-    [saved, setSaved],
+    (id: string) => {
+      const on = !saved.includes(id);
+      recordListChange('saved', id, on);
+      setSaved(on ? [...saved, id] : saved.filter((s) => s !== id));
+    },
+    [saved],
   );
-  const save = useCallback((ids: string[]) => setSaved([...new Set([...saved, ...ids])]), [saved, setSaved]);
-  const hide = useCallback((id: string) => setHidden([...new Set([...hidden, id])]), [hidden, setHidden]);
-  const unhide = useCallback((id: string) => setHidden(hidden.filter((h) => h !== id)), [hidden, setHidden]);
+  const save = useCallback(
+    (ids: string[]) => {
+      const fresh = [...new Set(ids)].filter((id) => !saved.includes(id));
+      for (const id of fresh) recordListChange('saved', id, true);
+      if (fresh.length) setSaved([...saved, ...fresh]);
+    },
+    [saved],
+  );
+  const hide = useCallback(
+    (id: string) => {
+      if (hidden.includes(id)) return;
+      recordListChange('hidden', id, true);
+      setHidden([...hidden, id]);
+    },
+    [hidden],
+  );
+  const unhide = useCallback(
+    (id: string) => {
+      if (!hidden.includes(id)) return;
+      recordListChange('hidden', id, false);
+      setHidden(hidden.filter((h) => h !== id));
+    },
+    [hidden],
+  );
 
   return (
     <AppStateContext

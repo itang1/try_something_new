@@ -43,6 +43,7 @@ jest.mock('expo-sqlite/kv-store', () => ({
   default: {
     getItemSync: (key: string) => globalThis.fakeStorage.kv.get(key) ?? null,
     setItemSync: (key: string, value: string) => void globalThis.fakeStorage.kv.set(key, value),
+    removeItemSync: (key: string) => globalThis.fakeStorage.kv.delete(key),
   },
 }));
 
@@ -59,7 +60,7 @@ const VERSION_0_SCHEMA = `
   CREATE TABLE catalog_cities (id TEXT PRIMARY KEY, hash TEXT NOT NULL, json TEXT NOT NULL, at TEXT NOT NULL);
 `;
 
-const LATEST_VERSION = 6;
+const LATEST_VERSION = 7;
 
 /** Loads storage.ts against a database, the way the app does on launch. */
 function launch(fake: Fake): Storage {
@@ -197,18 +198,18 @@ describe('storage migrations', () => {
     const phone = firstVersionPhone();
     const storage = launch(phone);
 
-    expect(column(phone.db, 'SELECT activity_id FROM completion_events ORDER BY id')).toEqual([
+    expect(column(phone.db, 'SELECT activity_id FROM completion_events ORDER BY seq')).toEqual([
       'snow-sports',
       'new-cuisine',
       'pottery',
       'pottery',
     ]);
-    expect(column(phone.db, 'SELECT activity_id FROM place_visits ORDER BY id')).toEqual(['snow-sports', 'museums']);
-    expect(column(phone.db, 'SELECT entry_id FROM reflections ORDER BY id')).toEqual(['snow-sports', 'new-cuisine']);
-    expect(column(phone.db, 'SELECT entry_id FROM plans ORDER BY id')).toEqual(['new-cuisine', 'museums']);
+    expect(column(phone.db, 'SELECT activity_id FROM place_visits ORDER BY seq')).toEqual(['snow-sports', 'museums']);
+    expect(column(phone.db, 'SELECT entry_id FROM reflections ORDER BY seq')).toEqual(['snow-sports', 'new-cuisine']);
+    expect(column(phone.db, 'SELECT entry_id FROM plans ORDER BY seq')).toEqual(['new-cuisine', 'museums']);
     // Skiing and snowboarding were both saved, and are now one saved idea.
-    expect(setting(phone.kv, 'savedIds')).toEqual(['snow-sports', 'pottery']);
-    expect(setting(phone.kv, 'hiddenIds')).toEqual(['new-cuisine']);
+    expect(storage.loadList('saved')).toEqual(['snow-sports', 'pottery']);
+    expect(storage.loadList('hidden')).toEqual(['new-cuisine']);
     // Undoing still wins: pottery was done, then undone.
     expect(storage.loadDoneIds()).toEqual(new Set(['snow-sports', 'new-cuisine']));
   });
@@ -239,9 +240,9 @@ describe('storage migrations', () => {
     const phone = firstVersionPhone();
     const storage = launch(phone);
 
-    expect(column(phone.db, 'SELECT place_id FROM place_visits ORDER BY id')).toEqual(['osm:n42', 'pick:art-museum']);
-    expect(column(phone.db, 'SELECT place_id FROM reflections ORDER BY id')).toEqual(['osm:n42', null]);
-    expect(column(phone.db, 'SELECT place_id FROM plans ORDER BY id')).toEqual(['osm:w7', null]);
+    expect(column(phone.db, 'SELECT place_id FROM place_visits ORDER BY seq')).toEqual(['osm:n42', 'pick:art-museum']);
+    expect(column(phone.db, 'SELECT place_id FROM reflections ORDER BY seq')).toEqual(['osm:n42', null]);
+    expect(column(phone.db, 'SELECT place_id FROM plans ORDER BY seq')).toEqual(['osm:w7', null]);
     expect(count(phone.db, 'drive_times')).toBe(0);
     expect(storage.loadVisitedPlaceIds()).toEqual(new Set(['osm:n42', 'pick:art-museum']));
     expect(storage.loadPlans().get('columbus/new-cuisine')).toEqual({
@@ -262,7 +263,7 @@ describe('storage migrations', () => {
       insert(db, 'custom_activities', custom('c-calm', 'calm'));
       kv.set('savedIds', JSON.stringify(['skiing']));
     });
-    launch(phone);
+    const storage = launch(phone);
 
     expect(version(phone.db)).toBe(LATEST_VERSION);
     expect(all(phone.db, 'SELECT id, subcategory FROM custom_activities ORDER BY id')).toEqual([
@@ -272,7 +273,7 @@ describe('storage migrations', () => {
     expect(column(phone.db, 'SELECT activity_id FROM completion_events')).toEqual(['skiing']);
     expect(column(phone.db, 'SELECT earlier FROM completion_events')).toEqual([1]);
     expect(column(phone.db, 'SELECT place_id FROM place_visits')).toEqual(['osm:n42']);
-    expect(setting(phone.kv, 'savedIds')).toEqual(['skiing']);
+    expect(storage.loadList('saved')).toEqual(['skiing']);
   });
 
   it('changes nothing when an up-to-date phone opens the app again', () => {
@@ -297,8 +298,8 @@ describe('catalog aliases', () => {
     storage.recordReflection({ entryId: 'old-idea', placeId: 'osm:old', placeName: 'Old Hall', rating: 'loved', note: 'Great', photo: null });
     storage.recordPlan('columbus', 'old-idea', { placeId: 'osm:old', placeName: 'Old Hall', day: '2026-11-07' });
     storage.saveDriveTimes('origin', new Map([['osm:old', 10], ['osm:other', 12]]));
-    storage.writeSetting('savedIds', ['old-idea', 'new-idea', 'kept']);
-    storage.writeSetting('hiddenIds', ['osm:old']);
+    for (const id of ['old-idea', 'new-idea', 'kept']) storage.recordListChange('saved', id, true);
+    storage.recordListChange('hidden', 'osm:old', true);
     return { phone, storage };
   }
 
@@ -315,8 +316,8 @@ describe('catalog aliases', () => {
     expect(storage.loadPlans().get('columbus/new-idea')).toEqual(expect.objectContaining({ placeId: 'osm:new', day: '2026-11-07' }));
     // The renamed place's drive time is dropped so it is fetched again, and other places keep theirs.
     expect(column(phone.db, 'SELECT place_id FROM drive_times')).toEqual(['osm:other']);
-    expect(storage.readSetting('savedIds', [])).toEqual(['new-idea', 'kept']);
-    expect(storage.readSetting('hiddenIds', [])).toEqual(['osm:new']);
+    expect(storage.loadList('saved')).toEqual(['new-idea', 'kept']);
+    expect(storage.loadList('hidden')).toEqual(['osm:new']);
   });
 
   it('runs once per list of aliases', () => {
@@ -325,17 +326,17 @@ describe('catalog aliases', () => {
     // Something recorded under the old id after the move stays put until the list changes.
     storage.recordCompletion('old-idea', true);
     storage.applyAliases(aliases);
-    expect(column(phone.db, 'SELECT activity_id FROM completion_events ORDER BY id')).toEqual(['new-idea', 'old-idea']);
+    expect(column(phone.db, 'SELECT activity_id FROM completion_events ORDER BY seq')).toEqual(['new-idea', 'old-idea']);
 
     storage.applyAliases({ ...aliases, 'another-old': 'another-new' });
-    expect(column(phone.db, 'SELECT activity_id FROM completion_events ORDER BY id')).toEqual(['new-idea', 'new-idea']);
+    expect(column(phone.db, 'SELECT activity_id FROM completion_events ORDER BY seq')).toEqual(['new-idea', 'new-idea']);
   });
 
   it('runs again after a backup is restored, since the backup may use old ids', () => {
     const { storage } = phoneWithHistory();
     storage.applyAliases(aliases);
     const backup = storage.exportUserData();
-    backup.tables.completion_events.push({ activity_id: 'old-idea', done: 1, earlier: 0, at: '2026-01-01T00:00:00.000Z' });
+    backup.tables.completion_events!.push({ activity_id: 'old-idea', done: 1, earlier: 0, at: '2026-01-01T00:00:00.000Z' });
 
     storage.mergeUserData(backup);
     expect(storage.loadDoneIds()).toEqual(new Set(['new-idea', 'old-idea']));
@@ -363,5 +364,154 @@ describe('backups across versions', () => {
     expect(storage.mergeUserData(backup)).toBe(0);
     expect(storage.loadDoneIds()).toEqual(new Set(['snow-sports', 'new-cuisine', 'pottery']));
     expect(storage.loadPlans().get('columbus/hiking')).toEqual(expect.objectContaining({ placeName: 'Trailhead' }));
+  });
+});
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+const LOGS = ['completion_events', 'place_visits', 'reflections', 'plans'];
+
+describe('getting ready for sync (version 7)', () => {
+  it('gives every old row its own random id and this device, keeping the order', () => {
+    const phone = firstVersionPhone();
+    const storage = launch(phone);
+    const device = storage.deviceId();
+
+    expect(device).toMatch(UUID);
+    for (const table of LOGS) {
+      const ids = column(phone.db, `SELECT id FROM ${table}`);
+      expect(ids.every((id) => UUID.test(String(id)))).toBe(true);
+      expect(new Set(ids).size).toBe(ids.length);
+      expect(new Set(column(phone.db, `SELECT device_id FROM ${table}`))).toEqual(new Set([device]));
+    }
+    // seq is the old number, so the history keeps its order.
+    expect(column(phone.db, 'SELECT seq FROM completion_events ORDER BY seq')).toEqual([1, 2, 3, 4]);
+    // Custom activities keep the ids history already points at.
+    expect(column(phone.db, 'SELECT id FROM custom_activities ORDER BY id')).toEqual(['c-calm', 'c-craft', 'c-food', 'c-museum', 'c-outdoor', 'c-social']);
+  });
+
+  it('turns the saved and hidden lists into events and drops the old settings', () => {
+    const phone = firstVersionPhone();
+    launch(phone);
+
+    expect(all(phone.db, 'SELECT list, entry_id, added FROM list_events ORDER BY seq')).toEqual([
+      { list: 'saved', entry_id: 'snow-sports', added: 1 },
+      { list: 'saved', entry_id: 'pottery', added: 1 },
+      { list: 'hidden', entry_id: 'new-cuisine', added: 1 },
+    ]);
+    expect(phone.kv.has('savedIds')).toBe(false);
+    expect(phone.kv.has('hiddenIds')).toBe(false);
+  });
+
+  it('keeps the same device id across launches, and new rows get fresh ids', () => {
+    const phone = newPhone();
+    const first = launch(phone);
+    const device = first.deviceId();
+    first.recordCompletion('pottery', true);
+
+    const second = launch(phone);
+    second.recordCompletion('pottery', false);
+    expect(second.deviceId()).toBe(device);
+    const ids = column(phone.db, 'SELECT id FROM completion_events');
+    expect(ids).toHaveLength(2);
+    expect(ids[0]).not.toBe(ids[1]);
+    expect(second.newId()).toMatch(UUID);
+  });
+
+  it('records saving, unsaving and hiding as events', () => {
+    const storage = launch(newPhone());
+    storage.recordListChange('saved', 'pottery', true);
+    storage.recordListChange('saved', 'hiking', true);
+    storage.recordListChange('saved', 'pottery', false);
+    storage.recordListChange('hidden', 'bowling', true);
+
+    expect(storage.loadList('saved')).toEqual(['hiking']);
+    expect(storage.loadList('hidden')).toEqual(['bowling']);
+  });
+
+  it('gives a deleted custom activity a new seq, so sync sees the delete', () => {
+    const phone = newPhone();
+    const storage = launch(phone);
+    storage.saveCustomActivity({ id: 'custom-a', cityId: 'columbus', name: 'Kite', subcategory: 'play', duration: '1 hour', cost: 'Free' });
+    const { cursor } = storage.changesSince();
+
+    storage.deleteCustomActivity('custom-a');
+
+    expect(storage.loadCustomActivities()).toEqual([]);
+    expect(storage.changesSince(cursor).changes.custom_activities).toEqual([expect.objectContaining({ id: 'custom-a', deleted: 1 })]);
+    expect(count(phone.db, 'custom_activities')).toBe(1);
+  });
+});
+
+describe('sync', () => {
+  it('sends only what changed since the cursor', () => {
+    const storage = launch(newPhone());
+    storage.recordCompletion('pottery', true);
+    const first = storage.changesSince();
+    expect(first.changes.completion_events).toHaveLength(1);
+    expect(first.changes.completion_events[0]).not.toHaveProperty('seq');
+
+    storage.recordListChange('saved', 'hiking', true);
+    const second = storage.changesSince(first.cursor);
+    expect(second.changes.completion_events).toEqual([]);
+    expect(second.changes.list_events).toEqual([expect.objectContaining({ entry_id: 'hiking', added: 1 })]);
+    expect(storage.changesSince(second.cursor).changes.list_events).toEqual([]);
+  });
+
+  it('merges two phones by the latest event, and applying twice changes nothing', () => {
+    const phoneA = launch(newPhone());
+    phoneA.recordListChange('saved', 'pottery', true);
+    phoneA.recordCompletion('hiking', true);
+    const fromA = phoneA.changesSince().changes;
+
+    const phoneB = launch(newPhone());
+    expect(phoneB.applyChanges(fromA)).toBe(2);
+    expect(phoneB.applyChanges(fromA)).toBe(0);
+    expect(phoneB.loadList('saved')).toEqual(['pottery']);
+    expect(phoneB.loadDoneIds()).toEqual(new Set(['hiking']));
+
+    // A later unsave on B beats A's earlier save, even when B's row arrives at A after A's own.
+    const later = { ...fromA.list_events[0], id: phoneB.newId(), device_id: phoneB.deviceId(), added: 0, at: '2999-01-01T00:00:00.000Z' };
+    phoneA.applyChanges({ list_events: [later] });
+    expect(phoneA.loadList('saved')).toEqual([]);
+    // And an older row arriving late doesn't undo a newer one.
+    const older = { ...fromA.completion_events[0], id: phoneB.newId(), done: 0, at: '2000-01-01T00:00:00.000Z' };
+    phoneA.applyChanges({ completion_events: [older] });
+    expect(phoneA.loadDoneIds()).toEqual(new Set(['hiking']));
+  });
+
+  it('keeps the newer version of a custom activity', () => {
+    const storage = launch(newPhone());
+    const row = { id: 'custom-x', device_id: 'd', city_id: 'columbus', name: 'Old', subcategory: 'play', duration: 'hour', cost: 'free', deleted: 0 };
+    storage.applyChanges({ custom_activities: [{ ...row, at: '2026-01-02T00:00:00.000Z' }] });
+    expect(storage.applyChanges({ custom_activities: [{ ...row, name: 'Older', at: '2026-01-01T00:00:00.000Z' }] })).toBe(0);
+    expect(storage.applyChanges({ custom_activities: [{ ...row, name: 'New', at: '2026-01-03T00:00:00.000Z' }] })).toBe(1);
+    expect(storage.loadCustomActivities()).toEqual([expect.objectContaining({ id: 'custom-x', name: 'New' })]);
+  });
+});
+
+describe('backups from before version 7', () => {
+  it('adds rows without ids once, and turns the old saved and hidden lists into events', () => {
+    const storage = launch(newPhone());
+    storage.recordListChange('saved', 'kept-unsaved', true);
+    storage.recordListChange('saved', 'kept-unsaved', false);
+    const backup = {
+      schema: 6,
+      tables: {
+        completion_events: [
+          { activity_id: 'pottery', done: 1, earlier: 0, at: '2025-01-01T00:00:00.000Z' },
+          { activity_id: 'pottery', done: 1, earlier: 0, at: '2025-01-01T00:00:00.000Z' },
+        ],
+        plans: [{ entry_id: 'hiking', city_id: 'columbus', place_id: null, place_name: null, day: '2026-11-07', at: '2025-01-01T00:00:00.000Z' }],
+      },
+      settings: { savedIds: ['pottery', 'kept-unsaved'], hiddenIds: ['bowling'] },
+    } as unknown as Parameters<Storage['mergeUserData']>[0];
+
+    expect(storage.mergeUserData(backup)).toBe(2);
+    expect(storage.mergeUserData(backup)).toBe(0);
+    expect(storage.loadDoneIds()).toEqual(new Set(['pottery']));
+    expect(storage.loadPlans().get('columbus/hiking')).toEqual(expect.objectContaining({ day: '2026-11-07' }));
+    // Unsaving on this phone is a newer record than the old list, so it stays unsaved.
+    expect(storage.loadList('saved')).toEqual(['pottery']);
+    expect(storage.loadList('hidden')).toEqual(['bowling']);
   });
 });
