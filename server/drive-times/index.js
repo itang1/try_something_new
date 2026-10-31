@@ -7,6 +7,13 @@ const CACHE_SECONDS = 30 * 86400;
 export default {
   async fetch(request, env, ctx) {
     if (request.method !== 'POST') return new Response('POST only', { status: 405 });
+    // Per-IP limit so one client can't spend the whole OpenRouteService quota. Skipped where the binding isn't set up,
+    // like `wrangler dev` without it. Cache hits below are free, but counting them too keeps the check simple.
+    if (env.LIMITER) {
+      const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';
+      const { success } = await env.LIMITER.limit({ key: ip });
+      if (!success) return new Response('Too many requests', { status: 429, headers: { 'Retry-After': '60' } });
+    }
     const { origin, places } = await request.json().catch(() => ({}));
     const valid =
       Array.isArray(origin) &&

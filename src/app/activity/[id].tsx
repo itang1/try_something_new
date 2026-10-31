@@ -80,6 +80,7 @@ export default function ActivitySheet() {
             )}
           </View>
           <Pressable
+            accessibilityRole="button"
             onPress={() => inviteFriend(entry, planPlace ?? places[0]?.place ?? null, plan?.day ?? null)}
             hitSlop={8}
             accessibilityLabel="Invite a friend"
@@ -88,6 +89,7 @@ export default function ActivitySheet() {
             <Icon name={process.env.EXPO_OS === 'ios' ? 'ios_share' : 'share'} size={18} color={colors.secondary} />
           </Pressable>
           <Pressable
+            accessibilityRole="button"
             onPress={() => router.back()}
             hitSlop={8}
             accessibilityLabel="Close"
@@ -190,6 +192,7 @@ export default function ActivitySheet() {
                     </View>
                     {canReport && (
                       <Pressable
+                        accessibilityRole="button"
                         onPress={() => reportPlace(place, entry, city.name)}
                         hitSlop={8}
                         accessibilityLabel={`Report a problem with ${place.name}`}
@@ -209,6 +212,7 @@ export default function ActivitySheet() {
               })}
               {!showAll && places.length > FIRST_PLACES && (
                 <Pressable
+                  accessibilityRole="button"
                   onPress={() => setShowAll(true)}
                   style={({ pressed }) => [
                     styles.row,
@@ -244,7 +248,7 @@ export default function ActivitySheet() {
               )}
             </View>
             {sources.length > 0 && (
-              <Pressable onPress={() => router.push('/about')} accessibilityRole="link" hitSlop={8}>
+              <Pressable onPress={() => router.push('/settings')} accessibilityRole="link" hitSlop={8}>
                 <Text style={[styles.credit, { color: colors.tertiary }]}>
                   Places from {sources.map((c) => c.name).join(' and ')}
                 </Text>
@@ -290,6 +294,7 @@ export default function ActivitySheet() {
 
       <View style={[styles.footer, { borderTopColor: colors.separator, backgroundColor: colors.background }]}>
         <Pressable
+          accessibilityRole="button"
           onPress={() => {
             Haptics.selectionAsync();
             toggleSaved(entry.id);
@@ -307,6 +312,7 @@ export default function ActivitySheet() {
           </Text>
         </Pressable>
         <Pressable
+          accessibilityRole="checkbox"
           onPress={() => {
             Haptics.selectionAsync();
             markDone(entry);
@@ -356,6 +362,7 @@ function RowAction({ icon, label, accessibilityLabel, onPress }: RowActionProps)
   const colors = useColors();
   return (
     <Pressable
+      accessibilityRole="button"
       onPress={onPress}
       accessibilityLabel={accessibilityLabel}
       style={({ pressed }) => [styles.go, { backgroundColor: colors.accentSoft, opacity: pressed ? 0.6 : 1 }]}

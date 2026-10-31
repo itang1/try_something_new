@@ -32,10 +32,10 @@ export function LocationControl() {
     >
       <Icon name={icon} size={20} color={colors.accent} />
       <View style={styles.text}>
-        <Text style={[styles.title, { color: colors.accent }]} numberOfLines={1}>
+        <Text style={[styles.title, { color: colors.accent }]} numberOfLines={2}>
           {title}
         </Text>
-        <Text style={[styles.subtitle, { color: colors.secondary }]} numberOfLines={1}>
+        <Text style={[styles.subtitle, { color: colors.secondary }]} numberOfLines={2}>
           {subtitle}
         </Text>
       </View>
