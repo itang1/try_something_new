@@ -49,10 +49,9 @@ In order. These are the ones to start a thread on.
 1. [~] **Check off the at-home way** · UX · S. Being added to PR #6: one "Where to do it" list with "At home" as the first row, each row with the same checkmark.
 2. [?] **Count a specific craft toward "Try a new craft"** · Feature · S. Open question from PR #6. Recommendation: yes, doing any kind checks off the broad idea once, and the broad idea stops coming back as "try another".
 3. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
-4. [ ] **Test the storage migrations** · Architecture · M. Tests exist for days, drive and filters. The 6 SQLite migrations and alias moves have none, and a bad migration silently wipes someone's history.
-5. [ ] **Prepare the data for sync** · Architecture · M. Client-made UUIDs instead of `AUTOINCREMENT`, saved and hidden lists as events, a device id, and one storage module the sync code plugs into. Cheap now, painful after launch.
-6. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
-7. [ ] **Run expo-doctor in CI** · Architecture · S. Left over from the CI PR (#3). Add `npx expo-doctor` to `.github/workflows/ci.yml`.
+4. [ ] **Prepare the data for sync** · Architecture · M. Client-made UUIDs instead of `AUTOINCREMENT`, saved and hidden lists as events, a device id, and one storage module the sync code plugs into. Cheap now, painful after launch. The migration tests make the switch safer.
+5. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
+6. [ ] **Run expo-doctor in CI** · Architecture · S. Left over from the CI PR (#3). Add `npx expo-doctor` to `.github/workflows/ci.yml`.
 
 ## Now: before launch
 
@@ -60,7 +59,6 @@ In order. These are the ones to start a thread on.
 - [~] **Make the tabs easier to get around** · UX · M. PR #11: one header pattern on every tab (the tab's own filter or sort button, then Settings, always top right), Map filters for Not done, Done, Saved and kind, a Checklist grouped by kind with folding sections, and Memories opened from the progress card. Left: check it on a phone.
 - [~] **Protect the drive-time Worker** · Backend · S. Per-IP rate limiting is in, and goes live on the next `npx wrangler deploy`. Left: App Attest / Play Integrity once the app is in the stores.
 - [ ] **Check merged work on a real phone** · Launch · S. See Up next.
-- [ ] **Test the storage migrations** · Architecture · M. See Up next.
 - [ ] **Prepare the data for sync** · Architecture · M. See Up next.
 - [ ] **Build the Android widget** · Feature · M. From the old TODO.
 - [ ] **Run expo-doctor in CI** · Architecture · S. See Up next.
@@ -131,6 +129,7 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **Test the storage migrations** · Architecture. Each of the 6 SQLite migrations, catalog aliases and restoring a backup onto an upgraded phone, run against a real SQLite seeded like an older version of the app. A new migration needs a test here. PR #9.
 - [x] **One place for header buttons** · UX. Settings moved from the top left of Explore to the top right of every tab, including the Map. PR #11.
 - [x] **Do an accessibility pass** · UX. A role on every button, labels where the icon was the only cue, done states read on map rows, the swipe hint and memory ratings readable, and card buttons that go two by two with large text. Swipes already had buttons and screen reader actions. Still to check on a device. PR #8.
 - [x] **Set up EAS builds** · Launch. Development, preview and production profiles. PR #2.
