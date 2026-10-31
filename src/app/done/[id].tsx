@@ -91,6 +91,7 @@ export default function DoneSheet() {
                 const selected = place.id === placeId;
                 return (
                   <Pressable
+                    accessibilityRole="button"
                     key={place.id}
                     onPress={() => setPlaceId(selected ? null : place.id)}
                     accessibilityState={{ selected }}
@@ -148,7 +149,7 @@ export default function DoneSheet() {
             style={[styles.note, { backgroundColor: colors.fill, color: colors.label }]}
           />
           {photo ? (
-            <Pressable onPress={() => setPhoto(null)} accessibilityLabel="Remove photo" style={styles.photoWrap}>
+            <Pressable accessibilityRole="button" onPress={() => setPhoto(null)} accessibilityLabel="Remove photo" style={styles.photoWrap}>
               <Image source={{ uri: photo }} style={styles.photo} />
               <View style={[styles.removePhoto, { backgroundColor: colors.card }]}>
                 <Icon name="close" size={16} color={colors.label} />
@@ -156,6 +157,7 @@ export default function DoneSheet() {
             </Pressable>
           ) : (
             <Pressable
+              accessibilityRole="button"
               onPress={async () => setPhoto(await pickAndKeepPhoto())}
               style={({ pressed }) => [styles.addPhoto, { backgroundColor: colors.fill, opacity: pressed ? 0.7 : 1 }]}
             >
@@ -169,12 +171,14 @@ export default function DoneSheet() {
 
       <View style={[styles.footer, { borderTopColor: colors.separator, backgroundColor: colors.background }]}>
         <Pressable
+          accessibilityRole="button"
           onPress={() => router.back()}
           style={({ pressed }) => [styles.button, styles.skip, { backgroundColor: colors.card, opacity: pressed ? 0.7 : 1 }]}
         >
           <Text style={[styles.buttonText, { color: colors.label }]}>Skip</Text>
         </Pressable>
         <Pressable
+          accessibilityRole="button"
           onPress={save}
           style={({ pressed }) => [styles.button, styles.save, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
         >

@@ -102,6 +102,7 @@ export default function QuickStartScreen() {
 
       <View style={styles.actions}>
         <Pressable
+          accessibilityRole="button"
           onPress={next}
           style={({ pressed }) => [styles.primary, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
         >
@@ -109,7 +110,7 @@ export default function QuickStartScreen() {
             {picked.length ? (step === 0 ? `Next (${picked.length} done)` : `Save ${picked.length}`) : 'None of these'}
           </Text>
         </Pressable>
-        <Pressable onPress={finish} hitSlop={8} style={styles.secondary}>
+        <Pressable accessibilityRole="button" onPress={finish} hitSlop={8} style={styles.secondary}>
           <Text style={[styles.secondaryText, { color: colors.accent }]}>Skip</Text>
         </Pressable>
       </View>
