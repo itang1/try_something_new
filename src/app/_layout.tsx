@@ -100,7 +100,7 @@ function RootLayout() {
                 }}
               />
               <Stack.Screen
-                name="about"
+                name="settings"
                 options={{
                   presentation: 'formSheet',
                   sheetAllowedDetents: [0.75, 1],

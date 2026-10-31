@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import FiltersIcon from '@expo/material-symbols/tune.xml';
-import AboutIcon from '@expo/material-symbols/info.xml';
+import SettingsIcon from '@expo/material-symbols/settings.xml';
 import * as Haptics from 'expo-haptics';
 import { inSeason, LEVELS, otherWays, type Entry } from '@/data/catalog';
 import { addDays, dayKey, formatDay } from '@/data/days';
@@ -255,11 +255,11 @@ export default function ExploreScreen() {
 
       <Stack.Toolbar placement="left">
         <Stack.Toolbar.Button
-          accessibilityLabel="About"
+          accessibilityLabel="Settings"
           tintColor={colors.accent}
-          onPress={() => router.push('/about')}
+          onPress={() => router.push('/settings')}
         >
-          <Stack.Toolbar.Icon {...toolbarIcon('info.circle', AboutIcon)} />
+          <Stack.Toolbar.Icon {...toolbarIcon('gearshape', SettingsIcon)} />
         </Stack.Toolbar.Button>
       </Stack.Toolbar>
       <Stack.Toolbar placement="right">

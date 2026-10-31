@@ -164,7 +164,7 @@ export default function MapScreen() {
         )}
         {sources.length > 0 && (
           <Pressable
-            onPress={() => router.push('/about')}
+            onPress={() => router.push('/settings')}
             accessibilityRole="link"
             accessibilityLabel={`Place data ${sources.map((c) => c.notice).join(', ')}. Opens credits.`}
             hitSlop={8}

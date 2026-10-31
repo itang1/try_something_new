@@ -38,22 +38,18 @@ The single list of what to build next. It replaces `TODO.md`. Last refreshed 202
 
 In order. These are the ones to start a thread on.
 
-1. [~] **Add a Settings screen** · UX · M. Being done in this refresh's PR: weekend ideas on/off (there was no way to turn them off), backup, credits and version in one place. Left after it: miles or kilometers, privacy policy link, feedback.
-2. [~] **Protect the drive-time Worker** · Backend · S. This refresh's PR adds per-IP rate limiting and an app header check. Left: App Attest / Play Integrity once the app is in the stores. Needs `npx wrangler deploy` from your machine.
-3. [~] **Add a friendly crash screen** · Architecture · S. This refresh's PR adds an error boundary with a "Try again" button that reports to Sentry.
-4. [~] **Check off the at-home way** · UX · S. Being added to PR #6: one "Where to do it" list with "At home" as the first row, each row with the same checkmark.
-5. [?] **Count a specific craft toward "Try a new craft"** · Feature · S. Open question from PR #6. Recommendation: yes, doing any kind checks off the broad idea once, and the broad idea stops coming back as "try another".
-6. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, and the map credit label. None of these has run on a device yet. Needs you and a development build.
-7. [ ] **Do an accessibility pass** · UX · M. About 33 accessibility labels across 4,000 lines. Label chips, pins, rows and icon buttons, give every swipe a button, support large text. Reanimated already skips animations when Reduce Motion is on, so confetti and springs are fine.
-8. [ ] **Test the storage migrations** · Architecture · M. Tests exist for days, drive and filters. The 6 SQLite migrations and alias moves have none, and a bad migration silently wipes someone's history.
-9. [ ] **Prepare the data for sync** · Architecture · M. Client-made UUIDs instead of `AUTOINCREMENT`, saved and hidden lists as events, a device id, and one storage module the sync code plugs into. Cheap now, painful after launch.
-10. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
+1. [~] **Check off the at-home way** · UX · S. Being added to PR #6: one "Where to do it" list with "At home" as the first row, each row with the same checkmark.
+2. [?] **Count a specific craft toward "Try a new craft"** · Feature · S. Open question from PR #6. Recommendation: yes, doing any kind checks off the broad idea once, and the broad idea stops coming back as "try another".
+3. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, and the new Settings and crash screens. None of these has run on a device yet. Needs you and a development build.
+4. [ ] **Do an accessibility pass** · UX · M. About 33 accessibility labels across 4,000 lines. Label chips, pins, rows and icon buttons, give every swipe a button, support large text. Reanimated already skips animations when Reduce Motion is on, so confetti and springs are fine.
+5. [ ] **Test the storage migrations** · Architecture · M. Tests exist for days, drive and filters. The 6 SQLite migrations and alias moves have none, and a bad migration silently wipes someone's history.
+6. [ ] **Prepare the data for sync** · Architecture · M. Client-made UUIDs instead of `AUTOINCREMENT`, saved and hidden lists as events, a device id, and one storage module the sync code plugs into. Cheap now, painful after launch.
+7. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
 
 ## Now: before launch
 
-- [~] **Add a Settings screen** · UX · M. See Up next.
-- [~] **Protect the drive-time Worker** · Backend · S. See Up next.
-- [~] **Add a friendly crash screen** · Architecture · S. See Up next.
+- [~] **Add a Settings screen** · UX · M. Weekend ideas on/off, backup, credits and version are in. Left: miles or kilometers, a privacy policy link, and a feedback link.
+- [~] **Protect the drive-time Worker** · Backend · S. Per-IP rate limiting is in, and goes live on the next `npx wrangler deploy`. Left: App Attest / Play Integrity once the app is in the stores.
 - [ ] **Check merged work on a real phone** · Launch · S. See Up next.
 - [ ] **Do an accessibility pass** · UX · M. See Up next.
 - [ ] **Test the storage migrations** · Architecture · M. See Up next.
@@ -132,6 +128,9 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 - [x] **Export and import a backup** · Backend. One JSON file through the share sheet, merged on restore. PR #4.
 - [x] **Run lint, typecheck and validate on every pull request** · Architecture. PR #3.
 - [x] **Add crash reporting** · Architecture. Sentry, off unless a DSN is set, no personal data. PR #3.
+- [x] **Add a friendly crash screen** · Architecture. A "Try again" screen that also reports to Sentry. Roadmap refresh PR.
+- [x] **Settings screen, first version** · UX. Weekend ideas could be turned on but never off; now they can. Roadmap refresh PR.
+- [x] **Rate-limit the drive-time Worker** · Backend. 30 requests a minute per IP. Roadmap refresh PR.
 - [x] **First tests** · Architecture. Jest with tests for days, drive and filters. PR #3.
 - [x] **Retheme the app as Dusk Ember** · UX. New palette, open-door icon, WCAG AA text. PR #5.
 - [x] **iOS widget** · Feature. Daily idea through expo-widgets.

@@ -49,7 +49,7 @@ export const MATERIAL_SYMBOLS: Credit = {
   url: 'https://github.com/google/material-design-icons',
 };
 
-/** Every credit, in the order the About screen lists them. */
+/** Every credit, in the order the Settings screen lists them. */
 export const CREDITS: Credit[] = [OSM, OVERTURE, OPENROUTESERVICE, MATERIAL_SYMBOLS];
 
 /** Where a place's data came from, read from its id. Hand-picked places have none. */
@@ -59,7 +59,7 @@ export function placeSource(place: Pick<Place, 'id'>): Credit | null {
   return null;
 }
 
-/** The sources behind a list of places, in the About screen's order. */
+/** The sources behind a list of places, in the Settings screen's order. */
 export function placeSources(places: Pick<Place, 'id'>[]): Credit[] {
   const ids = new Set(places.map((p) => placeSource(p)?.id));
   return CREDITS.filter((c) => ids.has(c.id));
