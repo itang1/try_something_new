@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { addToCalendar } from '@/data/calendar';
 import { inviteFriend } from '@/data/invite';
 import { dayKey, formatDay, isWeekend, nextWeekendDay, upcomingDays } from '@/data/days';
+import { isHomeSpot, spotsFor } from '@/data/catalog';
 import { placesByDistance } from '@/data/drive';
 import { readSetting, writeSetting } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
@@ -17,17 +18,21 @@ export default function PlanSheet() {
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { city, origin, driveTimes, plans, setPlan, findEntry } = useAppState();
+  const { city, origin, driveTimes, plans, setPlan, findEntry, filters } = useAppState();
   const entry = findEntry(id);
   const existing = plans.get(id);
   const days = upcomingDays(DAYS_AHEAD);
   const keys = days.map(dayKey);
   const places = entry ? placesByDistance(entry, origin, driveTimes) : [];
+  const spots = entry ? spotsFor(entry, places.slice(0, 6).map((p) => p.place)) : [];
+  const home = spots.find((s) => isHomeSpot(s.id));
 
   const [day, setDay] = useState(() =>
     existing && keys.includes(existing.day) ? existing.day : dayKey(nextWeekendDay()),
   );
-  const [placeId, setPlaceId] = useState<string | null>(existing?.placeId ?? places[0]?.place.id ?? null);
+  const [placeId, setPlaceId] = useState<string | null>(
+    existing?.placeId ?? (filters.where === 'home' ? home?.id : undefined) ?? spots.find((s) => s !== home)?.id ?? home?.id ?? null,
+  );
   const [calendar, setCalendar] = useState(() => readSetting('planAddsToCalendar', true));
 
   if (!entry) return null;
@@ -99,11 +104,11 @@ export default function PlanSheet() {
           })}
         </ScrollView>
 
-        {places.length > 1 && (
+        {spots.length > 1 && (
           <>
             <Text style={[styles.question, { color: colors.label }]}>Where?</Text>
             <View style={styles.chips}>
-              {places.slice(0, 6).map(({ place }) => {
+              {spots.map((place) => {
                 const selected = place.id === placeId;
                 return (
                   <Pressable

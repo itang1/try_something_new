@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { LEVELS, otherWays, seasonLabel } from '@/data/catalog';
+import { AT_HOME, entryHint, homeSpotId, kindsOf, LEVELS, otherWays, seasonLabel } from '@/data/catalog';
 import { formatDay } from '@/data/days';
 import { openDirections, searchNearby } from '@/data/directions';
 import { inviteFriend } from '@/data/invite';
@@ -13,6 +13,7 @@ import { useAppState } from '@/state/app-state';
 import { useMarkDone } from '@/state/use-mark-done';
 import { subcategory, useColors } from '@/theme';
 import { GradientIcon, Icon } from '@/components/icon';
+import type { IconName } from '@/icons/paths';
 
 // Big cities have hundreds of parks or restaurants for one activity, so the list starts with the closest.
 const FIRST_PLACES = 20;
@@ -21,7 +22,7 @@ export default function ActivitySheet() {
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { city, origin, driveTimes, isDone, savedIds, toggleSaved, visitedPlaceIds, toggleVisited, plans, findEntry, removeCustom } =
+  const { city, entries, origin, driveTimes, isDone, savedIds, toggleSaved, visitedPlaceIds, toggleVisited, plans, findEntry, removeCustom } =
     useAppState();
   const markDone = useMarkDone();
   const entry = findEntry(id);
@@ -43,7 +44,18 @@ export default function ActivitySheet() {
   const plan = plans.get(entry.id);
   const planPlace = plan && places.find(({ place }) => place.id === plan.placeId)?.place;
   const ways = otherWays(entry);
+  const homeWay = ways.find((w) => w.kind === 'home');
+  const hostWay = ways.find((w) => w.kind === 'host');
+  const searchWay = ways.find((w) => w.kind === 'search');
+  // Doing it at home checks off like a place of its own.
+  const homeId = homeSpotId(entry.activityId);
+  const hasSpots = !!homeWay || places.length > 0 || !!searchWay;
+  const placeCount = `${places.length} ${places.length === 1 ? 'place' : 'places'} in ${city.name}`;
+  const spotsTitle =
+    homeWay && places.length ? `At home or ${placeCount}` : places.length ? placeCount : 'Where to do it';
   const sources = placeSources(places.map(({ place }) => place));
+  const kinds = kindsOf(entries, entry);
+  const parent = entry.parent ? findEntry(entry.parent) : undefined;
 
   return (
     <View style={styles.screen}>
@@ -60,6 +72,11 @@ export default function ActivitySheet() {
             </Text>
             {entry.months && (
               <Text style={[styles.meta, { color: colors.secondary }]}>In season {seasonLabel(entry.months)}</Text>
+            )}
+            {parent && (
+              <Pressable onPress={() => router.push(`/activity/${parent.id}`)} accessibilityRole="link" hitSlop={6}>
+                <Text style={[styles.meta, { color: colors.accent }]}>One way to {parent.name[0].toLowerCase() + parent.name.slice(1)}</Text>
+              </Pressable>
             )}
           </View>
           <Pressable
@@ -99,13 +116,58 @@ export default function ActivitySheet() {
           <Icon name="chevron_right" size={20} color={colors.tertiary} />
         </Pressable>
 
-        {places.length > 0 && (
+        {kinds.length > 0 && (
+          <>
+            <Text style={[styles.section, { color: colors.secondary }]}>Pick one to try</Text>
+            <View style={[styles.list, { backgroundColor: colors.card }]}>
+              {kinds.map((kind, i) => (
+                <Pressable
+                  key={kind.id}
+                  onPress={() => router.push(`/activity/${kind.id}`)}
+                  accessibilityRole="button"
+                  style={({ pressed }) => [
+                    styles.row,
+                    i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
+                    { opacity: pressed ? 0.6 : 1 },
+                  ]}
+                >
+                  <GradientIcon icon={kind.icon} subcategoryId={kind.subcategory} size={32} shape="tile" />
+                  <View style={styles.grow}>
+                    <Text style={[styles.placeName, { color: colors.label }]}>{kind.name}</Text>
+                    <Text style={[styles.meta, { color: colors.secondary }]} numberOfLines={1}>
+                      {(kind.places.length || kind.search) && kind.home ? 'Out or at home' : entryHint(kind)}
+                    </Text>
+                  </View>
+                  {isDone(kind.id) && <Icon name="check_circle" size={20} color={colors.done} />}
+                  <Icon name="chevron_right" size={20} color={colors.tertiary} />
+                </Pressable>
+              ))}
+            </View>
+          </>
+        )}
+
+        {hasSpots && (
           <>
             <Text style={[styles.section, { color: colors.secondary }]}>
-              {places.length} {places.length === 1 ? 'place' : 'places'} in {city.name}
+              {spotsTitle}
               {visitedCount > 0 && places.length > 1 ? ` · ${visitedCount} visited` : ''}
             </Text>
             <View style={[styles.list, { backgroundColor: colors.card }]}>
+              {/* Home comes first: one row that would otherwise sink under a long list of places. */}
+              {homeWay && (
+                <View style={styles.row}>
+                  <VisitCheck
+                    checked={visitedPlaceIds.has(homeId)}
+                    label="Did it at home"
+                    onPress={() => toggleVisited(homeId, entry.activityId)}
+                  />
+                  <View style={styles.grow}>
+                    <Text style={[styles.placeName, { color: colors.label }]}>{AT_HOME}</Text>
+                    <Text style={[styles.meta, { color: colors.secondary }]}>{homeWay.detail}</Text>
+                  </View>
+                  <Icon name="cottage" size={20} color={colors.tertiary} />
+                </View>
+              )}
               {(showAll ? places : places.slice(0, FIRST_PLACES)).map(({ place, minutes }, i) => {
                 const visited = visitedPlaceIds.has(place.id);
                 const meta = [
@@ -118,25 +180,10 @@ export default function ActivitySheet() {
                     key={place.id}
                     style={[
                       styles.row,
-                      i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
+                      (i > 0 || homeWay) && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
                     ]}
                   >
-                    <Pressable
-                      onPress={() => {
-                        Haptics.selectionAsync();
-                        toggleVisited(place.id, entry.activityId);
-                      }}
-                      hitSlop={10}
-                      accessibilityRole="checkbox"
-                      accessibilityState={{ checked: visited }}
-                      accessibilityLabel={`Been to ${place.name}`}
-                    >
-                      <Icon
-                        name={visited ? 'check_circle' : 'radio_button_unchecked'}
-                        size={24}
-                        color={visited ? colors.done : colors.tertiary}
-                      />
-                    </Pressable>
+                    <VisitCheck checked={visited} label={`Been to ${place.name}`} onPress={() => toggleVisited(place.id, entry.activityId)} />
                     <View style={styles.grow}>
                       <Text style={[styles.placeName, { color: colors.label }]}>{place.name}</Text>
                       {meta.length > 0 && (
@@ -154,18 +201,12 @@ export default function ActivitySheet() {
                         <Icon name="flag" size={18} color={colors.tertiary} />
                       </Pressable>
                     )}
-                    <Pressable
-                      accessibilityRole="button"
-                      onPress={() => openDirections(place)}
+                    <RowAction
+                      icon="directions"
+                      label="Go"
                       accessibilityLabel={`Directions to ${place.name}`}
-                      style={({ pressed }) => [
-                        styles.go,
-                        { backgroundColor: colors.accentSoft, opacity: pressed ? 0.6 : 1 },
-                      ]}
-                    >
-                      <Icon name="directions" size={18} color={colors.accent} />
-                      <Text style={[styles.goText, { color: colors.accent }]}>Go</Text>
-                    </Pressable>
+                      onPress={() => openDirections(place)}
+                    />
                   </View>
                 );
               })}
@@ -182,6 +223,29 @@ export default function ActivitySheet() {
                   <Icon name="keyboard_arrow_down" size={20} color={colors.accent} />
                 </Pressable>
               )}
+              {/* Venues open map data can't list, like paint-your-own pottery studios. */}
+              {searchWay && (
+                <View
+                  style={[
+                    styles.row,
+                    (homeWay || places.length > 0) && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
+                  ]}
+                >
+                  <Icon name="search" size={24} color={colors.accent} />
+                  <View style={styles.grow}>
+                    <Text style={[styles.placeName, { color: colors.label }]}>
+                      {places.length ? 'Find another near you' : searchWay.title}
+                    </Text>
+                    <Text style={[styles.meta, { color: colors.secondary }]}>{searchWay.detail}</Text>
+                  </View>
+                  <RowAction
+                    icon="search"
+                    label="Search"
+                    accessibilityLabel={`Search maps for ${entry.search}`}
+                    onPress={() => searchNearby(entry.search!, origin)}
+                  />
+                </View>
+              )}
             </View>
             {sources.length > 0 && (
               <Pressable onPress={() => router.push('/settings')} accessibilityRole="link" hitSlop={8}>
@@ -193,49 +257,23 @@ export default function ActivitySheet() {
           </>
         )}
 
-        {ways.length > 0 && (
+        {hostWay && (
           <>
-            <Text style={[styles.section, { color: colors.secondary }]}>
-              {places.length ? 'Other ways' : 'Ways to try it'}
-            </Text>
+            <Text style={[styles.section, { color: colors.secondary }]}>With friends</Text>
             <View style={[styles.list, { backgroundColor: colors.card }]}>
-              {ways.map((way, i) => {
-                const action =
-                  way.kind === 'search'
-                    ? { label: 'Search', icon: 'search' as const, onPress: () => searchNearby(entry.search!, origin) }
-                    : way.kind === 'host'
-                      ? { label: 'Invite', icon: 'person_add' as const, onPress: () => inviteFriend(entry, null, plan?.day ?? null) }
-                      : null;
-                return (
-                  <View
-                    key={way.kind}
-                    style={[
-                      styles.row,
-                      i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
-                    ]}
-                  >
-                    <Icon name={way.icon} size={24} color={colors.accent} />
-                    <View style={styles.grow}>
-                      <Text style={[styles.placeName, { color: colors.label }]}>{way.title}</Text>
-                      <Text style={[styles.meta, { color: colors.secondary }]}>{way.detail}</Text>
-                    </View>
-                    {action && (
-                      <Pressable
-                        accessibilityRole="button"
-                        onPress={action.onPress}
-                        accessibilityLabel={`${action.label}: ${way.title}`}
-                        style={({ pressed }) => [
-                          styles.go,
-                          { backgroundColor: colors.accentSoft, opacity: pressed ? 0.6 : 1 },
-                        ]}
-                      >
-                        <Icon name={action.icon} size={18} color={colors.accent} />
-                        <Text style={[styles.goText, { color: colors.accent }]}>{action.label}</Text>
-                      </Pressable>
-                    )}
-                  </View>
-                );
-              })}
+              <View style={styles.row}>
+                <Icon name={hostWay.icon} size={24} color={colors.accent} />
+                <View style={styles.grow}>
+                  <Text style={[styles.placeName, { color: colors.label }]}>{hostWay.title}</Text>
+                  <Text style={[styles.meta, { color: colors.secondary }]}>{hostWay.detail}</Text>
+                </View>
+                <RowAction
+                  icon="person_add"
+                  label="Invite"
+                  accessibilityLabel={`Invite: ${hostWay.title}`}
+                  onPress={() => inviteFriend(entry, null, plan?.day ?? null)}
+                />
+              </View>
             </View>
           </>
         )}
@@ -293,6 +331,45 @@ export default function ActivitySheet() {
         </Pressable>
       </View>
     </View>
+  );
+}
+
+function VisitCheck({ checked, label, onPress }: { checked: boolean; label: string; onPress: () => void }) {
+  const colors = useColors();
+  return (
+    <Pressable
+      onPress={() => {
+        Haptics.selectionAsync();
+        onPress();
+      }}
+      hitSlop={10}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked }}
+      accessibilityLabel={label}
+    >
+      <Icon
+        name={checked ? 'check_circle' : 'radio_button_unchecked'}
+        size={24}
+        color={checked ? colors.done : colors.tertiary}
+      />
+    </Pressable>
+  );
+}
+
+type RowActionProps = { icon: IconName; label: string; accessibilityLabel: string; onPress: () => void };
+
+function RowAction({ icon, label, accessibilityLabel, onPress }: RowActionProps) {
+  const colors = useColors();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      accessibilityLabel={accessibilityLabel}
+      style={({ pressed }) => [styles.go, { backgroundColor: colors.accentSoft, opacity: pressed ? 0.6 : 1 }]}
+    >
+      <Icon name={icon} size={18} color={colors.accent} />
+      <Text style={[styles.goText, { color: colors.accent }]}>{label}</Text>
+    </Pressable>
   );
 }
 
