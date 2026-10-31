@@ -98,4 +98,4 @@ npx eas-cli@latest env:set --name GOOGLE_MAPS_ANDROID_API_KEY --value <key> \
   --environment development --environment preview --environment production --visibility sensitive
 ```
 
-The Maps key ships inside the app, so its protection is a restriction in Google Cloud to the package `com.pastureraised.trysomethingnew` and the app's SHA-1 fingerprints (`npx eas-cli@latest credentials` shows them), not secrecy.
+The Maps key ships inside the app, so its protection is a restriction in Google Cloud to the package `com.poodlestrategy.trysomethingnew` and the app's SHA-1 fingerprints (`npx eas-cli@latest credentials` shows them), not secrecy.
