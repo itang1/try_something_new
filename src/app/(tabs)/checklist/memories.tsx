@@ -81,7 +81,7 @@ function Stats({ items }: { items: Item[] }) {
       {kinds.length > 1 && (
         <View style={[styles.kinds, { backgroundColor: colors.card }]}>
           {kinds.map(({ id, count }) => (
-            <View key={id} style={styles.kindRow}>
+            <View key={id} style={styles.kindRow} accessible accessibilityLabel={`${subcategory(id).label}, ${count}`}>
               <Text style={[styles.kindLabel, { color: colors.label }]} numberOfLines={1}>
                 {subcategory(id).label}
               </Text>
@@ -235,6 +235,7 @@ function MemoryCard({ item }: { item: Item }) {
         {rating && (
           <View
             style={[styles.rating, { backgroundColor: item.rating === 'loved' ? colors.accentSoft : colors.fill }]}
+            accessible
             accessibilityLabel={rating.label}
           >
             <Icon
@@ -246,7 +247,14 @@ function MemoryCard({ item }: { item: Item }) {
         )}
       </View>
       {!!item.note && <Text style={[styles.note, { color: colors.label }]}>{item.note}</Text>}
-      {!!item.photo && <Image source={{ uri: keptPhotoUri(item.photo) }} style={styles.photo} />}
+      {!!item.photo && (
+        <Image
+          source={{ uri: keptPhotoUri(item.photo) }}
+          style={styles.photo}
+          accessible
+          accessibilityLabel={`Your photo from ${item.entry.name}`}
+        />
+      )}
     </View>
   );
 }
@@ -262,10 +270,10 @@ const styles = StyleSheet.create({
   tileLabel: { fontSize: 13, fontWeight: '600' },
   kinds: { borderRadius: 16, padding: 14, gap: 10 },
   kindRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  kindLabel: { width: 110, fontSize: 14, fontWeight: '600' },
+  kindLabel: { width: '35%', fontSize: 14, fontWeight: '600' },
   kindTrack: { flex: 1, height: 8, borderRadius: 4, overflow: 'hidden' },
   kindBar: { height: 8, borderRadius: 4 },
-  kindCount: { width: 24, fontSize: 14, textAlign: 'right' },
+  kindCount: { minWidth: 24, fontSize: 14, textAlign: 'right' },
   chips: { gap: 8, paddingVertical: 2 },
   section: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase', marginTop: 14, marginLeft: 4 },
   card: { borderRadius: 18, padding: 14, gap: 10 },

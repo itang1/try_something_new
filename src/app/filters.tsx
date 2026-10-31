@@ -43,6 +43,7 @@ export default function FiltersSheet() {
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.label }]}>Filters</Text>
           <Pressable
+            accessibilityRole="button"
             onPress={() => router.back()}
             hitSlop={8}
             accessibilityLabel="Close"
@@ -173,6 +174,7 @@ export default function FiltersSheet() {
                     {e.name}
                   </Text>
                   <Pressable
+                    accessibilityRole="button"
                     onPress={() => {
                       Haptics.selectionAsync();
                       unhide(e.id);
@@ -195,12 +197,14 @@ export default function FiltersSheet() {
 
       <View style={[styles.footer, { borderTopColor: colors.separator, backgroundColor: colors.background }]}>
         <Pressable
+          accessibilityRole="button"
           onPress={() => update(NO_FILTERS)}
           style={({ pressed }) => [styles.button, styles.grow, { backgroundColor: colors.card, opacity: pressed ? 0.7 : 1 }]}
         >
           <Text style={[styles.buttonText, { color: colors.label }]}>Reset</Text>
         </Pressable>
         <Pressable
+          accessibilityRole="button"
           onPress={() => router.back()}
           style={({ pressed }) => [
             styles.button,

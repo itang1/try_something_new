@@ -48,18 +48,16 @@ In order. These are the ones to start a thread on.
 
 1. [~] **Check off the at-home way** · UX · S. Being added to PR #6: one "Where to do it" list with "At home" as the first row, each row with the same checkmark.
 2. [?] **Count a specific craft toward "Try a new craft"** · Feature · S. Open question from PR #6. Recommendation: yes, doing any kind checks off the broad idea once, and the broad idea stops coming back as "try another".
-3. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, and the new Settings and crash screens. None of these has run on a device yet. Needs you and a development build.
-4. [ ] **Do an accessibility pass** · UX · M. About 33 accessibility labels across 4,000 lines. Label chips, pins, rows and icon buttons, give every swipe a button, support large text. Reanimated already skips animations when Reduce Motion is on, so confetti and springs are fine.
-5. [ ] **Prepare the data for sync** · Architecture · M. Client-made UUIDs instead of `AUTOINCREMENT`, saved and hidden lists as events, a device id, and one storage module the sync code plugs into. Cheap now, painful after launch. The migration tests make the switch safer.
-6. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
-7. [ ] **Run expo-doctor in CI** · Architecture · S. Left over from the CI PR (#3). Add `npx expo-doctor` to `.github/workflows/ci.yml`.
+3. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
+4. [ ] **Prepare the data for sync** · Architecture · M. Client-made UUIDs instead of `AUTOINCREMENT`, saved and hidden lists as events, a device id, and one storage module the sync code plugs into. Cheap now, painful after launch. The migration tests make the switch safer.
+5. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
+6. [ ] **Run expo-doctor in CI** · Architecture · S. Left over from the CI PR (#3). Add `npx expo-doctor` to `.github/workflows/ci.yml`.
 
 ## Now: before launch
 
 - [~] **Add a Settings screen** · UX · M. Weekend ideas on/off, backup, credits and version are in. Left: miles or kilometers, a privacy policy link, and a feedback link.
 - [~] **Protect the drive-time Worker** · Backend · S. Per-IP rate limiting is in, and goes live on the next `npx wrangler deploy`. Left: App Attest / Play Integrity once the app is in the stores.
 - [ ] **Check merged work on a real phone** · Launch · S. See Up next.
-- [ ] **Do an accessibility pass** · UX · M. See Up next.
 - [ ] **Prepare the data for sync** · Architecture · M. See Up next.
 - [ ] **Build the Android widget** · Feature · M. From the old TODO.
 - [ ] **Run expo-doctor in CI** · Architecture · S. See Up next.
@@ -130,6 +128,7 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 ## Done
 
 - [x] **Test the storage migrations** · Architecture. Each of the 6 SQLite migrations, catalog aliases and restoring a backup onto an upgraded phone, run against a real SQLite seeded like an older version of the app. A new migration needs a test here. PR #9.
+- [x] **Do an accessibility pass** · UX. A role on every button, labels where the icon was the only cue, done states read on map rows, the swipe hint and memory ratings readable, and card buttons that go two by two with large text. Swipes already had buttons and screen reader actions. Still to check on a device. PR #8.
 - [x] **Set up EAS builds** · Launch. Development, preview and production profiles. PR #2.
 - [x] **Add a Google Maps key for Android** · Launch. From the environment, never committed. PR #2.
 - [x] **Credit OpenStreetMap and Overture in the app** · Launch. About screen, map label and activity sheet. PR #1.

@@ -54,6 +54,7 @@ export default function PlanSheet() {
             </Text>
           </View>
           <Pressable
+            accessibilityRole="button"
             onPress={() => router.back()}
             hitSlop={8}
             accessibilityLabel="Close"
@@ -106,6 +107,7 @@ export default function PlanSheet() {
                 const selected = place.id === placeId;
                 return (
                   <Pressable
+                    accessibilityRole="button"
                     key={place.id}
                     onPress={() => setPlaceId(place.id)}
                     accessibilityState={{ selected }}
@@ -158,6 +160,7 @@ export default function PlanSheet() {
       <View style={[styles.footer, { borderTopColor: colors.separator, backgroundColor: colors.background }]}>
         {existing && (
           <Pressable
+            accessibilityRole="button"
             onPress={() => {
               Haptics.selectionAsync();
               setPlan(entry.id, null);
@@ -169,6 +172,7 @@ export default function PlanSheet() {
           </Pressable>
         )}
         <Pressable
+          accessibilityRole="button"
           onPress={save}
           style={({ pressed }) => [
             styles.button,
