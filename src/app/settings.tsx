@@ -1,7 +1,19 @@
 import { useState } from 'react';
-import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, useColorScheme, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Constants from 'expo-constants';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import {
+  accountsAvailable,
+  deleteAccount,
+  describeSession,
+  lastSyncedAt,
+  signIn,
+  signOut,
+  syncNow,
+  useSession,
+  type Provider,
+} from '@/data/account';
 import { restoreBackup, shareBackup } from '@/data/backup';
 import { CREDITS, openCredit } from '@/data/credits';
 import { allowNudges } from '@/data/nudge';
@@ -47,6 +59,61 @@ export default function SettingsSheet() {
     }
   };
 
+  const session = useSession();
+  const [syncedAt, setSyncedAt] = useState(lastSyncedAt);
+
+  const runSync = async () => {
+    const { pulled } = await syncNow();
+    setSyncedAt(lastSyncedAt());
+    if (pulled) reload();
+    return pulled;
+  };
+
+  const startSignIn = (provider: Provider) =>
+    run(async () => {
+      if (!(await signIn(provider))) return;
+      const pulled = await runSync();
+      showToast(pulled ? `Signed in and added ${pulled} ${pulled === 1 ? 'item' : 'items'}` : 'Signed in and backed up');
+    });
+
+  const syncAgain = () =>
+    run(async () => {
+      const pulled = await runSync();
+      showToast(pulled ? `Added ${pulled} ${pulled === 1 ? 'item' : 'items'} from your account` : 'Up to date');
+    });
+
+  const confirmSignOut = () =>
+    Alert.alert('Sign out?', 'Everything stays on this phone. Changes made while signed out won’t sync.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign out',
+        onPress: () =>
+          run(async () => {
+            await signOut();
+            setSyncedAt(null);
+          }),
+      },
+    ]);
+
+  const confirmDelete = () =>
+    Alert.alert(
+      'Delete your account?',
+      'This removes your account and everything backed up to it. This phone keeps its own copy. It can’t be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete account',
+          style: 'destructive',
+          onPress: () =>
+            run(async () => {
+              await deleteAccount();
+              setSyncedAt(null);
+              showToast('Account deleted');
+            }),
+        },
+      ],
+    );
+
   const restore = () =>
     run(async () => {
       const added = await restoreBackup();
@@ -87,6 +154,47 @@ export default function SettingsSheet() {
         </View>
       </View>
 
+      {accountsAvailable() && session !== undefined && (
+        <>
+          <Text style={[styles.section, { color: colors.secondary }]}>Back up and sync</Text>
+          {session ? (
+            <View style={[styles.list, { backgroundColor: colors.card }]}>
+              <View style={styles.row}>
+                <Icon name="person" size={22} color={colors.accent} />
+                <View style={styles.grow}>
+                  <Text style={[styles.name, { color: colors.label }]}>Signed in</Text>
+                  <Text style={[styles.use, { color: colors.secondary }]}>{describeSession(session)}</Text>
+                </View>
+              </View>
+              <ActionRow
+                icon="sync"
+                title="Sync now"
+                detail={syncedAt ? `Last synced ${formatSynced(syncedAt)}` : 'Not synced yet'}
+                onPress={syncAgain}
+                disabled={busy}
+                divider
+              />
+              <ActionRow icon="logout" title="Sign out" detail="Keeps everything on this phone" onPress={confirmSignOut} disabled={busy} divider />
+              <ActionRow
+                icon="delete"
+                title="Delete account"
+                detail="Removes your account and its backup"
+                onPress={confirmDelete}
+                disabled={busy}
+                divider
+              />
+            </View>
+          ) : (
+            <SignInButtons onSignIn={startSignIn} disabled={busy} />
+          )}
+          <Text style={[styles.footnote, { color: colors.secondary }]}>
+            {session
+              ? 'Your list, plans and memories sync with your other phones. Photos stay on each phone for now.'
+              : 'Optional. Sign in to back up your list, plans and memories and keep them the same on your other phones. The app works the same without an account.'}
+          </Text>
+        </>
+      )}
+
       <Text style={[styles.section, { color: colors.secondary }]}>Your data</Text>
       <View style={[styles.list, { backgroundColor: colors.card }]}>
         <ActionRow
@@ -106,7 +214,9 @@ export default function SettingsSheet() {
         />
       </View>
       <Text style={[styles.footnote, { color: colors.secondary }]}>
-        Everything stays on this phone. A backup is the way to move it to a new one.
+        {session
+          ? 'A backup file also keeps your photos, which syncing doesn’t yet.'
+          : 'Everything stays on this phone. A backup is the way to move it to a new one.'}
       </Text>
 
       <Text style={[styles.section, { color: colors.secondary }]}>Data and credits</Text>
@@ -162,6 +272,50 @@ export default function SettingsSheet() {
   );
 }
 
+function formatSynced(iso: string): string {
+  const at = new Date(iso);
+  const time = at.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  return at.toDateString() === new Date().toDateString() ? `today at ${time}` : `${at.toLocaleDateString()} at ${time}`;
+}
+
+/** Apple's own button on iPhone, as Apple asks, and plain matching buttons elsewhere. */
+function SignInButtons({ onSignIn, disabled }: { onSignIn: (provider: Provider) => void; disabled: boolean }) {
+  const colors = useColors();
+  const dark = useColorScheme() === 'dark';
+  const button = (provider: Provider, label: string) => (
+    <Pressable
+      key={provider}
+      onPress={() => onSignIn(provider)}
+      disabled={disabled}
+      accessibilityRole="button"
+      style={({ pressed }) => [
+        styles.signIn,
+        { backgroundColor: dark ? '#fff' : '#000', opacity: pressed || disabled ? 0.6 : 1 },
+      ]}
+    >
+      <Text style={[styles.signInText, { color: dark ? '#000' : '#fff' }]}>{label}</Text>
+    </Pressable>
+  );
+  return (
+    <View style={[styles.list, styles.signInList, { backgroundColor: colors.card }]}>
+      {Platform.OS === 'ios' ? (
+        <AppleAuthentication.AppleAuthenticationButton
+          buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+          buttonStyle={
+            dark ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
+          }
+          cornerRadius={12}
+          style={[styles.signIn, disabled && { opacity: 0.6 }]}
+          onPress={() => !disabled && onSignIn('apple')}
+        />
+      ) : (
+        button('apple', 'Continue with Apple')
+      )}
+      {button('google', 'Continue with Google')}
+    </View>
+  );
+}
+
 type ActionRowProps = {
   icon: IconName;
   title: string;
@@ -207,5 +361,8 @@ const styles = StyleSheet.create({
   use: { fontSize: 14, marginTop: 2 },
   notice: { fontSize: 12, marginTop: 4 },
   footnote: { fontSize: 13, lineHeight: 18, marginHorizontal: 4 },
+  signInList: { padding: 14, gap: 10 },
+  signIn: { height: 48, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  signInText: { fontSize: 17, fontWeight: '600' },
   version: { fontSize: 13, textAlign: 'center', marginTop: 16 },
 });

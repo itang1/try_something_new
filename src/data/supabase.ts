@@ -2,7 +2,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import Storage from 'expo-sqlite/kv-store';
 
 // Only the project URL and the publishable key ship in the app; row-level security decides what each account sees.
-// Both come from the environment (.env.local or EAS), so sync stays off until they are set.
+// Both come from .env (or an override in .env.local or EAS); without them accounts and sync stay hidden.
 const URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const KEY = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
@@ -14,7 +14,7 @@ export function supabase(): SupabaseClient | null {
     client =
       URL && KEY
         ? createClient(URL, KEY, {
-            auth: { storage: Storage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+            auth: { storage: Storage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false, flowType: 'pkce' },
           })
         : null;
   }

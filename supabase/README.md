@@ -1,7 +1,8 @@
 # Supabase
 
 The backend for the optional account and cross-device sync. The sync client is in `src/data/sync.ts` (with the
-client itself in `src/data/supabase.ts`), but nothing calls it until sign-in and the "Back up and sync" screen land.
+client itself in `src/data/supabase.ts`). Sign-in, sync now, sign out and account deletion are in `src/data/account.ts`
+and the "Back up and sync" section of Settings. Signing in is optional; the app works the same without it.
 
 - **Project:** Try Something New, in the Poodle Strategy organization. URL: https://fueiospwqwukvqmwcfrn.supabase.co
 - **Dashboard:** https://supabase.com/dashboard/project/fueiospwqwukvqmwcfrn
@@ -35,7 +36,8 @@ client itself in `src/data/supabase.ts`), but nothing calls it until sign-in and
 Only the **publishable key** and the project URL go into the app. They are safe in a client because row-level security
 decides what each account can see. Never put the secret or service-role key in the app or in git.
 
-Set them as environment variables, the same way as `GOOGLE_MAPS_ANDROID_API_KEY`:
+Both are in the committed `.env`, so every build has them. To point a build at another project, override them as
+environment variables (`.env.local` or EAS), the same way as `GOOGLE_MAPS_ANDROID_API_KEY`:
 
 | Variable | Where it comes from |
 | --- | --- |
@@ -46,14 +48,28 @@ Set them as environment variables, the same way as `GOOGLE_MAPS_ANDROID_API_KEY`
 - **EAS builds:** `npx eas-cli@latest env:create --name EXPO_PUBLIC_SUPABASE_URL --value <url> --environment production --environment preview --environment development --visibility plaintext`,
   and the same for the publishable key.
 
-## Still to set up in the dashboard
+## Sign-in
 
-- **Sign in with Apple:** Authentication > Sign In / Providers > Apple. Needs the app's bundle id
-  (`com.pastureraised.trysomethingnew`) as a client id; native sign-in on iOS needs nothing else. A Services ID, key and team id
-  are only needed for web or Android.
-- **Sign in with Google:** Authentication > Sign In / Providers > Google. Needs OAuth client ids from Google Cloud
-  (one each for iOS, Android and web), with the web client id and secret entered in Supabase.
-- **Redirect URLs:** Authentication > URL Configuration, add the app's scheme (`trysomethingnew://`) for sign-in links.
+- **Apple on iPhone:** the system sheet (`expo-apple-authentication`), then `signInWithIdToken` with a hashed nonce.
+- **Google, and Apple on Android:** Supabase's OAuth page in an in-app browser (`expo-web-browser`), which returns to
+  `trysomethingnew://auth-callback` with a PKCE code for `exchangeCodeForSession`. `src/app/+native-intent.tsx` keeps
+  the router from treating that link as a screen.
+
+### Dashboard setup
+
+- **Authentication > URL Configuration > Redirect URLs:** add `trysomethingnew://auth-callback`.
+- **Authentication > Sign In / Providers > Apple:** turn it on. **Client IDs:** `com.pastureraised.trysomethingnew` (the
+  bundle id, for the iPhone sheet), plus the Services ID (`com.pastureraised.trysomethingnew.signin`) for the browser
+  flow on Android. **Secret Key (for OAuth):** a JWT made from the Sign in with Apple key (.p8), its Key ID and the Team
+  ID. It expires after 6 months, so set a reminder to make a new one.
+- **Apple Developer > Identifiers:** the App ID `com.pastureraised.trysomethingnew` has Sign in with Apple on (EAS
+  turns it on during the first build with `usesAppleSignIn`). A Services ID `com.pastureraised.trysomethingnew.signin`
+  with Sign in with Apple configured: primary App ID as above, domain `fueiospwqwukvqmwcfrn.supabase.co`, return URL
+  `https://fueiospwqwukvqmwcfrn.supabase.co/auth/v1/callback`. **Keys:** one key with Sign in with Apple, for the JWT.
+- **Authentication > Sign In / Providers > Google:** turn it on with the web client id
+  `874671630872-85j12flv5atjsq3sjh6tpbm3lbom31oh.apps.googleusercontent.com` and its client secret. In Google Cloud,
+  that web client's **Authorized redirect URIs** needs `https://fueiospwqwukvqmwcfrn.supabase.co/auth/v1/callback`.
+  No iOS or Android client ids are needed for the browser flow.
 
 ## Applying changes
 
