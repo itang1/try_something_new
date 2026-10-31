@@ -3,7 +3,6 @@ import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } fr
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import FiltersIcon from '@expo/material-symbols/tune.xml';
-import SettingsIcon from '@expo/material-symbols/settings.xml';
 import * as Haptics from 'expo-haptics';
 import { inSeason, LEVELS, otherWays, type Entry } from '@/data/catalog';
 import { addDays, dayKey, formatDay } from '@/data/days';
@@ -14,7 +13,7 @@ import { describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
 import { readSetting, writeSetting } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
 import { readable, readableOn, subcategory, useColors } from '@/theme';
-import { toolbarIcon } from '@/components/header-items';
+import { settingsButton, toolbarIcon } from '@/components/header-items';
 import { GradientIcon, Icon } from '@/components/icon';
 import { MetadataTag } from '@/components/chips';
 import { LocationControl } from '@/components/location-control';
@@ -261,15 +260,6 @@ export default function ExploreScreen() {
         )}
       </SafeAreaView>
 
-      <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button
-          accessibilityLabel="Settings"
-          tintColor={colors.accent}
-          onPress={() => router.push('/settings')}
-        >
-          <Stack.Toolbar.Icon {...toolbarIcon('gearshape', SettingsIcon)} />
-        </Stack.Toolbar.Button>
-      </Stack.Toolbar>
       <Stack.Toolbar placement="right">
         <Stack.Toolbar.Button
           accessibilityLabel="Filters"
@@ -278,6 +268,7 @@ export default function ExploreScreen() {
         >
           <Stack.Toolbar.Icon {...toolbarIcon('line.3.horizontal.decrease', FiltersIcon)} />
         </Stack.Toolbar.Button>
+        {settingsButton(colors.accent, router)}
       </Stack.Toolbar>
     </View>
   );
