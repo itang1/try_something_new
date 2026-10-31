@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Alert, Image, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
-import { Stack } from 'expo-router';
+import { Alert, Image, Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
+import { Stack, useRouter } from 'expo-router';
 import BackupIcon from '@expo/material-symbols/backup.xml';
 import { restoreBackup, shareBackup } from '@/data/backup';
-import type { City, Entry } from '@/data/catalog';
+import { memoryItems, type MemoryItem } from '@/data/memories';
 import { keptPhotoUri } from '@/data/photos';
-import { loadMemories, type Memory, type Rating } from '@/data/storage';
+import { loadMemories, type Rating } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
 import { useToast } from '@/state/toast';
 import { readable, subcategory, useColors } from '@/theme';
@@ -23,28 +23,7 @@ const RATING: Record<Rating, { label: string; icon: IconName }> = {
 const FILTERS = ['All', 'Loved it', 'With photos'] as const;
 type Filter = (typeof FILTERS)[number];
 
-type Item = Memory & { entry: Entry };
-
-type Finder = (id: string, placeId?: string | null) => { entry: Entry; city: City } | undefined;
-
-function toItems(memories: Memory[], find: Finder): Item[] {
-  const items = memories.flatMap((m) => {
-    const found = find(m.entryId, m.placeId);
-    if (!found) return [];
-    const placeName = found.city.places.find((p) => p.id === m.placeId)?.name ?? m.placeName;
-    return [{ ...m, entry: found.entry, placeName }];
-  });
-  // Checking off a city icon also checks off its activity, which would show the same outing twice.
-  const iconTimes = items.filter((i) => i.entry.kind === 'icon').map((i) => [i.entry.activityId, Date.parse(i.at)] as const);
-  return items.filter(
-    (i) =>
-      i.entry.kind === 'icon' ||
-      i.rating ||
-      i.note ||
-      i.photo ||
-      !iconTimes.some(([id, t]) => id === i.entry.id && Math.abs(t - Date.parse(i.at)) < 10_000),
-  );
-}
+type Item = MemoryItem;
 
 /** Monday-based week number since the epoch, for counting distinct weeks. */
 function weekOf(iso: string): number {
@@ -114,7 +93,7 @@ export default function MemoriesScreen() {
   const { findAnyEntry, reload } = useAppState();
   const showToast = useToast();
   // A restore reloads the app state, which gives a new finder, so the list reads the merged history.
-  const items = useMemo(() => toItems(loadMemories(), findAnyEntry), [findAnyEntry]);
+  const items = useMemo(() => memoryItems(loadMemories(), findAnyEntry), [findAnyEntry]);
   const [filter, setFilter] = useState<Filter>('All');
 
   const shown = items.filter(
@@ -220,6 +199,7 @@ export default function MemoriesScreen() {
 
 function MemoryCard({ item }: { item: Item }) {
   const colors = useColors();
+  const router = useRouter();
   const rating = item.rating ? RATING[item.rating] : null;
   const date = new Date(item.at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   return (
@@ -245,6 +225,15 @@ function MemoryCard({ item }: { item: Item }) {
             />
           </View>
         )}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Share a card for ${item.entry.name}`}
+          hitSlop={6}
+          onPress={() => router.push({ pathname: '/share/[id]', params: { id: item.entry.id } })}
+          style={({ pressed }) => [styles.rating, { backgroundColor: colors.fill, opacity: pressed ? 0.6 : 1 }]}
+        >
+          <Icon name="ios_share" size={16} color={colors.accent} />
+        </Pressable>
       </View>
       {!!item.note && <Text style={[styles.note, { color: colors.label }]}>{item.note}</Text>}
       {!!item.photo && (

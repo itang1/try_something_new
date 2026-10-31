@@ -73,6 +73,15 @@ function RootLayout() {
                 }}
               />
               <Stack.Screen
+                name="share/[id]"
+                options={{
+                  presentation: 'formSheet',
+                  sheetAllowedDetents: [1],
+                  sheetGrabberVisible: true,
+                  contentStyle: { backgroundColor: colors.background },
+                }}
+              />
+              <Stack.Screen
                 name="add"
                 options={{
                   presentation: 'formSheet',
