@@ -36,6 +36,8 @@ export type Activity = {
   warm?: boolean;
   /** Only happens where winters are cold, like fall colors, so it's left out of cities warm all year. */
   needsWinter?: boolean;
+  /** A broader activity this is one kind of, like origami under "Try a new craft". */
+  parent?: string;
 } & Ways;
 
 /** Ways to do an activity without one of its places: what you'd need at home, how to host it, or a maps search. */
@@ -105,6 +107,8 @@ export type Entry = {
   custom: boolean;
   /** Months it's in season in this city, in order. Missing means all year. */
   months?: number[];
+  /** The broader activity this is one kind of. */
+  parent?: string;
 } & Ways;
 
 /** Something the user added to a city's list themselves. */
@@ -124,6 +128,12 @@ export function resolveAliases(table: Record<string, string>): Record<string, st
 export const ACTIVITY_ALIASES = resolveAliases(aliasesFile.aliases as Record<string, string>);
 
 const ACTIVITIES = new Map((activitiesFile.activities as Activity[]).map((a) => [a.id, a]));
+/** Ids to check off along with these: doing origami also counts as trying a new craft. */
+export function withParents(ids: string[]): string[] {
+  const parents = ids.map((id) => ACTIVITIES.get(id)?.parent).filter((p): p is string => !!p);
+  return [...new Set([...ids, ...parents])];
+}
+
 const icons = iconMapping as Record<string, { material: string }>;
 
 function seasonIn(city: City, a: Activity): number[] | undefined {
@@ -157,7 +167,7 @@ function entry(own: Activity | CityIcon, kind: Entry['kind'], activityId: string
     places,
     custom: false,
     months,
-    ...(kind === 'activity' && { home: base.home, host: base.host, search: base.search }),
+    ...(kind === 'activity' && { home: base.home, host: base.host, search: base.search, parent: base.parent }),
   };
 }
 
@@ -226,6 +236,36 @@ export function inSeason(entry: Entry, date = new Date()): boolean {
 /** Like "Dec to Mar". */
 export function seasonLabel(months: number[]): string {
   return `${MONTHS[months[0] - 1]} to ${MONTHS[months[months.length - 1] - 1]}`;
+}
+
+export const AT_HOME = 'At home';
+
+/** Doing an activity at home is logged like a visit to a place of its own, so it checks off and can be planned like one. */
+export function homeSpotId(activityId: string): string {
+  return `home:${activityId}`;
+}
+
+export function isHomeSpot(id: string | null | undefined): boolean {
+  return !!id?.startsWith('home:');
+}
+
+export type Spot = { id: string; name: string };
+
+/** What to pick from when planning or looking back: home first when it can be done there, then its places. */
+export function spotsFor(entry: Entry, places: Place[]): Spot[] {
+  const home = entry.kind === 'activity' && entry.home ? [{ id: homeSpotId(entry.activityId), name: AT_HOME }] : [];
+  return [...home, ...places.map((p) => ({ id: p.id, name: p.name }))];
+}
+
+/** The specific activities under a broad one, like origami and tie-dye under "Try a new craft". */
+export function kindsOf(entries: Entry[], entry: Entry): Entry[] {
+  return entries.filter((e) => e.parent === entry.id);
+}
+
+/** Like "origami, tie-dye, or embroidery". */
+export function listOr(names: string[]): string {
+  if (names.length < 3) return names.join(' or ');
+  return `${names.slice(0, -1).join(', ')}, or ${names[names.length - 1]}`;
 }
 
 export function placeNames(entry: Entry): string {

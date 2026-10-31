@@ -1,5 +1,5 @@
 import { createContext, use, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { customEntry, entriesForCity, type City, type CitySummary, type CustomActivity, type Entry } from '@/data/catalog';
+import { AT_HOME, customEntry, entriesForCity, isHomeSpot, withParents, type City, type CitySummary, type CustomActivity, type Entry } from '@/data/catalog';
 import {
   applyCatalogAliases,
   citySummary,
@@ -198,7 +198,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const setPlan = useCallback(
     (entryId: string, choice: Pick<Plan, 'placeId' | 'day'> | null) => {
       const places = entries.find((e) => e.id === entryId)?.places ?? [];
-      const plan = choice && { ...choice, placeName: places.find((p) => p.id === choice.placeId)?.name ?? null };
+      const plan = choice && { ...choice, placeName: places.find((p) => p.id === choice.placeId)?.name ?? (isHomeSpot(choice.placeId) ? AT_HOME : null) };
       recordPlan(city.id, entryId, plan);
       const next = new Map(allPlans);
       if (plan) next.set(planKey(city.id, entryId), { entryId, cityId: city.id, ...plan });
@@ -222,11 +222,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const startTrip = useCallback((cityId: string) => setTrip({ cityId, start: null }), [setTrip]);
   const endTrip = useCallback(() => setTrip(null), [setTrip]);
 
-  // Undoing never cascades: unchecking an icon or a place leaves the activity checked off.
+  // Undoing never cascades: unchecking an icon, a place or a kind of craft leaves the broader one checked off.
   const markDone = useCallback(
     (ids: string[], done: boolean, earlier?: boolean) => {
       const next = new Set(doneIds);
-      for (const id of ids) {
+      for (const id of done ? withParents(ids) : ids) {
         if (next.has(id) === done) continue;
         recordCompletion(id, done, earlier);
         if (done) next.add(id);

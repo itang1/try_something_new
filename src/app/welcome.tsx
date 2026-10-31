@@ -32,7 +32,7 @@ export default function WelcomeScreen() {
           Try Something New
         </Animated.Text>
         <Animated.Text entering={FadeInDown.delay(250)} style={[styles.subtitle, { color: colors.secondary }]}>
-          Ideas for things to do near you, from archery to the city&apos;s must-sees.
+          Ideas for things to try, out around town or at home, from archery to a new craft.
         </Animated.Text>
 
         <View style={styles.points}>

@@ -18,8 +18,8 @@ export function LocationControl() {
     title = `Trip to ${city.name}`;
     subtitle = trip.start ? `From ${trip.start.name}` : "Set where you're staying";
   } else if (home) {
-    title = `Near ${home.name}`;
-    subtitle = `Things to do around ${city.name}`;
+    title = home.name;
+    subtitle = `Out around ${city.name}, or right at home`;
   }
 
   return (

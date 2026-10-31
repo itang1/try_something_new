@@ -64,7 +64,7 @@ db.execSync(`
   );
 `);
 
-// Each step runs once, when stored ids or kinds change shape.
+// Each step runs once, when stored ids or kinds change shape. Give each new step a test in __tests__/storage-migrations-test.ts.
 const { user_version: version } = db.getFirstSync<{ user_version: number }>('PRAGMA user_version')!;
 if (version < 1) {
   const kinds: Record<string, string> = {
@@ -159,6 +159,10 @@ export function applyAliases(aliases: Record<string, string>): void {
       db.runSync('UPDATE plans SET entry_id = ? WHERE entry_id = ?', [to, from]);
       db.runSync('UPDATE plans SET place_id = ? WHERE place_id = ?', [to, from]);
       db.runSync('DELETE FROM drive_times WHERE place_id = ?', [from]);
+      // Doing an activity at home is stored as a visit to home:<activity>, so that id follows a rename too.
+      for (const table of ['place_visits', 'reflections', 'plans']) {
+        db.runSync(`UPDATE ${table} SET place_id = ? WHERE place_id = ?`, [`home:${to}`, `home:${from}`]);
+      }
     }
   });
   for (const list of ['savedIds', 'hiddenIds']) {
