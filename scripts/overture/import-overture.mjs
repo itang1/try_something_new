@@ -2,6 +2,8 @@
 // Businesses like escape rooms, studios, and restaurants come from here; parks, trails, and bike routes from import-osm.mjs.
 // Setup: `npm install --prefix scripts/overture`. Usage: npm run overture -- <city> [radius km]
 // A new city needs its details once: npm run overture -- <city> --name "Kyoto" --country JP --lat 35.0116 --lng 135.7681 [--region ...]
+// Where DuckDB can't download its httpfs extension, pass --from with a local GeoParquet extract of the same release, for example
+// from `overturemaps download --bbox ... -f geoparquet -t place`.
 // Re-running replaces the earlier Overture places; OSM and hand-picked places keep their ids and gain matched activities.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
@@ -9,7 +11,7 @@ import { DuckDBInstance } from '@duckdb/node-api';
 
 const { positionals, values } = parseArgs({
   allowPositionals: true,
-  options: { name: { type: 'string' }, region: { type: 'string' }, country: { type: 'string' }, lat: { type: 'string' }, lng: { type: 'string' } },
+  options: { from: { type: 'string' }, name: { type: 'string' }, region: { type: 'string' }, country: { type: 'string' }, lat: { type: 'string' }, lng: { type: 'string' } },
 });
 const [cityId, radiusArg = '40'] = positionals;
 if (!cityId) throw new Error('Usage: npm run overture -- <city> [radius km] [--name --country --lat --lng --region]');
@@ -36,6 +38,8 @@ const CATEGORIES = {
   karaoke_venue: 'karaoke',
   paint_your_own_pottery_venue: 'pottery-class',
   rock_climbing_gym: 'rock-climbing',
+  // Korean climbing gyms are mostly filed here.
+  rock_climbing_spot: 'rock-climbing',
   trampoline_park: 'trampoline-park',
   ice_skating_rink: 'ice-skating',
   roller_skating_rink: 'roller-skating',
@@ -114,6 +118,8 @@ const CUISINES = [
   'senegalese', 'somali', 'sri_lankan', 'taiwanese', 'turkish', 'ukrainian', 'uzbek', 'venezuelan', 'vietnamese', 'west_african',
 ];
 for (const c of CUISINES) CATEGORIES[`${c}_restaurant`] = 'new-cuisine';
+// A city's own cuisine isn't new there: Seoul has thousands of Korean restaurants.
+const LOCAL_CUISINE = { KR: 'korean_restaurant' };
 // For activities with no category of their own.
 const NAMES = [
   [/\bhot ?pot\b|shabu/, 'hot-pot'],
@@ -123,6 +129,15 @@ const NAMES = [
   [/pottery|ceramics (studio|class)|clay studio/, 'pottery-class'],
   [/climbing|bouldering/, 'rock-climbing'],
   [/glass ?blow/, 'glassblowing'],
+  // Korean names, for venues Overture files under a broad category like spa or cafe.
+  [/찜질방|불가마|한증막|사우나/, 'sauna'],
+  [/방탈출/, 'escape-room'],
+  [/보드게임/, 'board-game-cafe'],
+  [/클라이밍|볼더링/, 'rock-climbing'],
+  [/도예(공방|교실|원|스튜디오)|도자기 ?(공방|체험|교실)|물레/, 'pottery-class'],
+  [/훠궈|샤브샤브/, 'hot-pot'],
+  [/노래방|노래연습장/, 'karaoke'],
+  [/양궁(장|카페)|국궁|활터/, 'archery'],
 ];
 // Bookstores for course textbooks aren't somewhere to browse.
 const SKIP = new Set(['academic_bookstore', 'swimming_instructor']);
@@ -132,22 +147,32 @@ const NOT_A_VENUE = /remodel|install|contractor|construction|repair|suppl(y|ies)
 const NAME_RULES = {
   'drive-in-movie': { need: /drive.?in/ },
   'state-fair': { need: /fair/ },
-  library: { not: /universit|college|school|law|little free/ },
-  bookstore: { not: /universit|college/ },
+  library: { not: /universit|college|school|law|little free|학교|스터디|독서실|열람실/ },
+  bookstore: { not: /universit|college|대학교/ },
+  // The Korean rules below can't match an English name, so they only change Korean cities.
+  // Screen golf, driving ranges and lessons aren't a round of golf.
+  golf: { not: /골프존|스크린|gdr|연습장|아카데미|레슨/ },
+  'live-music': { not: /노래/ },
+  'food-market': { not: /마트|한살림|hansalim|가게/ },
+  // Water skiing.
+  'snow-sports': { not: /수상/ },
 };
+// Some listings sit in the wrong city: a Busan beach or a North Korean mountain with a pin in Seoul.
+const FAR_AWAY = { KR: /부산|busan|제주|jeju|강원도|강릉|금강산|해운대|경포|대천|안면/ };
 
-const normal = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, '');
+// Keeps letters in any script, so two different Korean names don't both normalize to an empty string.
+const normal = (name) => name.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, '');
 function km(a, b) {
   const rad = Math.PI / 180;
   const x = (b.lng - a.lng) * rad * Math.cos(((a.lat + b.lat) / 2) * rad);
   return Math.hypot(x, (b.lat - a.lat) * rad) * 6371;
 }
 
-function activitiesFor(row) {
+function activitiesFor(row, country) {
   const found = new Set();
   const hierarchy = row.hierarchy ?? [];
   if (!SKIP.has(row.category)) {
-    for (const c of hierarchy) if (CATEGORIES[c]) found.add(CATEGORIES[c]);
+    for (const c of hierarchy) if (CATEGORIES[c] && c !== LOCAL_CUISINE[country]) found.add(CATEGORIES[c]);
     if (EXACT[row.category]) found.add(EXACT[row.category]);
   }
   const name = row.name.toLowerCase();
@@ -155,7 +180,7 @@ function activitiesFor(row) {
   for (const [id, { need, not }] of Object.entries(NAME_RULES)) {
     if ((need && !need.test(name)) || not?.test(name)) found.delete(id);
   }
-  return NOT_A_VENUE.test(name) ? new Set() : found;
+  return NOT_A_VENUE.test(name) || FAR_AWAY[country]?.test(name) ? new Set() : found;
 }
 
 const file = `data/cities/${cityId}.json`;
@@ -169,11 +194,14 @@ if (existsSync(file)) {
 }
 
 const db = await (await DuckDBInstance.create()).connect();
-await db.run("INSTALL httpfs; LOAD httpfs; SET s3_region = 'us-west-2';");
+if (!values.from) await db.run("INSTALL httpfs; LOAD httpfs; SET s3_region = 'us-west-2';");
 const read = async (sql) => (await db.runAndReadAll(sql)).getRowObjectsJson();
-const [{ release }] = await read(
-  "SELECT max(regexp_extract(file, 'release/([^/]+)/', 1)) AS release FROM glob('s3://overturemaps-us-west-2/release/*/theme=places/type=place/*')",
-);
+const [{ release }] = values.from
+  ? [{ release: values.from }]
+  : await read("SELECT max(regexp_extract(file, 'release/([^/]+)/', 1)) AS release FROM glob('s3://overturemaps-us-west-2/release/*/theme=places/type=place/*')");
+const source = values.from
+  ? `read_parquet('${values.from.replaceAll("'", "''")}')`
+  : `read_parquet('s3://overturemaps-us-west-2/release/${release}/theme=places/type=place/*', hive_partitioning = 1)`;
 const dLat = RADIUS_KM / 111;
 const dLng = RADIUS_KM / (111 * Math.cos((city.lat * Math.PI) / 180));
 const keys = [...Object.keys(CATEGORIES), ...Object.keys(EXACT)].map((k) => `'${k}'`).join(', ');
@@ -182,7 +210,7 @@ console.log(`Reading Overture ${release} within ${RADIUS_KM} km of ${city.name}�
 const rows = await read(`
   SELECT id, names.primary AS name, (bbox.xmin + bbox.xmax) / 2 AS lng, (bbox.ymin + bbox.ymax) / 2 AS lat,
     taxonomy.primary AS category, taxonomy.hierarchy AS hierarchy
-  FROM read_parquet('s3://overturemaps-us-west-2/release/${release}/theme=places/type=place/*', hive_partitioning = 1)
+  FROM ${source}
   WHERE bbox.xmin BETWEEN ${city.lng - dLng} AND ${city.lng + dLng}
     AND bbox.ymin BETWEEN ${city.lat - dLat} AND ${city.lat + dLat}
     AND confidence >= ${MIN_CONFIDENCE}
@@ -195,7 +223,7 @@ const kept = city.places.filter((p) => !p.id.startsWith('ovt:'));
 const imported = [];
 let merged = 0;
 for (const row of rows) {
-  const activities = activitiesFor(row);
+  const activities = activitiesFor(row, city.country);
   // Registered companies, like "Audio Stream Inc", are rarely somewhere to visit.
   if (!activities.size || /\b(llc|inc|ltd|corp)\b\.?$/i.test(row.name) || km(city, row) > MAX_KM) continue;
   const place = {

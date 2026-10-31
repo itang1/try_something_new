@@ -1,6 +1,6 @@
 # Try Something New: Roadmap
 
-The single list of what to build next. It replaces `TODO.md`. Last refreshed 2026-10-31, against `main` at `8fd0af4` plus open PR #6.
+The single list of what to build next. It replaces `TODO.md`. Last refreshed 2026-10-31, against `main` at `0ad47db` plus open PR #6.
 
 ## How to use this roadmap
 
@@ -46,13 +46,16 @@ The single list of what to build next. It replaces `TODO.md`. Last refreshed 202
 
 In order. These are the ones to start a thread on.
 
-1. [~] **Check off the at-home way** · UX · S. Being added to PR #6: one "Where to do it" list with "At home" as the first row, each row with the same checkmark.
-2. [?] **Count a specific craft toward "Try a new craft"** · Feature · S. Open question from PR #6. Recommendation: yes, doing any kind checks off the broad idea once, and the broad idea stops coming back as "try another".
-3. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, and the new Settings and crash screens. None of these has run on a device yet. Needs you and a development build.
-4. [ ] **Do an accessibility pass** · UX · M. About 33 accessibility labels across 4,000 lines. Label chips, pins, rows and icon buttons, give every swipe a button, support large text. Reanimated already skips animations when Reduce Motion is on, so confetti and springs are fine.
-5. [ ] **Test the storage migrations** · Architecture · M. Tests exist for days, drive and filters. The 6 SQLite migrations and alias moves have none, and a bad migration silently wipes someone's history.
-6. [ ] **Prepare the data for sync** · Architecture · M. Client-made UUIDs instead of `AUTOINCREMENT`, saved and hidden lists as events, a device id, and one storage module the sync code plugs into. Cheap now, painful after launch.
-7. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
+1. [ ] **Test the storage migrations** · Architecture · M. Tests exist for days, drive and filters. The 6 SQLite migrations and alias moves have none, and a bad migration silently wipes someone's history.
+2. [ ] **Prepare the data for sync** · Architecture · M. Client-made UUIDs instead of `AUTOINCREMENT`, saved and hidden lists as events, a device id, and one storage module the sync code plugs into. Cheap now, painful after launch.
+3. [ ] **Store places in indexed SQLite tables** · Architecture · M. Each city is one JSON blob parsed whole, and Seoul makes five. Query by bounding box instead, to cut memory and launch time.
+4. [ ] **Optional account with cross-device sync** · Backend · L. Ask for a plan first and split it into M items here. Builds on the two items above; see Storage decision below.
+5. [~] **Check off the at-home way** · UX · S. Being added to PR #6: one "Where to do it" list with "At home" as the first row, each row with the same checkmark.
+6. [?] **Count a specific craft toward "Try a new craft"** · Feature · S. Open question from PR #6. Recommendation: yes, doing any kind checks off the broad idea once, and the broad idea stops coming back as "try another".
+7. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, and the new Settings and crash screens. None of these has run on a device yet. Needs you and a development build.
+8. [ ] **Finish Seoul's parks and trails** · Data · S. Needs your computer: the cloud can't reach Overpass. Run `node scripts/import-osm.mjs seoul 37.19,126.5,37.95,127.46` and commit the result. Overture has few parks and no bike routes there, so Seoul's outdoors list is mostly hand-picked until then.
+9. [ ] **Do an accessibility pass** · UX · M. About 33 accessibility labels across 4,000 lines. Label chips, pins, rows and icon buttons, give every swipe a button, support large text. Reanimated already skips animations when Reduce Motion is on, so confetti and springs are fine.
+10. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
 
 ## Now: before launch
 
@@ -62,6 +65,9 @@ In order. These are the ones to start a thread on.
 - [ ] **Do an accessibility pass** · UX · M. See Up next.
 - [ ] **Test the storage migrations** · Architecture · M. See Up next.
 - [ ] **Prepare the data for sync** · Architecture · M. See Up next.
+- [ ] **Store places in indexed SQLite tables** · Architecture · M. See Up next.
+- [ ] **Optional account with cross-device sync** · Backend · L. See Up next.
+- [ ] **Finish Seoul's parks and trails** · Data · S. See Up next.
 - [ ] **Build the Android widget** · Feature · M. From the old TODO.
 - [ ] **Run expo-doctor in CI** · Architecture · S. Left over from the CI PR (#3). Add `npx expo-doctor` to `.github/workflows/ci.yml`.
 - [ ] **Finish the release setup** · Launch · S. Needs your accounts: `eas init`, EAS environment variables, Apple and Play developer accounts, then EAS Update with a fingerprint runtime version. Steps are in PR #2's description and the README.
@@ -75,14 +81,14 @@ In order. These are the ones to start a thread on.
 **Location-agnostic and at-home ideas** (new, building on PR #6)
 
 - [~] **Suggest at-home crafts and broad ideas** · Feature · M. PR #6: a "Try a new craft" parent with 16 kinds, studio or DIY on each card, and Stay in leading with the home version. Waiting on your review.
-- [ ] **Use the app without a city** · Feature · M. Someone outside the 4 cities, or who skips location, should still get at-home and host-friends ideas instead of an empty Explore.
+- [ ] **Use the app without a city** · Feature · M. Someone outside the 5 cities, or who skips location, should still get at-home and host-friends ideas instead of an empty Explore.
 - [ ] **More broad ideas like crafts** · Data · S. Use the same parent model for "Cook something new", "Learn a new skill" and "Host friends", once PR #6 merges.
 - [ ] **More at-home and DIY versions** · Data · S. Add a `home` line to activities that can work at home and don't have one yet, and a few new home-only crafts.
 - [ ] **Draw custom icons for crafts** · UX · S. The activities without a Material Symbol, mostly crafts, in the same style.
 
 **Accounts and sync**
 
-- [ ] **Optional account with cross-device sync** · Backend · L. "Back up and sync" in Settings with Sign in with Apple or Google, push and pull the logs, merge by latest event, in-app account deletion. Recommended backend: Supabase (see Storage decision below). From the old TODO.
+- [ ] **Optional account with cross-device sync** · Backend · L. Moved up to Now; see Up next. "Back up and sync" in Settings with Sign in with Apple or Google, push and pull the logs, merge by latest event, in-app account deletion. Recommended backend: Supabase (see Storage decision below). From the old TODO.
 - [ ] **Back up memory photos** · Backend · M. Resize to about 1600 px, upload on Wi-Fi in the background, keep the local copy as the one shown.
 
 **Better suggestions**
@@ -99,8 +105,10 @@ In order. These are the ones to start a thread on.
 
 **Data**
 
+- [ ] **Directions in Korea** · UX · S. Google Maps has no driving directions in South Korea, so on Android open Naver Map or KakaoMap for Seoul places, with Google Maps as the fallback.
+- [ ] **Show kilometers outside the US** · UX · S. Default to kilometers for cities like Seoul, alongside the miles or kilometers setting.
+- [ ] **English names for Seoul places** · Data · M. Overture only has Korean names there. Options: OpenStreetMap's `name:en` (comes with the OSM import), or the Korea Tourism Organization's English TourAPI, which needs a free key from data.go.kr.
 - [ ] **Add more cities** · Data · M. The 25 largest US metros, then a few international ones. Re-import monthly from a scheduled Action.
-- [ ] **Store places in indexed SQLite tables** · Architecture · M. Each city is one JSON blob parsed whole. Query by bounding box instead, to cut memory and launch time.
 - [ ] **Show opening hours where known** · Data · M. OpenStreetMap `opening_hours`, an "Open now" badge, never hiding places without hours.
 - [ ] **Wheelchair and stroller access** · Data · S. Read OpenStreetMap's `wheelchair` tag and add an "Accessible" filter.
 - [ ] **Report a place through a form** · Data · S. A Worker endpoint that opens a GitHub issue with the place id, instead of email.
@@ -142,3 +150,5 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 - [x] **First tests** · Architecture. Jest with tests for days, drive and filters. PR #3.
 - [x] **Retheme the app as Dusk Ember** · UX. New palette, open-door icon, WCAG AA text. PR #5.
 - [x] **iOS widget** · Feature. Daily idea through expo-widgets.
+- [x] **Add Seoul** · Data. 6,282 Overture venues and 11 must-dos, with Korean-aware import rules. Seoul PR.
+- [x] **Fill Seattle's and Chicago's hand-picked gaps** · Data. Neighborhoods, a shopping street and local legends. Seoul PR.
