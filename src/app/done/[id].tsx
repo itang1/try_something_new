@@ -5,6 +5,7 @@ import Animated, { ZoomIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { isHomeSpot, spotsFor } from '@/data/catalog';
 import { placesByDistance } from '@/data/drive';
+import { track } from '@/data/analytics';
 import { pickAndKeepPhoto } from '@/data/photos';
 import { recordReflection, type Rating } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
@@ -56,6 +57,7 @@ export default function DoneSheet() {
     if (placeId && entry.kind === 'activity' && !visitedPlaceIds.has(placeId)) toggleVisited(placeId, entry.activityId);
     const placeName = spots.find((s) => s.id === placeId)?.name ?? null;
     recordReflection({ entryId: entry.id, placeId, placeName, rating, note: note.trim(), photo });
+    track('memory_saved');
     // Saving is the moment worth sharing, so offer the card in place of this sheet. After a "Loved it",
     // closing the card is also when the app may ask for a rating.
     router.replace({ pathname: '/share/[id]', params: { id: entry.id, ...(rating === 'loved' && { justLoved: '1' }) } });

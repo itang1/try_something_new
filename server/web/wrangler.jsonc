@@ -1,0 +1,31 @@
+{
+  "name": "try-something-new-web",
+  "main": "index.js",
+  "compatibility_date": "2026-10-01",
+  // Icons and site.js. A request for a file here is answered before the Worker runs.
+  "assets": { "directory": "./public" },
+  // Counts and waitlist signups per IP. A page view sends one or two counts, so 60 a minute leaves room for a shared
+  // network. namespace_id is any number unique to this account's rate limiters (drive-times uses 1001).
+  "ratelimits": [
+    {
+      "name": "LIMITER",
+      "namespace_id": "1002",
+      "simple": { "limit": 60, "period": 60 }
+    }
+  ],
+  "vars": {
+    "SUPABASE_URL": "https://fueiospwqwukvqmwcfrn.supabase.co",
+    // Store pages, once the app is listed. While both are empty, pages show the beta waitlist form instead.
+    "APP_STORE_URL": "",
+    "PLAY_STORE_URL": "",
+    // Apple Developer > Membership details > Team ID. Empty means /.well-known/apple-app-site-association is a 404.
+    "APPLE_TEAM_ID": "",
+    // Play Console > Test and release > App integrity > App signing key certificate > SHA-256, comma-separated if
+    // there are several (add the upload key's too for internal testing builds). Empty means assetlinks.json is a 404.
+    "ANDROID_SHA256_FINGERPRINTS": "",
+    // Where people write to be removed from the waitlist or ask about privacy. Empty means the privacy page points to
+    // Send feedback in the app.
+    "CONTACT_EMAIL": ""
+  }
+  // Secret, set with `npx wrangler secret put SUPABASE_PUBLISHABLE_KEY`: the Supabase publishable key (sb_publishable_...).
+}

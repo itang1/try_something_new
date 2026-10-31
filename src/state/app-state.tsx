@@ -1,4 +1,5 @@
 import { createContext, use, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { track } from '@/data/analytics';
 import { customEntry, entriesForCity, spotName, withParents, type City, type CitySummary, type CustomActivity, type Entry } from '@/data/catalog';
 import {
   applyCatalogAliases,
@@ -199,6 +200,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       const entry = entries.find((e) => e.id === entryId);
       const plan = choice && { ...choice, placeName: spotName(entry, choice.placeId) };
       recordPlan(city.id, entryId, plan);
+      if (plan && !allPlans.has(planKey(city.id, entryId))) track('plan_made');
       const next = new Map(allPlans);
       if (plan) next.set(planKey(city.id, entryId), { entryId, cityId: city.id, ...plan });
       else next.delete(planKey(city.id, entryId));
@@ -231,6 +233,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         if (done) next.add(id);
         else next.delete(id);
       }
+      // Things done before the app (quick start, "I did this before") aren't activity in the app.
+      if (done && !earlier && next.size > doneIds.size) track('done_saved');
       setDoneIds(next);
     },
     [doneIds],

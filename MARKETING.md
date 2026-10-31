@@ -66,6 +66,8 @@ Build these in this order; each is on the roadmap.
 
 ## 6. App Store optimization
 
+The ready-to-paste listing for both stores, with screenshots, the preview video and privacy answers, is in [marketing/store-listing.md](marketing/store-listing.md).
+
 - **Name and subtitle.** Apple allows 30 characters for each. Example: "Try Something New: Things to Do" and subtitle "Date ideas, hobbies, bucket list". Check that the name is free in both stores before committing.
 - **Keywords** (Apple's keyword field, and the Play description): things to do, near me, weekend ideas, date ideas, bucket list, hobbies, new hobby, try new things, activities, city checklist.
 - **Screenshots.** The first three do most of the work: the idea card with the one-line promise, the checklist with progress, and a "tried it" card. Use real places in the launch city.
