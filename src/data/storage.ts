@@ -1,6 +1,6 @@
 import { openDatabaseSync } from 'expo-sqlite';
 import Storage from 'expo-sqlite/kv-store';
-import type { CustomActivity } from './catalog';
+import type { City, CustomActivity, Place } from './catalog';
 
 const db = openDatabaseSync('app.db');
 
@@ -71,6 +71,31 @@ function insertRow(table: SyncedTable, row: Row): void {
 /** The row of a log that holds the current state for the key columns. */
 const latest = (table: SyncedTable, alias: string, keys: string[]) =>
   `${alias}.seq = (SELECT seq FROM ${table} WHERE ${keys.map((k) => `${k} = ${alias}.${k}`).join(' AND ')} ORDER BY at DESC, seq DESC LIMIT 1)`;
+
+const CATALOG_TABLES = `
+  CREATE TABLE IF NOT EXISTS catalog_cities (id TEXT PRIMARY KEY, hash TEXT, meta TEXT NOT NULL, at TEXT NOT NULL);
+  CREATE TABLE IF NOT EXISTS catalog_places (
+    city_id TEXT NOT NULL,
+    id TEXT NOT NULL,
+    ord INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    lat REAL NOT NULL,
+    lng REAL NOT NULL,
+    duration TEXT,
+    cost TEXT,
+    PRIMARY KEY (city_id, id)
+  ) WITHOUT ROWID;
+  CREATE INDEX IF NOT EXISTS catalog_places_box ON catalog_places (city_id, lat, lng);
+  CREATE INDEX IF NOT EXISTS catalog_places_order ON catalog_places (city_id, ord);
+  CREATE INDEX IF NOT EXISTS catalog_places_id ON catalog_places (id);
+  CREATE TABLE IF NOT EXISTS catalog_place_activities (
+    city_id TEXT NOT NULL,
+    place_id TEXT NOT NULL,
+    activity_id TEXT NOT NULL,
+    PRIMARY KEY (city_id, place_id, activity_id)
+  ) WITHOUT ROWID;
+  CREATE INDEX IF NOT EXISTS catalog_place_activities_activity ON catalog_place_activities (city_id, activity_id);
+`;
 
 // The tables as the first version of the app made them. The steps below bring them up to date.
 db.execSync(`
@@ -240,6 +265,21 @@ if (version < 7) {
       Storage.removeItemSync(key);
     }
     db.execSync(`${INDEXES} PRAGMA user_version = 7;`);
+  });
+}
+
+// Version 8 moves downloaded cities out of one JSON blob each and into indexed tables, so launch reads only what it
+// needs: the city's summary and aliases without its places, and places by bounding box. Bundled cities are seeded too.
+if (version < 8) {
+  db.withTransactionSync(() => {
+    const blobs = db.getAllSync<{ id: string; hash: string; json: string }>('SELECT id, hash, json FROM catalog_cities');
+    db.execSync(`DROP TABLE catalog_cities; ${CATALOG_TABLES}`);
+    for (const { id, hash, json } of blobs) {
+      const city = parseCity(json);
+      // A blob that doesn't parse is dropped, and the city downloads again.
+      if (city?.id === id) writeCity(city, hash);
+    }
+    db.execSync('PRAGMA user_version = 8');
   });
 }
 
@@ -440,23 +480,97 @@ export function saveDriveTimes(origin: string, times: Map<string, number | null>
   });
 }
 
-/** Downloaded city files, kept whole so a city works offline once it has been opened. */
-export function loadCachedCity(id: string): { hash: string; json: string } | null {
-  return db.getFirstSync<{ hash: string; json: string }>('SELECT hash, json FROM catalog_cities WHERE id = ?', [id]);
+// Catalog cities. Each city's summary, icons and aliases are one small row, and its places are rows of their own,
+// indexed by position for bounding-box queries. A bundled city has no hash, so it doesn't count as downloaded.
+
+/** A city without its places. */
+export type CityMeta = Omit<City, 'places'>;
+
+function parseCity(json: string): City | null {
+  try {
+    const city = JSON.parse(json) as City;
+    return city && typeof city.id === 'string' && Array.isArray(city.places) ? city : null;
+  } catch {
+    return null;
+  }
 }
 
-export function cachedCityHashes(): Map<string, string> {
-  const rows = db.getAllSync<{ id: string; hash: string }>('SELECT id, hash FROM catalog_cities');
-  return new Map(rows.map((r) => [r.id, r.hash]));
+/** Replaces the city's rows. Call inside a transaction. */
+function writeCity(city: City, hash: string | null): void {
+  const { places, ...meta } = city;
+  db.runSync('DELETE FROM catalog_places WHERE city_id = ?', [city.id]);
+  db.runSync('DELETE FROM catalog_place_activities WHERE city_id = ?', [city.id]);
+  db.runSync('INSERT OR REPLACE INTO catalog_cities (id, hash, meta, at) VALUES (?, ?, ?, ?)', [city.id, hash, JSON.stringify(meta), now()]);
+  const placeRow = db.prepareSync('INSERT OR IGNORE INTO catalog_places (city_id, id, ord, name, lat, lng, duration, cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+  const activityRow = db.prepareSync('INSERT OR IGNORE INTO catalog_place_activities (city_id, place_id, activity_id) VALUES (?, ?, ?)');
+  try {
+    places.forEach((p, ord) => {
+      placeRow.executeSync([city.id, p.id, ord, p.name, p.lat, p.lng, p.duration ?? null, p.cost ?? null]);
+      for (const activity of p.activities) activityRow.executeSync([city.id, p.id, activity]);
+    });
+  } finally {
+    placeRow.finalizeSync();
+    activityRow.finalizeSync();
+  }
 }
 
-export function saveCachedCity(id: string, hash: string, json: string): void {
-  db.runSync('INSERT OR REPLACE INTO catalog_cities (id, hash, json, at) VALUES (?, ?, ?, ?)', [
-    id,
-    hash,
-    json,
-    new Date().toISOString(),
-  ]);
+/** Saves a downloaded city, or with no hash a bundled one, in place of what the device had. */
+export function saveCatalogCity(city: City, hash: string | null): void {
+  db.withTransactionSync(() => writeCity(city, hash));
+}
+
+/** Every city on the device, without places. A null hash means it came with the app. */
+export function loadCatalogCities(): { meta: CityMeta; hash: string | null }[] {
+  const rows = db.getAllSync<{ meta: string; hash: string | null }>('SELECT meta, hash FROM catalog_cities ORDER BY id');
+  return rows.map((r) => ({ meta: JSON.parse(r.meta) as CityMeta, hash: r.hash }));
+}
+
+type PlaceRow = { id: string; name: string; lat: number; lng: number; duration: string | null; cost: string | null; activities: string | null };
+
+const PLACE_COLUMNS = `p.id, p.name, p.lat, p.lng, p.duration, p.cost,
+  (SELECT group_concat(a.activity_id, ',') FROM catalog_place_activities a WHERE a.city_id = p.city_id AND a.place_id = p.id) AS activities`;
+
+function toPlace(r: PlaceRow): Place {
+  const place: Place = { id: r.id, name: r.name, lat: r.lat, lng: r.lng, activities: r.activities ? r.activities.split(',') : [] };
+  if (r.duration) place.duration = r.duration as Place['duration'];
+  if (r.cost) place.cost = r.cost as Place['cost'];
+  return place;
+}
+
+/** All of a city's places, in the catalog's order. */
+export function loadCatalogPlaces(cityId: string): Place[] {
+  return db.getAllSync<PlaceRow>(`SELECT ${PLACE_COLUMNS} FROM catalog_places p WHERE p.city_id = ? ORDER BY p.ord`, [cityId]).map(toPlace);
+}
+
+export type Box = { south: number; west: number; north: number; east: number };
+
+/** A city's places inside a box, read through the position index. */
+export function placesInBox(cityId: string, box: Box): Place[] {
+  return db
+    .getAllSync<PlaceRow>(
+      `SELECT ${PLACE_COLUMNS} FROM catalog_places p
+       WHERE p.city_id = ? AND p.lat BETWEEN ? AND ? AND p.lng BETWEEN ? AND ? ORDER BY p.ord`,
+      [cityId, box.south, box.north, box.west, box.east],
+    )
+    .map(toPlace);
+}
+
+/** A city's places for one activity, plus any others asked for by id. */
+export function placesFor(cityId: string, activityId: string, placeIds: string[] = []): Place[] {
+  return db
+    .getAllSync<PlaceRow>(
+      `SELECT ${PLACE_COLUMNS} FROM catalog_places p WHERE p.city_id = ? AND (
+         p.id IN (SELECT place_id FROM catalog_place_activities WHERE city_id = ? AND activity_id = ?)
+         OR p.id IN (${placeIds.map(() => '?').join(', ')})
+       ) ORDER BY p.ord`,
+      [cityId, cityId, activityId, ...placeIds],
+    )
+    .map(toPlace);
+}
+
+/** The cities that have a place, since history keeps place ids but not cities. */
+export function citiesWithPlace(placeId: string): string[] {
+  return db.getAllSync<{ city_id: string }>('SELECT city_id FROM catalog_places WHERE id = ?', [placeId]).map((r) => r.city_id);
 }
 
 // Sync plugs in here. Every table in SYNCED_TABLES is a log of rows with a global id, or for custom activities one row

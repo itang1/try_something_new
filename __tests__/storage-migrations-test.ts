@@ -24,6 +24,10 @@ jest.mock('expo-sqlite', () => ({
       },
       getFirstSync: <T>(sql: string, params: Value[] = []) => plain<T>(db.prepare(sql).get(...params)),
       getAllSync: <T>(sql: string, params: Value[] = []) => db.prepare(sql).all(...params).map((r) => plain<T>(r)!),
+      prepareSync: (sql: string) => {
+        const statement = db.prepare(sql);
+        return { executeSync: (params: Value[]) => statement.run(...params), finalizeSync: () => {} };
+      },
       withTransactionSync: (task: () => void) => {
         db.exec('BEGIN');
         try {
@@ -60,7 +64,7 @@ const VERSION_0_SCHEMA = `
   CREATE TABLE catalog_cities (id TEXT PRIMARY KEY, hash TEXT NOT NULL, json TEXT NOT NULL, at TEXT NOT NULL);
 `;
 
-const LATEST_VERSION = 7;
+const LATEST_VERSION = 8;
 
 /** Loads storage.ts against a database, the way the app does on launch. */
 function launch(fake: Fake): Storage {
@@ -108,6 +112,23 @@ const custom = (id: string, subcategory: string) => ({
   at: '2025-01-01T00:00:00.000Z',
 });
 
+/** A downloaded city, small enough to read. */
+const COLUMBUS = {
+  id: 'columbus',
+  name: 'Columbus',
+  region: 'OH',
+  country: 'US',
+  lat: 39.96,
+  lng: -83.0,
+  icons: [{ id: 'short-north', name: 'Walk the Short North', place: 'pick:short-north', activity: 'neighborhood' }],
+  aliases: { 'osm:old-park': 'osm:n42' },
+  places: [
+    { id: 'osm:n42', name: 'Snow Trails', lat: 40.5, lng: -82.5, activities: ['snow-sports'] },
+    { id: 'pick:short-north', name: 'Short North', lat: 39.98, lng: -83.0, activities: ['neighborhood', 'food-market'], cost: 'Free' },
+    { id: 'ovt:clay', name: 'Clay Studio', lat: 39.95, lng: -83.01, activities: ['pottery-class'], duration: '2-3 hours' },
+  ],
+};
+
 /** A phone from the first version of the app, with something every migration has to move. */
 function firstVersionPhone(): Fake {
   return oldPhone(0, (db, kv) => {
@@ -143,7 +164,7 @@ function firstVersionPhone(): Fake {
     insert(db, 'plans', { entry_id: 'korean-bbq', city_id: 'columbus', place_id: 'columbus--osm-w7', day: '2025-02-01', at: '2025-01-03T00:00:00.000Z' });
     insert(db, 'plans', { entry_id: 'museums', city_id: 'columbus', place_id: null, day: '2025-02-02', at: '2025-01-03T00:00:00.000Z' });
     insert(db, 'drive_times', { origin: '39.96,-83.00', place_id: 'columbus--osm-n42', minutes: 25, at: '2025-01-01T00:00:00.000Z' });
-    insert(db, 'catalog_cities', { id: 'columbus', hash: 'abc', json: '{}', at: '2025-01-01T00:00:00.000Z' });
+    insert(db, 'catalog_cities', { id: 'columbus', hash: 'abc', json: JSON.stringify(COLUMBUS), at: '2025-01-01T00:00:00.000Z' });
     kv.set('savedIds', JSON.stringify(['skiing', 'snowboarding', 'pottery']));
     kv.set('hiddenIds', JSON.stringify(['korean-bbq']));
   });
@@ -169,7 +190,7 @@ describe('storage migrations', () => {
 
   it('upgrades a phone from the first version without losing a row', () => {
     const phone = firstVersionPhone();
-    const tables = ['completion_events', 'place_visits', 'reflections', 'plans', 'custom_activities', 'catalog_cities'];
+    const tables = ['completion_events', 'place_visits', 'reflections', 'plans', 'custom_activities'];
     const before = tables.map((t) => count(phone.db, t));
 
     launch(phone);
@@ -513,5 +534,103 @@ describe('backups from before version 7', () => {
     // Unsaving on this phone is a newer record than the old list, so it stays unsaved.
     expect(storage.loadList('saved')).toEqual(['pottery']);
     expect(storage.loadList('hidden')).toEqual(['bowling']);
+  });
+});
+
+describe('catalog places in tables (version 8)', () => {
+  it('moves a downloaded city out of its JSON blob into rows, keeping every place and its order', () => {
+    const phone = firstVersionPhone();
+    const storage = launch(phone);
+
+    expect(storage.loadCatalogCities()).toEqual([{ hash: 'abc', meta: expect.objectContaining({ id: 'columbus', aliases: COLUMBUS.aliases }) }]);
+    expect(storage.loadCatalogCities()[0].meta).not.toHaveProperty('places');
+    expect(storage.loadCatalogPlaces('columbus')).toEqual(
+      COLUMBUS.places.map((p) => ({ ...p, activities: expect.arrayContaining(p.activities) })),
+    );
+    expect(column(phone.db, "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'catalog_cities'")).toEqual(['catalog_cities']);
+    expect(column(phone.db, 'SELECT COUNT(*) FROM pragma_table_info(\'catalog_cities\') WHERE name = \'json\'')).toEqual([0]);
+  });
+
+  it('drops a blob that does not parse, so the city downloads again', () => {
+    const phone = oldPhone(7, (db) => {
+      db.exec('CREATE TABLE IF NOT EXISTS list_events (seq INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT NOT NULL UNIQUE, device_id TEXT NOT NULL, list TEXT NOT NULL, entry_id TEXT NOT NULL, added INTEGER NOT NULL, at TEXT NOT NULL)');
+      insert(db, 'catalog_cities', { id: 'seoul', hash: 'x', json: '{"id":', at: '2025-01-01T00:00:00.000Z' });
+    });
+    const storage = launch(phone);
+
+    expect(version(phone.db)).toBe(LATEST_VERSION);
+    expect(storage.loadCatalogCities()).toEqual([]);
+  });
+
+  it('finds places by bounding box, by activity and by id', () => {
+    const storage = launch(newPhone());
+    storage.saveCatalogCity(COLUMBUS as never, 'abc');
+
+    const downtown = storage.placesInBox('columbus', { south: 39.9, north: 40.0, west: -83.1, east: -82.9 });
+    expect(downtown.map((p) => p.id)).toEqual(['pick:short-north', 'ovt:clay']);
+    expect(storage.placesInBox('chicago', { south: 39.9, north: 40.0, west: -83.1, east: -82.9 })).toEqual([]);
+    expect(storage.placesFor('columbus', 'pottery-class').map((p) => p.id)).toEqual(['ovt:clay']);
+    expect(storage.placesFor('columbus', 'pottery-class', ['osm:n42']).map((p) => p.id)).toEqual(['osm:n42', 'ovt:clay']);
+    expect(storage.citiesWithPlace('ovt:clay')).toEqual(['columbus']);
+  });
+
+  it('replaces a city\'s rows when it downloads again', () => {
+    const storage = launch(newPhone());
+    storage.saveCatalogCity(COLUMBUS as never, 'abc');
+    storage.saveCatalogCity({ ...COLUMBUS, places: [COLUMBUS.places[2]] } as never, 'def');
+
+    expect(storage.loadCatalogCities()).toEqual([expect.objectContaining({ hash: 'def' })]);
+    expect(storage.loadCatalogPlaces('columbus').map((p) => p.id)).toEqual(['ovt:clay']);
+    expect(storage.placesFor('columbus', 'neighborhood')).toEqual([]);
+  });
+});
+
+describe('cities read from the tables', () => {
+  /** Loads cities.ts against a phone, the way the app does on launch. */
+  function launchCities(fake: Fake): typeof import('@/data/cities') {
+    globalThis.fakeStorage = fake;
+    let cities!: typeof import('@/data/cities');
+    jest.isolateModules(() => {
+      cities = require('@/data/cities');
+    });
+    return cities;
+  }
+
+  it('seeds the bundled city once, and reads aliases and summaries without loading places', () => {
+    const phone = firstVersionPhone();
+    const cities = launchCities(phone);
+    const bundled = count(phone.db, 'catalog_places');
+    launchCities(phone);
+
+    expect(count(phone.db, 'catalog_places')).toBe(bundled);
+    expect(column(phone.db, 'SELECT id FROM catalog_cities ORDER BY id')).toEqual(['columbus', 'los-angeles']);
+    expect(cities.nearestCity({ latitude: 40, longitude: -83 }, true).city.id).toBe('columbus');
+    expect(cities.citySummary('columbus')).toEqual(expect.objectContaining({ name: 'Columbus', region: 'OH' }));
+  });
+
+  it('finds the nearest places by growing a box around the point', () => {
+    const cities = launchCities(firstVersionPhone());
+    const near = cities.nearestPlaces('columbus', { latitude: 39.96, longitude: -83.0 }, 2);
+    expect(near.map((p) => p.id)).toEqual(['ovt:clay', 'pick:short-north']);
+    // The ski hill is about 80 km out, past the smaller boxes.
+    expect(cities.nearestPlaces('columbus', { latitude: 39.96, longitude: -83.0 }, 3).map((p) => p.id)).toContain('osm:n42');
+  });
+
+  it('finds history in a city that is not loaded, by its place', () => {
+    const cities = launchCities(firstVersionPhone());
+    cities.localCity('los-angeles');
+
+    const found = cities.findEntryAnywhere('pottery-class', 'ovt:clay');
+    expect(found?.city.id).toBe('columbus');
+    expect(found?.city.places.find((p) => p.id === 'ovt:clay')?.name).toBe('Clay Studio');
+    expect(found?.entry.places.map((p) => p.id)).toEqual(['ovt:clay']);
+    expect(cities.findEntryAnywhere('short-north')?.entry).toEqual(expect.objectContaining({ kind: 'icon', name: 'Walk the Short North' }));
+  });
+
+  it('keeps the whole city in use, with every place in order', () => {
+    const cities = launchCities(firstVersionPhone());
+    const city = cities.localCity('columbus')!;
+    expect(city.places.map((p) => p.id)).toEqual(COLUMBUS.places.map((p) => p.id));
+    expect(cities.localCity('columbus')).toBe(city);
   });
 });

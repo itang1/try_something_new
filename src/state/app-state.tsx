@@ -3,17 +3,19 @@ import { AT_HOME, customEntry, entriesForCity, isHomeSpot, withParents, type Cit
 import {
   applyCatalogAliases,
   citySummary,
+  cityWithoutPlaces,
   DEFAULT_CITY_ID,
   downloadCity,
   findEntryAnywhere,
   localCity,
   nearestCity,
+  nearestPlaces,
   needsDownload,
   refreshCatalog,
 } from '@/data/cities';
 import type { Coordinate, DriveTimes } from '@/data/drive';
 import { NO_FILTERS, type Filters } from '@/data/filters';
-import { cachedDriveTimes, refreshDriveTimes } from '@/data/routing';
+import { cachedDriveTimes, NEAREST_TIMED, refreshDriveTimes } from '@/data/routing';
 import {
   deleteCustomActivity,
   loadCustomActivities,
@@ -153,7 +155,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (lat == null || lng == null) return;
     const controller = new AbortController();
-    refreshDriveTimes({ latitude: lat, longitude: lng }, city.places, cachedTimes, controller.signal)
+    const from = { latitude: lat, longitude: lng };
+    refreshDriveTimes(from, nearestPlaces(city.id, from, NEAREST_TIMED), cachedTimes, controller.signal)
       .then((times) => setFetchedTimes({ key: timesKey, times }))
       .catch(() => {});
     return () => controller.abort();
@@ -172,7 +175,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       const found = findEntryAnywhere(id, placeId);
       if (found) return found;
       const custom = customs.find((c) => c.id === id);
-      const customCity = custom && localCity(custom.cityId);
+      const customCity = custom && cityWithoutPlaces(custom.cityId);
       return custom && customCity ? { entry: customEntry(custom), city: customCity } : undefined;
     },
     [customs],
