@@ -52,7 +52,7 @@ In order. These are the ones to start a thread on.
 4. [ ] **Test the storage migrations** · Architecture · M. Tests exist for days, drive and filters. The 6 SQLite migrations and alias moves have none, and a bad migration silently wipes someone's history.
 5. [ ] **Prepare the data for sync** · Architecture · M. Client-made UUIDs instead of `AUTOINCREMENT`, saved and hidden lists as events, a device id, and one storage module the sync code plugs into. Cheap now, painful after launch.
 6. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
-7. [ ] **Run expo-doctor in CI** · Architecture · S. Left over from the CI PR (#3). Add `npx expo-doctor` to `.github/workflows/ci.yml`.
+7. [x] **Run expo-doctor in CI** · Architecture · S. Left over from the CI PR (#3). Add `npx expo-doctor` to `.github/workflows/ci.yml`.
 
 ## Now: before launch
 
@@ -62,7 +62,7 @@ In order. These are the ones to start a thread on.
 - [ ] **Test the storage migrations** · Architecture · M. See Up next.
 - [ ] **Prepare the data for sync** · Architecture · M. See Up next.
 - [ ] **Build the Android widget** · Feature · M. From the old TODO.
-- [ ] **Run expo-doctor in CI** · Architecture · S. See Up next.
+- [x] **Run expo-doctor in CI** · Architecture · S. See Up next.
 - [ ] **Finish the release setup** · Launch · S. Needs your accounts: `eas init`, EAS environment variables, Apple and Play developer accounts, then EAS Update with a fingerprint runtime version. Steps are in PR #2's description and the README.
 - [ ] **Test on a cheap Android phone** · Launch · S. Cold start, parsing the Los Angeles file, and the map with every pin. The map spike only ran in the iOS Simulator.
 - [ ] **Decide on iPad** · UX · S. `supportsTablet` is on, so Apple will review it on iPad. Either give the main screens two columns or turn tablets off for launch.
