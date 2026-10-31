@@ -1,0 +1,77 @@
+# Re-imports OpenStreetMap parks, trails, bike routes and venues for a city, with wheelchair access and opening hours,
+# and opens a pull request with the result. Runs here because Claude's cloud sessions can't reach Overpass.
+# Start it from the Actions tab: "Import OpenStreetMap places", then Run workflow.
+name: Import OpenStreetMap places
+
+on:
+  workflow_dispatch:
+    inputs:
+      city:
+        description: City id, like seoul, or "all" for every city in data/cities
+        required: true
+        default: all
+      bbox:
+        description: Optional south,west,north,east box. Empty means 40 km around the city's center. Ignored for "all".
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: import-osm
+  cancel-in-progress: false
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Import
+        env:
+          CITY: ${{ inputs.city }}
+          BBOX: ${{ inputs.bbox }}
+        run: |
+          if [ "$CITY" = all ]; then
+            cities=$(ls data/cities | sed 's/\.json$//')
+          else
+            cities="$CITY"
+          fi
+          for city in $cities; do
+            box="${BBOX:--}"
+            [ "$CITY" = all ] && box=-
+            # Overpass turns busy clients away for a minute or two, so try each city a few times.
+            for attempt in 1 2 3; do
+              node scripts/import-osm.mjs "$city" "$box" | tee -a "$RUNNER_TEMP/summary.txt" && break
+              [ "$attempt" = 3 ] && exit 1
+              sleep 60
+            done
+          done
+      - run: npm run validate
+      - name: Open a pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CITY: ${{ inputs.city }}
+        run: |
+          if git diff --quiet; then echo "Nothing changed."; exit 0; fi
+          branch="osm-import/$CITY-$(date -u +%Y%m%d-%H%M)"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git commit -am "Re-import OpenStreetMap places for $CITY"
+          git push -u origin "$branch"
+          {
+            echo "Re-imported OpenStreetMap places with \`scripts/import-osm.mjs\` for **$CITY**."
+            echo
+            echo '```'
+            cat "$RUNNER_TEMP/summary.txt"
+            echo '```'
+            echo
+            echo "Pull requests opened by this workflow don't start CI on their own. Push a commit or re-run CI from the Actions tab before merging."
+          } > "$RUNNER_TEMP/body.md"
+          # Needs "Allow GitHub Actions to create and approve pull requests" in the repository's Actions settings.
+          gh pr create --title "Re-import OpenStreetMap places for $CITY" --body-file "$RUNNER_TEMP/body.md" \
+            || echo "Couldn't open the pull request. The branch $branch is pushed; open one from it."

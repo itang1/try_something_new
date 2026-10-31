@@ -52,8 +52,8 @@ In order. These are the ones to start a thread on.
 
 1. [~] **Optional account with cross-device sync** · Backend · L. The Supabase backend and the sync client (`src/data/sync.ts`, PR #27) are in. Left, as M items: **Turn on Apple and Google sign-in** (needs you: Google OAuth client ids, and the bundle id entered for Apple in the Supabase dashboard), and **Add Back up and sync to Settings** (sign in, sync now, sign out with `resetSync`, delete account through the `delete-account` function). Set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env.local` and EAS first (see `supabase/README.md`).
 2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), the rating prompt after closing the card for a "Loved it", and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
-3. [ ] **Finish Seoul's parks and trails** · Data · S. Needs your computer: the cloud can't reach Overpass. Run `node scripts/import-osm.mjs seoul 37.19,126.5,37.95,127.46` and commit the result. Overture has few parks and no bike routes there, so Seoul's outdoors list is mostly hand-picked until then.
-4. [ ] **Remind on a plan's day** · Feature · S. A local notification the morning of a planned activity, using the weekend ideas notification setup.
+3. [ ] **Remind on a plan's day** · Feature · S. A local notification the morning of a planned activity, using the weekend ideas notification setup.
+4. [~] **Wheelchair and stroller access** · Data · S. The OSM import keeps the `wheelchair` tag, and the **Import OpenStreetMap places** Action fills it in for every city. Left: store it in the app's catalog tables and add an "Accessible" filter.
 5. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
 6. [ ] **Use the app without a city** · Feature · M. Someone outside the 5 cities, or who skips location, should still get at-home and host-friends ideas instead of an empty Explore.
 
@@ -64,7 +64,6 @@ In order. These are the ones to start a thread on.
 - [~] **Protect the drive-time Worker** · Backend · S. Per-IP rate limiting is in, and goes live on the next `npx wrangler deploy`. Left: App Attest / Play Integrity once the app is in the stores.
 - [ ] **Check merged work on a real phone** · Launch · S. See Up next.
 - [~] **Optional account with cross-device sync** · Backend · L. Backend and sync client done; see Up next.
-- [ ] **Finish Seoul's parks and trails** · Data · S. See Up next.
 - [ ] **Build the Android widget** · Feature · M. From the old TODO.
 - [ ] **Finish the release setup** · Launch · S. Needs your accounts: `eas init`, EAS environment variables, Apple and Play developer accounts, then EAS Update with a fingerprint runtime version. Steps are in PR #2's description and the README.
 - [ ] **Test on a cheap Android phone** · Launch · S. Cold start, parsing the Los Angeles file, and the map with every pin. The map spike only ran in the iOS Simulator.
@@ -112,9 +111,9 @@ In order. These are the ones to start a thread on.
 - [ ] **Directions in Korea** · UX · S. Google Maps has no driving directions in South Korea, so on Android open Naver Map or KakaoMap for Seoul places, with Google Maps as the fallback.
 - [ ] **Show kilometers outside the US** · UX · S. Default to kilometers for cities like Seoul, alongside a miles or kilometers setting. Only needed once the app shows distances; today it shows drive minutes.
 - [ ] **English names for Seoul places** · Data · M. Overture only has Korean names there. Options: OpenStreetMap's `name:en` (comes with the OSM import), or the Korea Tourism Organization's English TourAPI, which needs a free key from data.go.kr.
-- [ ] **Add more cities** · Data · M. The 25 largest US metros, then a few international ones. Re-import monthly from a scheduled Action.
-- [ ] **Show opening hours where known** · Data · M. OpenStreetMap `opening_hours`, an "Open now" badge, never hiding places without hours.
-- [ ] **Wheelchair and stroller access** · Data · S. Read OpenStreetMap's `wheelchair` tag and add an "Accessible" filter.
+- [ ] **Add more cities** · Data · M. The 25 largest US metros, then a few international ones. Re-import monthly from a scheduled Action; the **Import OpenStreetMap places** Action already does the OSM half on demand.
+- [~] **Show opening hours where known** · Data · M. The OSM import keeps `opening_hours` as each place's `hours`. Left: store it in the app, parse it on the phone, and show an "Open now" badge, never hiding places without hours.
+- [~] **Wheelchair and stroller access** · Data · S. See Up next.
 - [ ] **Report a place through a form** · Data · S. A Worker endpoint that opens a GitHub issue with the place id, instead of email.
 
 **Growth after launch**
@@ -150,6 +149,8 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **Import OpenStreetMap places from GitHub Actions** · Data. The cloud can't reach Overpass, so an Action ("Import OpenStreetMap places" in the Actions tab) runs `scripts/import-osm.mjs` for one city or all of them and opens a pull request. Without a box the script now takes 40 km around the city's center, and it keeps OSM's wheelchair access and opening hours. PR #29.
+- [x] **Finish Seoul's parks and trails** · Data. OpenStreetMap parks, trails, bike routes and venues for Seoul. PR #28.
 - [x] **Ask for a rating at a happy moment** · Growth. The system review prompt (expo-store-review) when the share card closes after a "Loved it", shared or not, at most once every 120 days. Never on launch or after "Not for me". Adds a native module, so it needs a new development build. PR #27.
 - [x] **Add the sync client** · Backend. `sync()` in `src/data/sync.ts` pushes `changesSince` in pages and pulls each table by `(updated_at, id)` into `applyChanges`, saving each cursor only after its step succeeds. Uses `@supabase/supabase-js`, with the session kept in the SQLite key-value store. Nothing calls it until sign-in lands. PR #27.
 - [x] **Share a "tried it" card** · Growth. After Save on the done sheet, and from a share button on each memory: an image card with your photo (or the activity's colors), the activity's icon and name, the place, "Loved it", "#12 in Seattle" and the app's name, in story (1080×1920) and square (1080×1080) sizes, through the share sheet. Adds react-native-view-shot, so it needs a new development build. The short link waits for **Invite links that open the idea**. PR #26.
