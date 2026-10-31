@@ -76,5 +76,7 @@ describe('catalog', () => {
     expect(withParents(['origami'])).toEqual(['origami', 'try-a-craft']);
     expect(withParents(['origami', 'tie-dye'])).toEqual(['origami', 'tie-dye', 'try-a-craft']);
     expect(withParents(['bowling'])).toEqual(['bowling']);
+    expect(withParents(['make-pasta'])).toEqual(['make-pasta', 'cook-something-new']);
+    expect(withParents(['learn-chess'])).toEqual(['learn-chess', 'learn-a-skill']);
   });
 });
