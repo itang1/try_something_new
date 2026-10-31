@@ -3,8 +3,8 @@
 The backend for the optional account and cross-device sync. Nothing in the app talks to it yet; the in-app
 "Back up and sync" screen is a separate roadmap item.
 
-- **Project:** Try Something New, in the Poodle Strategy organization. URL: `PROJECT_URL`
-- **Dashboard:** `DASHBOARD_URL`
+- **Project:** Try Something New, in the Poodle Strategy organization. URL: https://fueiospwqwukvqmwcfrn.supabase.co
+- **Dashboard:** https://supabase.com/dashboard/project/fueiospwqwukvqmwcfrn
 
 ## What's here
 
@@ -56,4 +56,4 @@ Set them as environment variables, the same way as `GOOGLE_MAPS_ANDROID_API_KEY`
 ## Applying changes
 
 Migrations here were applied to the project with the Supabase connector. With the Supabase CLI instead:
-`supabase link --project-ref PROJECT_REF` then `supabase db push`, and `supabase functions deploy delete-account`.
+`supabase link --project-ref fueiospwqwukvqmwcfrn` then `supabase db push`, and `supabase functions deploy delete-account`.

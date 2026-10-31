@@ -47,7 +47,7 @@ The single list of what to build next. It replaces `TODO.md`. Last refreshed 202
 In order. These are the ones to start a thread on.
 
 1. [ ] **Store places in indexed SQLite tables** · Architecture · M. Each city is one JSON blob parsed whole, and Seoul makes five. Query by bounding box instead, to cut memory and launch time.
-2. [ ] **Optional account with cross-device sync** · Backend · L. Ask for a plan first and split it into M items here. Builds on the item above and on **Prepare the data for sync** (done); see Storage decision below.
+2. [~] **Optional account with cross-device sync** · Backend · L. The Supabase backend is set up (see `supabase/README.md`). Left, as M items: **Turn on Apple and Google sign-in** (needs you: Google OAuth client ids, and the bundle id entered for Apple in the Supabase dashboard), **Add the sync client** (`@supabase/supabase-js`, push with `changesSince`, pull with `applyChanges`), and **Add Back up and sync to Settings** (sign in, sync now, sign out, delete account through the `delete-account` function).
 3. [~] **Check off the at-home way** · UX · S. Being added to PR #6: one "Where to do it" list with "At home" as the first row, each row with the same checkmark.
 4. [?] **Count a specific craft toward "Try a new craft"** · Feature · S. Open question from PR #6. Recommendation: yes, doing any kind checks off the broad idea once, and the broad idea stops coming back as "try another".
 5. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
@@ -84,8 +84,8 @@ In order. These are the ones to start a thread on.
 
 **Accounts and sync**
 
-- [ ] **Optional account with cross-device sync** · Backend · L. Moved up to Now; see Up next. "Back up and sync" in Settings with Sign in with Apple or Google, push and pull the logs, merge by latest event, in-app account deletion. Recommended backend: Supabase (see Storage decision below). From the old TODO.
-- [ ] **Back up memory photos** · Backend · M. Resize to about 1600 px, upload on Wi-Fi in the background, keep the local copy as the one shown.
+- [~] **Optional account with cross-device sync** · Backend · L. Backend done; see Up next. "Back up and sync" in Settings with Sign in with Apple or Google, push and pull the logs, merge by latest event, in-app account deletion. Recommended backend: Supabase (see Storage decision below). From the old TODO.
+- [ ] **Back up memory photos** · Backend · M. The private `photos` bucket is ready, one folder per account. Resize to about 1600 px, upload on Wi-Fi in the background, keep the local copy as the one shown.
 
 **Better suggestions**
 
@@ -134,6 +134,8 @@ Unsorted ideas. Move them into a horizon at the next refresh.
 Recommendation: **Supabase** (Postgres with row-level security, Sign in with Apple and Google, Storage for photos), with a small hand-written push/pull of the existing append-only logs. Cloudflare D1 + R2 is the runner-up: cheapest, but more to build. Add PowerSync only if shared plans make conflicts real. Do **Prepare the data for sync** first, whichever backend wins. Offering Google sign-in means also offering Sign in with Apple, and any app with accounts needs in-app account deletion. The full comparison is on the [roadmap page](https://claude.ai/code/artifact/4e24e846-bd46-4e59-b7b8-1c71c340fc67).
 
 ## Done
+
+- [x] **Set up Supabase for sync** · Backend. Project "Try Something New" (free plan, us-west-1). Tables mirror the synced SQLite tables with `owner_id` and a server `updated_at`, row-level security per account, a private photos bucket, and a `delete-account` Edge Function. Schema in `supabase/migrations`, keys and setup in `supabase/README.md`.
 
 - [x] **Prepare the data for sync** · Architecture. Every row gets a UUID made on the phone and the id of the device that made it, saved and hidden ideas are event logs like the rest, the latest event by time wins, and `changesSince` / `applyChanges` in `src/data/storage.ts` are where sync plugs in. Migration 7, with tests. PR #15.
 
