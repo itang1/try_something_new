@@ -50,7 +50,7 @@ At a glance: the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquB
 
 In order. These are the ones to start a thread on.
 
-1. [ ] **Optional account with cross-device sync** · Backend · L. Ask for a plan first and split it into M items here. Builds on **Store places in indexed SQLite tables** and **Prepare the data for sync** (both done); see Storage decision below.
+1. [~] **Optional account with cross-device sync** · Backend · L. The Supabase backend is set up (see `supabase/README.md`). Left, as M items: **Turn on Apple and Google sign-in** (needs you: Google OAuth client ids, and the bundle id entered for Apple in the Supabase dashboard), **Add the sync client** (`@supabase/supabase-js`, push with `changesSince`, pull with `applyChanges`), and **Add Back up and sync to Settings** (sign in, sync now, sign out, delete account through the `delete-account` function).
 2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
 3. [ ] **Ask for a rating at a happy moment** · Growth · S. The system review prompt (expo-store-review) right after someone rates an activity "Loved it", which now also offers the share card. Never on launch or after "Not for me". MARKETING.md plans it for the same beta week as the share card.
 4. [ ] **Finish Seoul's parks and trails** · Data · S. Needs your computer: the cloud can't reach Overpass. Run `node scripts/import-osm.mjs seoul 37.19,126.5,37.95,127.46` and commit the result. Overture has few parks and no bike routes there, so Seoul's outdoors list is mostly hand-picked until then.
@@ -63,7 +63,7 @@ In order. These are the ones to start a thread on.
 - [~] **Make the tabs easier to get around** · UX · M. PR #11: one header pattern on every tab (the tab's own filter or sort button, then Settings, always top right), Map filters for Not done, Done, Saved and kind, a Checklist grouped by kind with folding sections, and Memories opened from the progress card. Left: check it on a phone.
 - [~] **Protect the drive-time Worker** · Backend · S. Per-IP rate limiting is in, and goes live on the next `npx wrangler deploy`. Left: App Attest / Play Integrity once the app is in the stores.
 - [ ] **Check merged work on a real phone** · Launch · S. See Up next.
-- [ ] **Optional account with cross-device sync** · Backend · L. See Up next.
+- [~] **Optional account with cross-device sync** · Backend · L. Backend done; see Up next.
 - [ ] **Finish Seoul's parks and trails** · Data · S. See Up next.
 - [ ] **Build the Android widget** · Feature · M. From the old TODO.
 - [ ] **Finish the release setup** · Launch · S. Needs your accounts: `eas init`, EAS environment variables, Apple and Play developer accounts, then EAS Update with a fingerprint runtime version. Steps are in PR #2's description and the README.
@@ -93,8 +93,8 @@ In order. These are the ones to start a thread on.
 
 **Accounts and sync**
 
-- [ ] **Optional account with cross-device sync** · Backend · L. Moved up to Now; see Up next. "Back up and sync" in Settings with Sign in with Apple or Google, push and pull the logs, merge by latest event, in-app account deletion. Recommended backend: Supabase (see Storage decision below). From the old TODO.
-- [ ] **Back up memory photos** · Backend · M. Resize to about 1600 px, upload on Wi-Fi in the background, keep the local copy as the one shown.
+- [~] **Optional account with cross-device sync** · Backend · L. Backend done; see Up next. "Back up and sync" in Settings with Sign in with Apple or Google, push and pull the logs, merge by latest event, in-app account deletion. Recommended backend: Supabase (see Storage decision below). From the old TODO.
+- [ ] **Back up memory photos** · Backend · M. The private `photos` bucket is ready, one folder per account. Resize to about 1600 px, upload on Wi-Fi in the background, keep the local copy as the one shown.
 
 **Better suggestions**
 
@@ -152,6 +152,7 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 ## Done
 
 - [x] **Share a "tried it" card** · Growth. After Save on the done sheet, and from a share button on each memory: an image card with your photo (or the activity's colors), the activity's icon and name, the place, "Loved it", "#12 in Seattle" and the app's name, in story (1080×1920) and square (1080×1080) sizes, through the share sheet. Adds react-native-view-shot, so it needs a new development build. The short link waits for **Invite links that open the idea**. PR #26.
+- [x] **Set up Supabase for sync** · Backend. Project "Try Something New" (free plan, us-west-1). Tables mirror the synced SQLite tables with `owner_id` and a server `updated_at`, row-level security per account, a private photos bucket, and a `delete-account` Edge Function. Schema in `supabase/migrations`, keys and setup in `supabase/README.md`.
 - [x] **More broad ideas like crafts** · Data. "Cook something new" (dumplings, sushi, kimchi, tortillas, no-churn ice cream, plus bread, pasta and cooking classes) and "Learn a new skill" (a language, chess, sign language, a card trick, juggling, first aid, code, plus music lessons), on the same parent model as "Try a new craft". PR #19.
 - [x] **More at-home and DIY versions** · Data. Home versions for 12 more activities and an "anywhere" option for 11 in PR #16, then four new home-only crafts under Try a new craft (Carve a block print, Build a terrarium, Bind a notebook, Press flowers) in PR #22.
 - [x] **Remember the Map filter and Checklist sections** · UX. The Map's status and kind filter, and the Checklist's filter, sort, grouping and open sections, stay the same after the app restarts. From the Inbox. PR #21.
