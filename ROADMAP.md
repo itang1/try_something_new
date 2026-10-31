@@ -81,7 +81,7 @@ In order. These are the ones to start a thread on.
 - [~] **Suggest at-home crafts and broad ideas** · Feature · M. PR #6: a "Try a new craft" parent with 16 kinds, studio or DIY on each card, and Stay in leading with the home version. Waiting on your review.
 - [ ] **Use the app without a city** · Feature · M. Someone outside the 5 cities, or who skips location, should still get at-home and host-friends ideas instead of an empty Explore.
 - [ ] **More broad ideas like crafts** · Data · S. Use the same parent model for "Cook something new", "Learn a new skill" and "Host friends", once PR #6 merges.
-- [~] **More at-home and DIY versions** · Data · S. Add a `home` line to activities that can work at home and don't have one yet, and a few new home-only crafts. PR #NN: home versions for 12 more activities (yoga, karaoke, hot pot, mini golf in the backyard and more), a new "anywhere" option for 11 that need no set venue (pickleball in a backyard or any tennis court, tennis, roller skating, disc golf and more) that checks off like a place, and a host line for run club. Left: a few new home-only crafts.
+- [~] **More at-home and DIY versions** · Data · S. Add a `home` line to activities that can work at home and don't have one yet, and a few new home-only crafts. PR #16: home versions for 12 more activities (yoga, karaoke, hot pot, mini golf in the backyard and more), a new "anywhere" option for 11 that need no set venue (pickleball in a backyard or any tennis court, tennis, roller skating, disc golf and more) that checks off like a place, and a host line for run club. Left: a few new home-only crafts.
 - [ ] **Draw custom icons for crafts** · UX · S. The activities without a Material Symbol, mostly crafts, in the same style.
 
 **Accounts and sync**
