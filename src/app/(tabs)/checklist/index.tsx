@@ -1,29 +1,26 @@
 import { useCallback, useMemo, useState, type ComponentType } from 'react';
-import { Pressable, ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
+import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import type { SFSymbol } from 'expo-symbols';
 import NativeSegmentedControl, {
   type SegmentedControlProps,
 } from '@react-native-segmented-control/segmented-control';
-import MemoriesIcon from '@expo/material-symbols/photo_library.xml';
 import SortIcon from '@expo/material-symbols/swap_vert.xml';
 import { entryHint, LEVELS, type Entry } from '@/data/catalog';
+import { checklistSections, type ChecklistSection, type Grouping } from '@/data/checklist';
 import { formatDay } from '@/data/days';
 import { driveMinutes } from '@/data/drive';
+import { matchesStatus, STATUSES, type Status } from '@/data/status';
 import { useAppState } from '@/state/app-state';
 import { useToggleWithUndo } from '@/state/use-toggle-with-undo';
 import { readable, subcategory, useColors } from '@/theme';
 import { ActivityRow, type PlaceProgress } from '@/components/activity-row';
-import { FilterChip } from '@/components/chips';
 import { Icon } from '@/components/icon';
-import { toolbarIcon } from '@/components/header-items';
+import { settingsButton, toolbarIcon } from '@/components/header-items';
 import { LocationControl } from '@/components/location-control';
 
 // The package's class typings predate React 19.3's JSX types; the component itself works.
 const SegmentedControl = NativeSegmentedControl as unknown as ComponentType<SegmentedControlProps>;
-
-const STATUSES = ['All', 'Not Done', 'Done', 'Saved'] as const;
-type Status = (typeof STATUSES)[number];
 
 type Sort = 'Name' | 'Distance' | 'Duration' | 'Cost' | 'Level';
 const SORTS: { label: Sort; sf: SFSymbol }[] = [
@@ -32,6 +29,10 @@ const SORTS: { label: Sort; sf: SFSymbol }[] = [
   { label: 'Duration', sf: 'clock' },
   { label: 'Cost', sf: 'dollarsign.circle' },
   { label: 'Level', sf: 'chart.bar' },
+];
+const GROUPINGS: { label: Grouping; title: string; sf: SFSymbol }[] = [
+  { label: 'Kind', title: 'By kind', sf: 'square.stack.3d.up' },
+  { label: 'None', title: 'One list', sf: 'list.bullet' },
 ];
 
 type Row = { activity: Entry; minutes: number | null; progress: PlaceProgress | null };
@@ -43,24 +44,24 @@ export default function ChecklistScreen() {
   const toggleDone = useToggleWithUndo();
   const [status, setStatus] = useState<Status>('All');
   const [sort, setSort] = useState<Sort>('Name');
+  const [grouping, setGrouping] = useState<Grouping>('Kind');
   const [search, setSearch] = useState('');
-  // The chip remembers its city, so switching cities resets it without an effect.
-  const [chip, setChip] = useState<{ city: string; sub: string } | null>(null);
-  const selectedSub = chip?.city === city.id ? chip.sub : null;
+  // Kind sections start folded so the list opens as a short overview, not 100 rows.
+  const [open, setOpen] = useState<Set<string>>(new Set());
+  const toggleSection = (key: string) =>
+    setOpen((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(key)) next.add(key);
+      return next;
+    });
 
   const cityActivities = entries;
-  const subcategories = useMemo(
-    () => [...new Set(cityActivities.map((a) => a.subcategory))].sort(),
-    [cityActivities],
-  );
+  const searching = search.trim().length > 0;
   const doneCount = cityActivities.filter((a) => doneIds.has(a.id)).length;
   const fraction = cityActivities.length ? doneCount / cityActivities.length : 0;
 
   const sections = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
-    const matchesStatus = (a: Entry) =>
-      status === 'All' ||
-      (status === 'Saved' ? savedIds.has(a.id) : (status === 'Done') === doneIds.has(a.id));
     const matchesQuery = (a: Entry) =>
       !query ||
       a.name.toLocaleLowerCase().includes(query) ||
@@ -72,8 +73,7 @@ export default function ChecklistScreen() {
       return { visited: visited.length, total: a.places.length, names: visited.map((p) => p.name).join(', ') };
     };
     const result: Row[] = cityActivities
-      .filter((a) => !selectedSub || a.subcategory === selectedSub)
-      .filter(matchesStatus)
+      .filter((a) => matchesStatus([a.id], status, doneIds, savedIds))
       .filter(matchesQuery)
       .map((a) => ({ activity: a, minutes: driveMinutes(a, origin, driveTimes), progress: progressOf(a) }));
     const byName = (x: Row, y: Row) => x.activity.name.localeCompare(y.activity.name);
@@ -85,16 +85,19 @@ export default function ChecklistScreen() {
       Level: (x, y) => LEVELS[x.activity.level].rank - LEVELS[y.activity.level].rank || byName(x, y),
     };
     result.sort(compare[sort]);
-    // Planned and not yet done rows move up into their own section, soonest first.
-    const isUpcoming = (r: Row) => plans.has(r.activity.id) && !doneIds.has(r.activity.id);
-    const day = (r: Row) => plans.get(r.activity.id)?.day ?? '';
-    const rest = result.filter((r) => !isUpcoming(r));
-    return [
-      { title: 'Coming up', data: result.filter(isUpcoming).sort((x, y) => day(x).localeCompare(day(y))) },
-      { title: `${city.name} icons`, data: rest.filter((r) => r.activity.kind === 'icon') },
-      { title: 'Activities', data: rest.filter((r) => r.activity.kind === 'activity') },
-    ].filter((section) => section.data.length > 0);
-  }, [cityActivities, selectedSub, status, doneIds, savedIds, visitedPlaceIds, search, origin, driveTimes, sort, city.name, plans]);
+    return checklistSections(cityActivities, result, {
+      grouping,
+      cityName: city.name,
+      doneIds,
+      planDay: (id) => plans.get(id)?.day,
+      kindLabel: (id) => subcategory(id).label,
+    });
+  }, [cityActivities, status, doneIds, savedIds, visitedPlaceIds, search, origin, driveTimes, sort, grouping, city.name, plans]);
+
+  // A search, or a single section, shows everything; otherwise folded kinds hide their rows.
+  const showAll = searching || sections.length === 1;
+  const isOpen = (s: ChecklistSection<Row>) => !s.collapsible || showAll || open.has(s.key);
+  const visibleSections = sections.map((s) => (isOpen(s) ? s : { ...s, data: [] as Row[] }));
 
   const renderItem = useCallback(
     ({ item }: { item: Row }) => (
@@ -116,12 +119,13 @@ export default function ChecklistScreen() {
   const header = (
     <View style={styles.header}>
       <LocationControl />
-      <View
-        style={[styles.progress, { backgroundColor: colors.accentSoft }]}
-        accessible
-        accessibilityRole="progressbar"
-        accessibilityLabel={`${doneCount} of ${cityActivities.length} tried`}
-        accessibilityValue={{ min: 0, max: cityActivities.length, now: doneCount }}
+      {/* Progress and Memories are the same story: what you've tried. Tapping it opens the memories. */}
+      <Pressable
+        onPress={() => router.push('/checklist/memories')}
+        style={({ pressed }) => [styles.progress, { backgroundColor: colors.accentSoft, opacity: pressed ? 0.7 : 1 }]}
+        accessibilityRole="button"
+        accessibilityLabel={`${doneCount} of ${cityActivities.length} tried, ${Math.floor(fraction * 100)} percent`}
+        accessibilityHint="Opens your memories"
       >
         <View style={styles.progressTop}>
           <Icon name="trophy" size={18} color={colors.accent} />
@@ -133,46 +137,33 @@ export default function ChecklistScreen() {
         <View style={[styles.track, { backgroundColor: colors.fill }]}>
           <View style={[styles.bar, { width: `${fraction * 100}%`, backgroundColor: colors.accent }]} />
         </View>
-      </View>
+        <View style={styles.memories}>
+          <Icon name="photo_library" size={16} color={colors.accent} />
+          <Text style={[styles.memoriesText, { color: colors.accent }]}>Memories</Text>
+          <Icon name="chevron_right" size={16} color={colors.accent} />
+        </View>
+      </Pressable>
 
       <SegmentedControl
         values={[...STATUSES]}
         selectedIndex={STATUSES.indexOf(status)}
         onChange={(e) => setStatus(STATUSES[e.nativeEvent.selectedSegmentIndex])}
       />
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-        <FilterChip
-          title="All"
-          icon="grid_view"
-          color={colors.accent}
-          selected={!selectedSub}
-          onPress={() => setChip(null)}
-        />
-        {subcategories.map((sub) => (
-          <FilterChip
-            key={sub}
-            title={subcategory(sub).label}
-            icon={subcategory(sub).icon}
-            color={subcategory(sub).color}
-            selected={selectedSub === sub}
-            onPress={() => setChip(selectedSub === sub ? null : { city: city.id, sub })}
-          />
-        ))}
-      </ScrollView>
     </View>
   );
 
   return (
     <>
       <SectionList
-        sections={sections}
+        sections={visibleSections}
         keyExtractor={(row) => row.activity.id}
         renderItem={renderItem}
         renderSectionHeader={({ section }) => (
-          <Text style={[styles.section, { color: colors.secondary, backgroundColor: colors.background }]}>
-            {section.title}
-          </Text>
+          <SectionHeader
+            section={section}
+            open={isOpen(section)}
+            onToggle={section.collapsible && !showAll ? () => toggleSection(section.key) : undefined}
+          />
         )}
         stickySectionHeadersEnabled={false}
         ListHeaderComponent={header}
@@ -209,28 +200,68 @@ export default function ChecklistScreen() {
         onCancelButtonPress={() => setSearch('')}
       />
       <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button
-          accessibilityLabel="Memories"
-          tintColor={colors.accent}
-          onPress={() => router.push('/checklist/memories')}
-        >
-          <Stack.Toolbar.Icon {...toolbarIcon('photo.on.rectangle', MemoriesIcon)} />
-        </Stack.Toolbar.Button>
-        <Stack.Toolbar.Menu accessibilityLabel="Sort" tintColor={colors.accent}>
+        <Stack.Toolbar.Menu accessibilityLabel="Sort and group" tintColor={colors.accent}>
           <Stack.Toolbar.Icon {...toolbarIcon('arrow.up.arrow.down', SortIcon)} />
-          {SORTS.map((s) => (
-            <Stack.Toolbar.MenuAction
-              key={s.label}
-              icon={process.env.EXPO_OS === 'ios' ? s.sf : undefined}
-              isOn={sort === s.label}
-              onPress={() => setSort(s.label)}
-            >
-              {s.label}
-            </Stack.Toolbar.MenuAction>
-          ))}
+          <Stack.Toolbar.Menu inline title="Sort by">
+            {SORTS.map((s) => (
+              <Stack.Toolbar.MenuAction
+                key={s.label}
+                icon={process.env.EXPO_OS === 'ios' ? s.sf : undefined}
+                isOn={sort === s.label}
+                onPress={() => setSort(s.label)}
+              >
+                {s.label}
+              </Stack.Toolbar.MenuAction>
+            ))}
+          </Stack.Toolbar.Menu>
+          <Stack.Toolbar.Menu inline title="Group">
+            {GROUPINGS.map((g) => (
+              <Stack.Toolbar.MenuAction
+                key={g.label}
+                icon={process.env.EXPO_OS === 'ios' ? g.sf : undefined}
+                isOn={grouping === g.label}
+                onPress={() => setGrouping(g.label)}
+              >
+                {g.title}
+              </Stack.Toolbar.MenuAction>
+            ))}
+          </Stack.Toolbar.Menu>
         </Stack.Toolbar.Menu>
+        {settingsButton(colors.accent, router)}
       </Stack.Toolbar>
     </>
+  );
+}
+
+function SectionHeader({
+  section,
+  open,
+  onToggle,
+}: {
+  section: ChecklistSection<Row>;
+  open: boolean;
+  onToggle?: () => void;
+}) {
+  const colors = useColors();
+  const count = section.key === 'upcoming' ? `${section.total}` : `${section.done} of ${section.total}`;
+  const body = (
+    <>
+      <Text style={[styles.section, styles.grow, { color: colors.secondary }]}>{section.title}</Text>
+      <Text style={[styles.sectionCount, { color: colors.tertiary }]}>{count}</Text>
+      {onToggle && <Icon name={open ? 'keyboard_arrow_down' : 'chevron_right'} size={20} color={colors.secondary} />}
+    </>
+  );
+  if (!onToggle) return <View style={styles.sectionRow}>{body}</View>;
+  return (
+    <Pressable
+      onPress={onToggle}
+      accessibilityRole="button"
+      accessibilityState={{ expanded: open }}
+      accessibilityLabel={`${section.title}, ${section.done} of ${section.total} done`}
+      style={({ pressed }) => [styles.sectionRow, styles.sectionButton, { backgroundColor: colors.card, opacity: pressed ? 0.6 : 1 }]}
+    >
+      {body}
+    </Pressable>
   );
 }
 
@@ -244,8 +275,12 @@ const styles = StyleSheet.create({
   track: { height: 4, borderRadius: 2, overflow: 'hidden' },
   bar: { height: 4, borderRadius: 2 },
   caption: { fontSize: 13, textAlign: 'center' },
-  section: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase', marginTop: 12, marginLeft: 4 },
-  chips: { gap: 8, paddingVertical: 2 },
+  memories: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-end' },
+  memoriesText: { fontSize: 14, fontWeight: '600' },
+  sectionRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, paddingHorizontal: 4, minHeight: 28 },
+  sectionButton: { minHeight: 44, paddingHorizontal: 12, borderRadius: 12, marginTop: 4 },
+  section: { fontSize: 13, fontWeight: '600', textTransform: 'uppercase' },
+  sectionCount: { fontSize: 13, fontVariant: ['tabular-nums'] },
   empty: { alignItems: 'center', gap: 8, paddingTop: 48 },
   add: {
     flexDirection: 'row',
