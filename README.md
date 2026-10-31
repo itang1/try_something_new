@@ -65,6 +65,8 @@ The app is built on a few findings from psychology. The evidence varies, so the 
 - **Credits:** OpenStreetMap (ODbL) and Overture Maps (CDLA Permissive 2.0) both require attribution. The map shows their notices in its corner, each activity's place list names its sources, and the Settings screen (the gear button on Explore) lists every source, what it's used for, and its license. They're defined once in [`src/data/credits.ts`](src/data/credits.ts), and a place's source is read from its id prefix. A new data source gets a line there.
 - **Reports:** a flag on each place opens an email about a wrong or closed place, with its id filled in. The address goes in `.env.local` as `EXPO_PUBLIC_REPORT_EMAIL`, kept out of the public repo, and the flag is hidden without it. Fixes go into the import rules or the city file.
 - **Crash reports:** [Sentry](https://sentry.io) through `@sentry/react-native`, set up in [`src/crash-reporting.ts`](src/crash-reporting.ts). Release builds send crashes and slow screens when `EXPO_PUBLIC_SENTRY_DSN` is set; development builds and builds without it send nothing. Reports carry no user details, and places, plans and locations stay on the device. For readable stack traces, EAS builds also need `SENTRY_AUTH_TOKEN` (a sensitive secret), `SENTRY_ORG` and `SENTRY_PROJECT` in their environment so source maps upload.
+- **Web links:** with `EXPO_PUBLIC_WEB_URL` set to the website's origin (like `https://trysomething.new`), "Invite a friend" adds the idea's page (`/activity/<id>?s=invite`), the "tried it" card prints the site's host in its corner, Settings links to `/privacy`, and `app.config.ts` adds universal links (`applinks:<host>`) and a verified Android app link for `https://<host>/activity`, so the page opens the idea in the app when it's installed. The link says which kind of share it came from, never who shared it. Changing the variable needs a new development build. Without it, none of this appears.
+- **Usage counts:** opt-in and off by default, from "Share anonymous usage counts" in Settings ([`src/data/analytics.ts`](src/data/analytics.ts)). Each event (`app_open`, `plan_made`, `done_saved`, `memory_saved`, `card_shared`, `invite_sent`) is one row in Supabase's insert-only `app_events` table with the platform, the app version and the days since the app was first opened. No device id, account or location. Needs the Supabase keys; development builds send nothing.
 - **Checks:** a GitHub Action runs `npm run lint`, `npm run typecheck` and `npm test` (Jest with `jest-expo`, tests in `__tests__/`) on every pull request.
 
 ## Building
@@ -89,6 +91,7 @@ npx eas-cli@latest submit --profile production --platform android
 | `EXPO_PUBLIC_ROUTING_URL` | The drive-times Worker, for preview and production. |
 | `EXPO_PUBLIC_REPORT_EMAIL` | Where place reports go. |
 | `EXPO_PUBLIC_SENTRY_DSN` | Where crash reports go. Without it none are sent. |
+| `EXPO_PUBLIC_WEB_URL` | The website's origin, like `https://trysomething.new`: activity pages in invites, the card's short link, the privacy policy, and universal and app links. Not secret. |
 | `SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT` | Uploading source maps so crash reports show readable stack traces. The token is sensitive. |
 
 Set each one once per environment, for example:

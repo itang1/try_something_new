@@ -10,7 +10,11 @@ import { ToastProvider } from '@/state/toast';
 import { NudgeSync } from '@/state/nudge-sync';
 import { WidgetSync } from '@/state/widget-sync';
 import { useColors } from '@/theme';
+import { appOpened } from '@/data/analytics';
 import { CrashScreen } from '@/components/crash-screen';
+
+// A link or notification that opens a sheet, like /activity/pottery, still has the tabs underneath to go back to.
+export const unstable_settings = { anchor: '(tabs)' };
 
 // A screen that throws while rendering shows a friendly retry screen instead of crashing the app.
 export const ErrorBoundary = wrapErrorBoundary(CrashScreen);
@@ -34,6 +38,7 @@ function useNudgeTaps() {
 
 function RootLayout() {
   useNudgeTaps();
+  useEffect(appOpened, []);
   const scheme = useColorScheme();
   const colors = useColors();
   const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
