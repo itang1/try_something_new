@@ -64,7 +64,7 @@ db.execSync(`
   );
 `);
 
-// Each step runs once, when stored ids or kinds change shape.
+// Each step runs once, when stored ids or kinds change shape. Give each new step a test in __tests__/storage-migrations-test.ts.
 const { user_version: version } = db.getFirstSync<{ user_version: number }>('PRAGMA user_version')!;
 if (version < 1) {
   const kinds: Record<string, string> = {
