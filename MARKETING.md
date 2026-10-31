@@ -141,10 +141,15 @@ Starting Monday 2026-11-02. Weeks 1 to 9 are beta and pre-launch; week 10 is the
 
 The plan works at close to $0 beyond the store accounts (Apple's developer program is $99 a year and Google Play is a one-time $25). Time is the real cost: about an hour a day on videos and community. If there is money, the best uses are, in order: paying local creators for honest posts, printing partner stickers, and small boosted posts behind videos that already did well on their own. Hold off on paid app-install ads until activation and retention look good, or they just buy people who leave.
 
-## 12. Decisions needed
+## 12. Decisions
 
-- **Name and brand.** "Try Something New" is clear but generic, so it's hard to search for and to protect. Options: keep it, or pick a distinctive name and keep "try something new" as the tagline.
-- **Budget:** $0, a few hundred, or more for the first 90 days.
-- **Social accounts:** whether you'll post as yourself (recommended, it's what worked for Lovable) or as the app, and on which two platforms first.
-- **Launch city:** the city where you live, so you can film, visit partners and meet users in person.
+**Decided 2026-10-31**
+
+- **Budget:** $0 for now. Store accounts are the only cost.
+- **Platforms:** TikTok first, because it shows videos to people who don't follow you yet, which is how a new account gets found. Post the same video to Instagram Reels, and use Instagram for Stories (where the share cards go), DMs with local partners and the link in bio. Add YouTube Shorts later with the same videos; it costs nothing extra.
+- **Launch city:** Los Angeles, starting with Pasadena. The LA data has about 750 places in and around Pasadena covering 59 of the activities, and drive-time sorting brings in the rest of LA. Pasadena is small enough to cover well and has its own community: r/pasadena, local newsletters, Caltech, PCC and ArtCenter students, and places like Old Pasadena, Eaton Canyon, the Rose Bowl Flea Market and the Huntington. The Rose Parade on January 1 lines up with the New Year launch. Widen to the rest of LA once Pasadena is going.
+
+**Still open**
+
+- **Name.** "Try Something New" is generic, so it's hard to search for and protect. Most short names in this space are already used: several "Sidequest" apps exist (including one for exploring your city), and "Firsts", "First Timers", "Never Done", "Dabble" and "Kindling" are taken on the App Store. Before picking, search both stores and check the handle on TikTok and Instagram.
 - **Launch date:** early January for the New Year moment (recommended), or as soon as the store setup is done.
