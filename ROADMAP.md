@@ -74,7 +74,7 @@ In order. These are the ones to start a thread on.
 
 **Marketing and launch** (see [MARKETING.md](MARKETING.md))
 
-- [?] **Pick the name and claim the handles** · Growth · S. Keep "Try Something New" or pick a distinctive name with it as the tagline (shortlist in MARKETING.md section 12), check it's free in both stores, then claim the same handle on TikTok and Instagram. Decided 2026-10-31: launch in Los Angeles starting with Pasadena, $0 budget for now, TikTok first with the same videos on Instagram Reels.
+- [ ] **Claim the handles and check the store name** · Growth · S. Needs you. The name stays "Try Something New" (decided 2026-10-31). Claim the same handle on TikTok and Instagram, check the name is available in both stores, and pick a store subtitle (see MARKETING.md section 6). Also decided: launch in Los Angeles starting with Pasadena, $0 budget for now, TikTok first with the same videos on Instagram Reels.
 - [?] **Set the launch date** · Growth · S. Recommended: early January, for "try new things" New Year's resolutions, with a beta in November and December.
 - [ ] **Start a beta with a waitlist** · Growth · S. A one-page site with an email signup, TestFlight and Play internal testing, 50 to 200 testers mostly in the launch city. Needs **Finish the release setup**.
 - [ ] **Share a "tried it" card** · Growth · M. After saving a memory, offer an image card (photo, activity icon and name, city, rating, "#12 in Seattle") in story and square sizes with the app name and a short link, through the share sheet. The app's main way to spread.
