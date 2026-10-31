@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import FiltersIcon from '@expo/material-symbols/tune.xml';
 import * as Haptics from 'expo-haptics';
-import { entryHint, inSeason, isHomeSpot, kindsOf, LEVELS, listOr, type Entry } from '@/data/catalog';
+import { entryHint, inSeason, isAnywhereSpot, isHomeSpot, kindsOf, LEVELS, listOr, type Entry } from '@/data/catalog';
 import { addDays, dayKey, formatDay } from '@/data/days';
 import { openDirections, searchNearby } from '@/data/directions';
 import { inviteFriend } from '@/data/invite';
@@ -146,7 +146,7 @@ export default function ExploreScreen() {
             <View style={styles.grow}>
               <Text style={[styles.soonDay, { color: colors.accent }]}>{formatDay(soonPlan.day)}</Text>
               <Text style={[styles.placeName, { color: colors.label }]} numberOfLines={2}>
-                {isHomeSpot(soonPlan.placeId) ? `${soonEntry.name} at home` : soonPlace ? `${soonEntry.name} at ${soonPlace}` : soonEntry.name}
+                {isHomeSpot(soonPlan.placeId) ? `${soonEntry.name} at home` : soonPlace && !isAnywhereSpot(soonPlan.placeId) ? `${soonEntry.name} at ${soonPlace}` : soonEntry.name}
               </Text>
             </View>
             <Icon name="chevron_right" size={20} color={colors.tertiary} />
@@ -442,7 +442,7 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onP
 
 const KINDS_ON_CARD = 5;
 
-const WHERE_ICONS: Record<WhereOption['kind'], IconName> = { home: 'cottage', place: 'location_on', search: 'search', host: 'groups' };
+const WHERE_ICONS: Record<WhereOption['kind'], IconName> = { home: 'cottage', place: 'location_on', anywhere: 'explore', search: 'search', host: 'groups' };
 
 function whereIcon(o: WhereOption): IconName {
   return WHERE_ICONS[o.kind];

@@ -1,20 +1,53 @@
 import seedCity from './seed-city.json';
-import { ACTIVITY_ALIASES, findEntry, resolveAliases, type City, type CitySummary, type Entry } from './catalog';
+import { ACTIVITY_ALIASES, findEntry, resolveAliases, type City, type CitySummary, type Entry, type Place } from './catalog';
 import { haversineKm, type Coordinate } from './drive';
-import { applyAliases, cachedCityHashes, loadCachedCity, readSetting, saveCachedCity, writeSetting } from './storage';
+import {
+  applyAliases,
+  citiesWithPlace,
+  loadCatalogCities,
+  loadCatalogPlaces,
+  placesFor,
+  placesInBox,
+  readSetting,
+  saveCatalogCity,
+  writeSetting,
+  type CityMeta,
+} from './storage';
 
 // Where `npm run catalog` output is hosted (see .env). Without it the app has only the cities bundled in it.
 const BASE_URL = process.env.EXPO_PUBLIC_CATALOG_URL?.replace(/\/+$/, '');
 
 /** A slim copy bundled by `npm run catalog`, so the app works on first launch and offline. The full city replaces it once downloaded. */
-const BUNDLED = new Map(([seedCity] as City[]).map((c) => [c.id, c]));
+const BUNDLED = [seedCity] as City[];
 
 export const DEFAULT_CITY_ID = 'los-angeles';
 
-const summary = ({ id, name, region, country, lat, lng }: City): CitySummary => ({ id, name, region, country, lat, lng });
+const summary = ({ id, name, region, country, lat, lng }: CitySummary): CitySummary => ({ id, name, region, country, lat, lng });
 
-let index: CitySummary[] = readSetting<CitySummary[] | null>('cityIndex', null) ?? [...BUNDLED.values()].map(summary);
-const loaded = new Map<string, City>();
+/** Every city on the device, without places, and the hash of its download. Bundled cities have a null hash. */
+let onDevice = new Map<string, { meta: CityMeta; hash: string | null }>();
+
+function readOnDevice(): void {
+  onDevice = new Map(loadCatalogCities().map((c) => [c.meta.id, c]));
+}
+
+// A bundled city goes into the tables when the device has no copy, or only an older bundled one.
+const seedKey = (city: City) => `${city.id}:${city.places.length}:${JSON.stringify(city).length}`;
+readOnDevice();
+for (const city of BUNDLED) {
+  const stored = onDevice.get(city.id);
+  const key = `seededCity:${city.id}`;
+  if (!stored || (stored.hash === null && readSetting(key, '') !== seedKey(city))) {
+    saveCatalogCity(city, null);
+    writeSetting(key, seedKey(city));
+  }
+}
+readOnDevice();
+
+let index: CitySummary[] = readSetting<CitySummary[] | null>('cityIndex', null) ?? BUNDLED.map(summary);
+
+// Only the city in use is kept whole in memory. Others are read from their tables when needed.
+let loaded: City | undefined;
 
 /** Every city the catalog covers, including ones not downloaded yet. */
 export function cityIndex(): CitySummary[] {
@@ -22,28 +55,23 @@ export function cityIndex(): CitySummary[] {
 }
 
 export function citySummary(id: string): CitySummary | undefined {
-  return index.find((c) => c.id === id) ?? (BUNDLED.has(id) ? summary(BUNDLED.get(id)!) : undefined);
+  const meta = onDevice.get(id)?.meta;
+  return index.find((c) => c.id === id) ?? (meta ? summary(meta) : undefined);
 }
 
 /** The city if it's on the device, downloaded or bundled. */
 export function localCity(id: string): City | undefined {
-  let city = loaded.get(id);
-  if (!city) {
-    const cached = loadCachedCity(id);
-    city = cached ? (JSON.parse(cached.json) as City) : BUNDLED.get(id);
-    if (city) loaded.set(id, city);
-  }
-  return city;
-}
-
-function localCityIds(): string[] {
-  return [...new Set([...BUNDLED.keys(), ...cachedCityHashes().keys()])];
+  if (loaded?.id === id) return loaded;
+  const stored = onDevice.get(id);
+  if (!stored) return undefined;
+  loaded = { ...stored.meta, places: loadCatalogPlaces(id) };
+  return loaded;
 }
 
 /** True when the index has a newer file for the city than the device does. */
 export function needsDownload(id: string): boolean {
   const hash = BASE_URL && index.find((c) => c.id === id)?.hash;
-  return !!hash && cachedCityHashes().get(id) !== hash;
+  return !!hash && onDevice.get(id)?.hash !== hash;
 }
 
 /** Downloads the city's current file. Resolves to whether anything changed. */
@@ -52,10 +80,10 @@ export async function downloadCity(id: string): Promise<boolean> {
   if (!BASE_URL || !hash) return false;
   const response = await fetch(`${BASE_URL}/cities/${id}-${hash}.json`);
   if (!response.ok) return false;
-  const json = await response.text();
-  const city = JSON.parse(json) as City;
-  saveCachedCity(id, hash, json);
-  loaded.set(id, city);
+  const city = (await response.json()) as City;
+  saveCatalogCity(city, hash);
+  readOnDevice();
+  if (loaded?.id === id) loaded = undefined;
   return true;
 }
 
@@ -68,32 +96,80 @@ export async function refreshCatalog(): Promise<boolean> {
   const changed = JSON.stringify(cities) !== JSON.stringify(index);
   index = cities;
   writeSetting('cityIndex', cities);
-  const stale = [...cachedCityHashes().keys()].filter(needsDownload);
-  const updated = await Promise.all(stale.map((id) => downloadCity(id).catch(() => false)));
+  const downloaded = [...onDevice.values()].filter((c) => c.hash !== null).map((c) => c.meta.id);
+  const updated = await Promise.all(downloaded.filter(needsDownload).map((id) => downloadCity(id).catch(() => false)));
   return changed || updated.some(Boolean);
 }
 
 /** The closest city to a point, from the index or only from cities on the device. */
-export function nearestCity(point: Coordinate, onDevice = false): { city: CitySummary; km: number } {
-  const cities = onDevice ? localCityIds().map((id) => summary(localCity(id)!)) : index;
+export function nearestCity(point: Coordinate, onDeviceOnly = false): { city: CitySummary; km: number } {
+  const cities = onDeviceOnly ? [...onDevice.values()].map((c) => summary(c.meta)) : index;
   return cities
     .map((city) => ({ city, km: haversineKm(point, city.lat, city.lng) }))
     .reduce((a, b) => (b.km < a.km ? b : a));
 }
 
+/** The city's places within a radius, read by bounding box. Nearest first. */
+export function placesNear(cityId: string, point: Coordinate, km: number): Place[] {
+  const dLat = km / 111;
+  const dLng = km / (111 * Math.max(0.1, Math.cos((point.latitude * Math.PI) / 180)));
+  return placesInBox(cityId, {
+    south: point.latitude - dLat,
+    north: point.latitude + dLat,
+    west: point.longitude - dLng,
+    east: point.longitude + dLng,
+  })
+    .map((p) => ({ p, d: haversineKm(point, p.lat, p.lng) }))
+    .filter(({ d }) => d <= km)
+    .sort((a, b) => a.d - b.d)
+    .map(({ p }) => p);
+}
+
+// Routing only times the nearest places, so the box grows until it holds enough of them.
+const SEARCH_KM = [3, 10, 30, 100];
+
+/** The city's nearest places, without reading the whole city. */
+export function nearestPlaces(cityId: string, point: Coordinate, count: number): Place[] {
+  for (const km of SEARCH_KM) {
+    const near = placesNear(cityId, point, km);
+    if (near.length >= count) return near.slice(0, count);
+  }
+  return placesNear(cityId, point, 20_000).slice(0, count);
+}
+
+/** A city's own fields with no places, for entries the user added there. */
+export function cityWithoutPlaces(id: string): City | undefined {
+  const meta = onDevice.get(id)?.meta;
+  return meta && { ...meta, places: [] };
+}
+
+/**
+ * Just enough of a city to find one entry in it: the city's own fields, and only the places for that activity or
+ * place. Cities other than the one in use are read this way, so looking through history doesn't load them whole.
+ */
+function cityFor(cityId: string, entryId: string, placeId?: string | null): City | undefined {
+  if (loaded?.id === cityId) return loaded;
+  const stored = onDevice.get(cityId);
+  if (!stored) return undefined;
+  const icon = stored.meta.icons.find((i) => i.id === entryId);
+  const placeIds = [icon?.place, placeId].filter((p): p is string => !!p);
+  return { ...stored.meta, places: placesFor(cityId, icon?.activity ?? entryId, placeIds) };
+}
+
 /** Finds an entry in any city on the device, using the place to pick the city when ids repeat across cities. */
 export function findEntryAnywhere(id: string, placeId?: string | null): { entry: Entry; city: City } | undefined {
-  const cities = localCityIds().map((c) => localCity(c)!);
-  const byPlace = placeId ? cities.find((c) => c.places.some((p) => p.id === placeId)) : undefined;
-  for (const city of byPlace ? [byPlace, ...cities] : cities) {
-    const found = findEntry(city, id);
-    if (found) return { entry: found, city };
+  const byPlace = placeId ? citiesWithPlace(placeId) : [];
+  const order = [...new Set([...byPlace, ...(loaded ? [loaded.id] : []), ...onDevice.keys()])];
+  for (const cityId of order) {
+    const city = cityFor(cityId, id, placeId);
+    const found = city && findEntry(city, id);
+    if (found) return { entry: found, city: city! };
   }
   return undefined;
 }
 
 /** Before anything reads stored ids, so renamed activities and places keep their history. Downloaded aliases apply on the next launch. */
 export function applyCatalogAliases(): void {
-  const places = localCityIds().map((id) => localCity(id)!.aliases ?? {});
+  const places = [...onDevice.values()].map((c) => c.meta.aliases ?? {});
   applyAliases({ ...resolveAliases(Object.assign({}, ...places)), ...ACTIVITY_ALIASES });
 }

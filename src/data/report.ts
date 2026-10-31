@@ -1,4 +1,4 @@
-import { Linking, Share } from 'react-native';
+import { Alert, Linking, Share } from 'react-native';
 import type { Entry, Place } from './catalog';
 
 // Kept in .env.local rather than the public repo, so the address isn't scraped.
@@ -22,5 +22,17 @@ export async function reportPlace(place: Place, entry: Entry, cityName: string) 
     await Linking.openURL(url);
   } catch {
     await Share.share({ message: `${subject}\n\n${body}` });
+  }
+}
+
+/** Opens an email for general feedback, with the app version and platform filled in. */
+export async function sendFeedback(version: string | undefined, platform: string) {
+  const subject = 'Feedback on Try Something New';
+  const body = ['', '', '---', `Version ${version ?? 'unknown'} on ${platform}`].join('\n');
+  const url = `mailto:${EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  try {
+    await Linking.openURL(url);
+  } catch {
+    Alert.alert('No mail app', `Write to ${EMAIL} with your feedback.`);
   }
 }

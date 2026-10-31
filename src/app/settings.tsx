@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { Alert, Linking, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import Constants from 'expo-constants';
 import { restoreBackup, shareBackup } from '@/data/backup';
 import { CREDITS, openCredit } from '@/data/credits';
 import { allowNudges } from '@/data/nudge';
-import { canReport } from '@/data/report';
+import { canReport, sendFeedback } from '@/data/report';
 import { useAppState } from '@/state/app-state';
 import { useToast } from '@/state/toast';
 import { readable, useColors } from '@/theme';
@@ -140,6 +140,20 @@ export default function SettingsSheet() {
         Android, credited in its corner.
         {canReport ? ' Places can be out of date, and the flag next to a place reports it.' : ''}
       </Text>
+
+      {canReport && (
+        <>
+          <Text style={[styles.section, { color: colors.secondary }]}>Feedback</Text>
+          <View style={[styles.list, { backgroundColor: colors.card }]}>
+            <ActionRow
+              icon="send"
+              title="Send feedback"
+              detail="An idea, a bug, or a place we should add"
+              onPress={() => sendFeedback(version, `${Platform.OS} ${Platform.Version}`)}
+            />
+          </View>
+        </>
+      )}
 
       <Text style={[styles.version, { color: colors.tertiary }]}>
         Try Something New{version ? ` ${version}` : ''}

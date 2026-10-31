@@ -1,19 +1,22 @@
 import { createContext, use, useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { AT_HOME, customEntry, entriesForCity, isHomeSpot, withParents, type City, type CitySummary, type CustomActivity, type Entry } from '@/data/catalog';
+import { customEntry, entriesForCity, spotName, withParents, type City, type CitySummary, type CustomActivity, type Entry } from '@/data/catalog';
 import {
   applyCatalogAliases,
   citySummary,
+  cityWithoutPlaces,
   DEFAULT_CITY_ID,
   downloadCity,
   findEntryAnywhere,
   localCity,
   nearestCity,
+  nearestPlaces,
   needsDownload,
   refreshCatalog,
 } from '@/data/cities';
 import type { Coordinate, DriveTimes } from '@/data/drive';
 import { NO_FILTERS, type Filters } from '@/data/filters';
-import { cachedDriveTimes, refreshDriveTimes } from '@/data/routing';
+import { useSetting } from './use-setting';
+import { cachedDriveTimes, NEAREST_TIMED, refreshDriveTimes } from '@/data/routing';
 import {
   deleteCustomActivity,
   loadCustomActivities,
@@ -23,13 +26,11 @@ import {
   loadVisitedPlaceIds,
   newId,
   planKey,
-  readSetting,
   recordCompletion,
   recordListChange,
   recordPlan,
   recordVisit,
   saveCustomActivity,
-  writeSetting,
   type Plan,
 } from '@/data/storage';
 
@@ -99,31 +100,18 @@ const MAX_RECENT = 5;
 
 applyCatalogAliases();
 
-function usePersistedState<T>(key: string, fallback: T) {
-  const [value, setValue] = useState<T>(() => readSetting(key, fallback));
-  const set = useCallback(
-    (next: T) => {
-      setValue(next);
-      writeSetting(key, next);
-    },
-    [key],
-  );
-  const reload = useCallback(() => setValue(readSetting(key, fallback)), [key, fallback]);
-  return [value, set, reload] as const;
-}
-
 export function AppStateProvider({ children }: { children: ReactNode }) {
-  const [home, setHome, reloadHome] = usePersistedState<HomeLocation | null>('homeLocation', null);
-  const [trip, setTrip, reloadTrip] = usePersistedState<Trip | null>('trip', null);
-  const [recentPlaces, setRecentPlaces, reloadRecentPlaces] = usePersistedState<HomeLocation[]>('recentPlaces', []);
+  const [home, setHome, reloadHome] = useSetting<HomeLocation | null>('homeLocation', null);
+  const [trip, setTrip, reloadTrip] = useSetting<Trip | null>('trip', null);
+  const [recentPlaces, setRecentPlaces, reloadRecentPlaces] = useSetting<HomeLocation[]>('recentPlaces', []);
   const [doneIds, setDoneIds] = useState(loadDoneIds);
   const [visitedPlaceIds, setVisitedPlaceIds] = useState(loadVisitedPlaceIds);
   const [saved, setSaved] = useState(() => loadList('saved'));
   const [hidden, setHidden] = useState(() => loadList('hidden'));
   const [allPlans, setAllPlans] = useState(loadPlans);
   const [customs, setCustoms] = useState(loadCustomActivities);
-  const [filters, setFilters, reloadFilters] = usePersistedState<Filters>('exploreFilters', NO_FILTERS);
-  const [weekendNudge, setWeekendNudge] = usePersistedState('weekendNudge', false);
+  const [filters, setFilters, reloadFilters] = useSetting<Filters>('exploreFilters', NO_FILTERS);
+  const [weekendNudge, setWeekendNudge] = useSetting('weekendNudge', false);
   const savedIds = useMemo(() => new Set(saved), [saved]);
   const hiddenIds = useMemo(() => new Set(hidden), [hidden]);
 
@@ -153,7 +141,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (lat == null || lng == null) return;
     const controller = new AbortController();
-    refreshDriveTimes({ latitude: lat, longitude: lng }, city.places, cachedTimes, controller.signal)
+    const from = { latitude: lat, longitude: lng };
+    refreshDriveTimes(from, nearestPlaces(city.id, from, NEAREST_TIMED), cachedTimes, controller.signal)
       .then((times) => setFetchedTimes({ key: timesKey, times }))
       .catch(() => {});
     return () => controller.abort();
@@ -172,7 +161,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       const found = findEntryAnywhere(id, placeId);
       if (found) return found;
       const custom = customs.find((c) => c.id === id);
-      const customCity = custom && localCity(custom.cityId);
+      const customCity = custom && cityWithoutPlaces(custom.cityId);
       return custom && customCity ? { entry: customEntry(custom), city: customCity } : undefined;
     },
     [customs],
@@ -200,8 +189,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const setPlan = useCallback(
     (entryId: string, choice: Pick<Plan, 'placeId' | 'day'> | null) => {
-      const places = entries.find((e) => e.id === entryId)?.places ?? [];
-      const plan = choice && { ...choice, placeName: places.find((p) => p.id === choice.placeId)?.name ?? (isHomeSpot(choice.placeId) ? AT_HOME : null) };
+      const entry = entries.find((e) => e.id === entryId);
+      const plan = choice && { ...choice, placeName: spotName(entry, choice.placeId) };
       recordPlan(city.id, entryId, plan);
       const next = new Map(allPlans);
       if (plan) next.set(planKey(city.id, entryId), { entryId, cityId: city.id, ...plan });
