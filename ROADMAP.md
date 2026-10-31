@@ -90,7 +90,6 @@ In order. These are the ones to start a thread on.
 **Location-agnostic and at-home ideas** (building on PR #6)
 
 - [ ] **Use the app without a city** · Feature · M. See Up next.
-- [~] **More at-home and DIY versions** · Data · S. Add a `home` line to activities that can work at home and don't have one yet, and a few new home-only crafts. PR #16: home versions for 12 more activities (yoga, karaoke, hot pot, mini golf in the backyard and more), a new "anywhere" option for 11 that need no set venue (pickleball in a backyard or any tennis court, tennis, roller skating, disc golf and more) that checks off like a place, and a host line for run club. Left: a few new home-only crafts.
 - [ ] **Draw custom icons for crafts** · UX · S. The activities without a Material Symbol, mostly crafts, in the same style.
 
 **Accounts and sync**
@@ -154,6 +153,7 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 ## Done
 
 - [x] **More broad ideas like crafts** · Data. "Cook something new" (dumplings, sushi, kimchi, tortillas, no-churn ice cream, plus bread, pasta and cooking classes) and "Learn a new skill" (a language, chess, sign language, a card trick, juggling, first aid, code, plus music lessons), on the same parent model as "Try a new craft". PR #19.
+- [x] **More at-home and DIY versions** · Data. Home versions for 12 more activities and an "anywhere" option for 11 in PR #16, then four new home-only crafts under Try a new craft (Carve a block print, Build a terrarium, Bind a notebook, Press flowers) in PR #22.
 - [x] **Remember the Map filter and Checklist sections** · UX. The Map's status and kind filter, and the Checklist's filter, sort, grouping and open sections, stay the same after the app restarts. From the Inbox. PR #21.
 - [x] **Send feedback from Settings** · UX. An email with the app version and platform filled in, shown when the report address is set. PR #21.
 - [x] **Store places in indexed SQLite tables** · Architecture. Migration 8 moves each downloaded city out of its JSON blob into `catalog_places` and `catalog_place_activities`, indexed by position, activity and place id, with the city's own fields in a small `catalog_cities` row. Launch now reads only those small rows for aliases and the nearest city, and loads just the city in use instead of parsing every downloaded one. Drive times take the nearest places from a growing bounding box, and Memories reads only the places it needs from other cities. The bundled city is seeded into the same tables. Left: the Map still clusters the whole city in memory. PR #18.
