@@ -15,6 +15,7 @@ import {
 } from '@/data/cities';
 import type { Coordinate, DriveTimes } from '@/data/drive';
 import { NO_FILTERS, type Filters } from '@/data/filters';
+import { useSetting } from './use-setting';
 import { cachedDriveTimes, NEAREST_TIMED, refreshDriveTimes } from '@/data/routing';
 import {
   deleteCustomActivity,
@@ -25,13 +26,11 @@ import {
   loadVisitedPlaceIds,
   newId,
   planKey,
-  readSetting,
   recordCompletion,
   recordListChange,
   recordPlan,
   recordVisit,
   saveCustomActivity,
-  writeSetting,
   type Plan,
 } from '@/data/storage';
 
@@ -101,31 +100,18 @@ const MAX_RECENT = 5;
 
 applyCatalogAliases();
 
-function usePersistedState<T>(key: string, fallback: T) {
-  const [value, setValue] = useState<T>(() => readSetting(key, fallback));
-  const set = useCallback(
-    (next: T) => {
-      setValue(next);
-      writeSetting(key, next);
-    },
-    [key],
-  );
-  const reload = useCallback(() => setValue(readSetting(key, fallback)), [key, fallback]);
-  return [value, set, reload] as const;
-}
-
 export function AppStateProvider({ children }: { children: ReactNode }) {
-  const [home, setHome, reloadHome] = usePersistedState<HomeLocation | null>('homeLocation', null);
-  const [trip, setTrip, reloadTrip] = usePersistedState<Trip | null>('trip', null);
-  const [recentPlaces, setRecentPlaces, reloadRecentPlaces] = usePersistedState<HomeLocation[]>('recentPlaces', []);
+  const [home, setHome, reloadHome] = useSetting<HomeLocation | null>('homeLocation', null);
+  const [trip, setTrip, reloadTrip] = useSetting<Trip | null>('trip', null);
+  const [recentPlaces, setRecentPlaces, reloadRecentPlaces] = useSetting<HomeLocation[]>('recentPlaces', []);
   const [doneIds, setDoneIds] = useState(loadDoneIds);
   const [visitedPlaceIds, setVisitedPlaceIds] = useState(loadVisitedPlaceIds);
   const [saved, setSaved] = useState(() => loadList('saved'));
   const [hidden, setHidden] = useState(() => loadList('hidden'));
   const [allPlans, setAllPlans] = useState(loadPlans);
   const [customs, setCustoms] = useState(loadCustomActivities);
-  const [filters, setFilters, reloadFilters] = usePersistedState<Filters>('exploreFilters', NO_FILTERS);
-  const [weekendNudge, setWeekendNudge] = usePersistedState('weekendNudge', false);
+  const [filters, setFilters, reloadFilters] = useSetting<Filters>('exploreFilters', NO_FILTERS);
+  const [weekendNudge, setWeekendNudge] = useSetting('weekendNudge', false);
   const savedIds = useMemo(() => new Set(saved), [saved]);
   const hiddenIds = useMemo(() => new Set(hidden), [hidden]);
 
