@@ -58,7 +58,7 @@ In order. These are the ones to start a thread on.
 
 ## Now: before launch
 
-- [~] **Add a Settings screen** · UX · M. Weekend ideas on/off, backup, credits and version are in. Left: miles or kilometers, a privacy policy link, and a feedback link.
+- [~] **Add a Settings screen** · UX · M. Weekend ideas on/off, backup, credits, version and a Send feedback email (PR #PRNUM) are in. Left: a privacy policy link, once **Write the privacy policy and store forms** has a page. Miles or kilometers is dropped for now: the app shows drive minutes, never distances.
 - [~] **Make the tabs easier to get around** · UX · M. PR #11: one header pattern on every tab (the tab's own filter or sort button, then Settings, always top right), Map filters for Not done, Done, Saved and kind, a Checklist grouped by kind with folding sections, and Memories opened from the progress card. Left: check it on a phone.
 - [~] **Protect the drive-time Worker** · Backend · S. Per-IP rate limiting is in, and goes live on the next `npx wrangler deploy`. Left: App Attest / Play Integrity once the app is in the stores.
 - [ ] **Check merged work on a real phone** · Launch · S. See Up next.
@@ -100,7 +100,7 @@ In order. These are the ones to start a thread on.
 **Data**
 
 - [ ] **Directions in Korea** · UX · S. Google Maps has no driving directions in South Korea, so on Android open Naver Map or KakaoMap for Seoul places, with Google Maps as the fallback.
-- [ ] **Show kilometers outside the US** · UX · S. Default to kilometers for cities like Seoul, alongside the miles or kilometers setting.
+- [ ] **Show kilometers outside the US** · UX · S. Default to kilometers for cities like Seoul, alongside a miles or kilometers setting. Only needed once the app shows distances; today it shows drive minutes.
 - [ ] **English names for Seoul places** · Data · M. Overture only has Korean names there. Options: OpenStreetMap's `name:en` (comes with the OSM import), or the Korea Tourism Organization's English TourAPI, which needs a free key from data.go.kr.
 - [ ] **Add more cities** · Data · M. The 25 largest US metros, then a few international ones. Re-import monthly from a scheduled Action.
 - [ ] **Show opening hours where known** · Data · M. OpenStreetMap `opening_hours`, an "Open now" badge, never hiding places without hours.
@@ -124,7 +124,6 @@ In order. These are the ones to start a thread on.
 
 Unsorted ideas. Move them into a horizon at the next refresh.
 
-- Remember the Map filter and which Checklist sections are open between launches. From PR #11.
 - Let the Map use the Explore filters too (cost, time, level, indoor or outdoor), so the two tabs agree. From PR #11.
 
 ## Storage decision
@@ -133,6 +132,8 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **Remember the Map filter and Checklist sections** · UX. The Map's status and kind filter, and the Checklist's filter, sort, grouping and open sections, stay the same after the app restarts. From the Inbox. PR #PRNUM.
+- [x] **Send feedback from Settings** · UX. An email with the app version and platform filled in, shown when the report address is set. PR #PRNUM.
 - [x] **Store places in indexed SQLite tables** · Architecture. Migration 8 moves each downloaded city out of its JSON blob into `catalog_places` and `catalog_place_activities`, indexed by position, activity and place id, with the city's own fields in a small `catalog_cities` row. Launch now reads only those small rows for aliases and the nearest city, and loads just the city in use instead of parsing every downloaded one. Drive times take the nearest places from a growing bounding box, and Memories reads only the places it needs from other cities. The bundled city is seeded into the same tables. Left: the Map still clusters the whole city in memory. PR #18.
 - [x] **Offer Host friends in the Where picker** · UX. The Explore card's Change list ends with Host friends wherever an activity has it, with an Invite button. PR #14.
 - [x] **Run expo-doctor in CI** · Architecture. Plus the Expo package patch versions it asked for. PR #12.

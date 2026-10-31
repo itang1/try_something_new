@@ -12,6 +12,7 @@ import { formatDay } from '@/data/days';
 import { driveMinutes } from '@/data/drive';
 import { matchesStatus, STATUSES, type Status } from '@/data/status';
 import { useAppState } from '@/state/app-state';
+import { useSetting } from '@/state/use-setting';
 import { useToggleWithUndo } from '@/state/use-toggle-with-undo';
 import { readable, subcategory, useColors } from '@/theme';
 import { ActivityRow, type PlaceProgress } from '@/components/activity-row';
@@ -42,18 +43,16 @@ export default function ChecklistScreen() {
   const router = useRouter();
   const { city, entries, origin, driveTimes, doneIds, savedIds, visitedPlaceIds, plans } = useAppState();
   const toggleDone = useToggleWithUndo();
-  const [status, setStatus] = useState<Status>('All');
-  const [sort, setSort] = useState<Sort>('Name');
-  const [grouping, setGrouping] = useState<Grouping>('Kind');
+  const [status, setStatus] = useSetting<Status>('checklistStatus', 'All');
+  const [sort, setSort] = useSetting<Sort>('checklistSort', 'Name');
+  const [grouping, setGrouping] = useSetting<Grouping>('checklistGrouping', 'Kind');
   const [search, setSearch] = useState('');
   // Kind sections start folded so the list opens as a short overview, not 100 rows.
-  const [open, setOpen] = useState<Set<string>>(new Set());
+  // Which ones are open is remembered between launches.
+  const [openKeys, setOpenKeys] = useSetting<string[]>('checklistOpen', []);
+  const open = useMemo(() => new Set(openKeys), [openKeys]);
   const toggleSection = (key: string) =>
-    setOpen((prev) => {
-      const next = new Set(prev);
-      if (!next.delete(key)) next.add(key);
-      return next;
-    });
+    setOpenKeys((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
 
   const cityActivities = entries;
   const searching = search.trim().length > 0;

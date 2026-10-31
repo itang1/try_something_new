@@ -16,6 +16,7 @@ import { openDirections } from '@/data/directions';
 import { formatMinutes, haversineKm, minutesTo } from '@/data/drive';
 import { matchesStatus, STATUSES, type Status } from '@/data/status';
 import { useAppState } from '@/state/app-state';
+import { useSetting } from '@/state/use-setting';
 import { readable, subcategory, useColors } from '@/theme';
 import { settingsButton, toolbarIcon } from '@/components/header-items';
 import { GradientIcon, Icon } from '@/components/icon';
@@ -40,10 +41,9 @@ export default function MapScreen() {
   const headerHeight = useHeaderHeight();
   const { city, entries, origin, driveTimes, doneIds, savedIds } = useAppState();
   const mapRef = useRef<MapView>(null);
-  const [status, setStatus] = useState<Status>('All');
-  // The kind remembers its city, so switching cities clears it without an effect.
-  const [kindPick, setKindPick] = useState<{ city: string; kind: string } | null>(null);
-  const kind = kindPick?.city === city.id ? kindPick.kind : null;
+  const [status, setStatus] = useSetting<Status>('mapStatus', 'All');
+  // The kind remembers its city, so switching cities clears it without an effect. Both are kept between launches.
+  const [kindPick, setKindPick] = useSetting<{ city: string; kind: string } | null>('mapKind', null);
   // Selection remembers its city, so switching cities clears it without an effect.
   const [selection, setSelection] = useState<{ city: string; placeId: string } | null>(null);
 
@@ -66,6 +66,8 @@ export default function MapScreen() {
     () => [...new Set(entries.map((e) => e.subcategory))].sort((a, b) => subcategory(a).label.localeCompare(subcategory(b).label)),
     [entries],
   );
+  // A remembered kind the city no longer has is ignored rather than showing an empty map.
+  const kind = kindPick?.city === city.id && kinds.some((k) => k === kindPick.kind) ? kindPick.kind : null;
   const isPlaceDone = (p: PinPlace) => p.entries.length > 0 && p.entries.every((e) => doneIds.has(e.id));
   // Filtering by kind also narrows each pin to that kind, so its icon and card match the filter.
   const shown = useMemo(
