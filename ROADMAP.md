@@ -149,6 +149,7 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **Clean up the repo** · Tooling. Removed the finished SwiftUI parity checklist (`design/parity.md`) and the leftover Xcode, Swift Package Manager, CocoaPods, Carthage and Fastlane rules in `.gitignore`. The ignore file now also covers Overture extracts, test coverage and tool caches. No app changes.
 - [x] **Import OpenStreetMap places from GitHub Actions** · Data. The cloud can't reach Overpass, so an Action ("Import OpenStreetMap places" in the Actions tab) runs `scripts/import-osm.mjs` for one city or all of them and opens a pull request. Without a box the script now takes 40 km around the city's center, and it keeps OSM's wheelchair access and opening hours. PR #29.
 - [x] **Finish Seoul's parks and trails** · Data. OpenStreetMap parks, trails, bike routes and venues for Seoul. PR #28.
 - [x] **Ask for a rating at a happy moment** · Growth. The system review prompt (expo-store-review) when the share card closes after a "Loved it", shared or not, at most once every 120 days. Never on launch or after "Not for me". Adds a native module, so it needs a new development build. PR #27.
