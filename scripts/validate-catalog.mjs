@@ -13,6 +13,8 @@ const KINDS = new Set(KIND_LIST);
 const ICON_NAMES = new Set([...read('src/icons/paths.ts').matchAll(/^ {2}(\w+): '/gm)].map((m) => m[1]));
 const PLACE_ID = /^(osm:[nwr]\d+|ovt:[0-9a-f-]{36}|pick:[a-z0-9]+(-[a-z0-9]+)*)$/;
 const ID = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+// OpenStreetMap's wheelchair tag, from scripts/import-osm.mjs.
+const WHEELCHAIR = new Set(['yes', 'limited', 'no']);
 // Ski hills can be a couple of hours out, but a mistyped coordinate lands much farther away.
 const MAX_KM = 300;
 
@@ -96,6 +98,10 @@ for (const file of readdirSync('data/cities').filter((f) => f.endsWith('.json'))
     for (const id of p.activities ?? []) if (!activityIds.has(id)) fail(where, `unknown activity "${id}"`);
     if (p.duration && !DURATIONS.has(p.duration)) fail(where, `unknown duration "${p.duration}"`);
     if (p.cost && !COSTS.has(p.cost)) fail(where, `unknown cost "${p.cost}"`);
+    if ('wheelchair' in p && !WHEELCHAIR.has(p.wheelchair)) fail(where, `wheelchair must be yes, limited or no, got "${p.wheelchair}"`);
+    if ('hours' in p && (typeof p.hours !== 'string' || !p.hours.trim() || p.hours.length > 255)) {
+      fail(where, 'hours must be an OpenStreetMap opening_hours value of 1 to 255 characters');
+    }
   }
   for (const i of city.icons) {
     const where = `${city.id} icon ${i.id}`;
