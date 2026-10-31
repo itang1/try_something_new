@@ -1,4 +1,4 @@
-import { homeSpotId, isHomeSpot, kindsOf, listOr, spotsFor, type Entry, type Place } from '@/data/catalog';
+import { homeSpotId, isHomeSpot, kindsOf, withParents, listOr, spotsFor, type Entry, type Place } from '@/data/catalog';
 
 const craft = { id: 'try-a-craft' } as Entry;
 const origami = { id: 'origami', parent: 'try-a-craft' } as Entry;
@@ -27,5 +27,11 @@ describe('catalog', () => {
     expect(spotsFor({ ...pottery, home: undefined }, [studio])).toEqual([{ id: 'osm:n1', name: 'Clay Studio' }]);
     expect(isHomeSpot(homeSpotId('origami'))).toBe(true);
     expect(isHomeSpot('osm:n1')).toBe(false);
+  });
+
+  it('checks off the broader activity along with a specific one', () => {
+    expect(withParents(['origami'])).toEqual(['origami', 'try-a-craft']);
+    expect(withParents(['origami', 'tie-dye'])).toEqual(['origami', 'tie-dye', 'try-a-craft']);
+    expect(withParents(['bowling'])).toEqual(['bowling']);
   });
 });

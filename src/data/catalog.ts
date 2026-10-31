@@ -128,6 +128,12 @@ export function resolveAliases(table: Record<string, string>): Record<string, st
 export const ACTIVITY_ALIASES = resolveAliases(aliasesFile.aliases as Record<string, string>);
 
 const ACTIVITIES = new Map((activitiesFile.activities as Activity[]).map((a) => [a.id, a]));
+/** Ids to check off along with these: doing origami also counts as trying a new craft. */
+export function withParents(ids: string[]): string[] {
+  const parents = ids.map((id) => ACTIVITIES.get(id)?.parent).filter((p): p is string => !!p);
+  return [...new Set([...ids, ...parents])];
+}
+
 const icons = iconMapping as Record<string, { material: string }>;
 
 function seasonIn(city: City, a: Activity): number[] | undefined {
