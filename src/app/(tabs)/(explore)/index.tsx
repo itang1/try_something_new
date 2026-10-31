@@ -5,7 +5,7 @@ import { Stack, useRouter } from 'expo-router';
 import FiltersIcon from '@expo/material-symbols/tune.xml';
 import AboutIcon from '@expo/material-symbols/info.xml';
 import * as Haptics from 'expo-haptics';
-import { inSeason, kindsOf, LEVELS, listOr, otherWays, type Entry, type Way } from '@/data/catalog';
+import { inSeason, isHomeSpot, kindsOf, LEVELS, listOr, otherWays, type Entry, type Way } from '@/data/catalog';
 import { addDays, dayKey, formatDay } from '@/data/days';
 import { searchNearby } from '@/data/directions';
 import { allowNudges } from '@/data/nudge';
@@ -144,7 +144,7 @@ export default function ExploreScreen() {
             <View style={styles.grow}>
               <Text style={[styles.soonDay, { color: colors.accent }]}>{formatDay(soonPlan.day)}</Text>
               <Text style={[styles.placeName, { color: colors.label }]} numberOfLines={2}>
-                {soonPlace ? `${soonEntry.name} at ${soonPlace}` : soonEntry.name}
+                {isHomeSpot(soonPlan.placeId) ? `${soonEntry.name} at home` : soonPlace ? `${soonEntry.name} at ${soonPlace}` : soonEntry.name}
               </Text>
             </View>
             <Icon name="chevron_right" size={20} color={colors.tertiary} />

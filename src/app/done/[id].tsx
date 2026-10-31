@@ -3,6 +3,7 @@ import { Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { isHomeSpot, spotsFor } from '@/data/catalog';
 import { placesByDistance } from '@/data/drive';
 import { pickAndKeepPhoto } from '@/data/photos';
 import { recordReflection, type Rating } from '@/data/storage';
@@ -33,11 +34,13 @@ export default function DoneSheet() {
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { city, origin, driveTimes, doneIds, visitedPlaceIds, toggleVisited, plans, entries, findEntry } = useAppState();
+  const { city, origin, driveTimes, doneIds, visitedPlaceIds, toggleVisited, plans, entries, findEntry, filters } = useAppState();
   const entry = findEntry(id);
   const places = entry ? placesByDistance(entry, origin, driveTimes) : [];
+  const spots = entry && entry.kind === 'activity' ? spotsFor(entry, places.slice(0, 6).map((p) => p.place)) : [];
+  const home = spots.find((s) => isHomeSpot(s.id));
   const [placeId, setPlaceId] = useState<string | null>(
-    plans.get(id)?.placeId ?? places[0]?.place.id ?? null,
+    plans.get(id)?.placeId ?? (filters.where === 'home' ? home?.id : undefined) ?? spots.find((s) => s !== home)?.id ?? home?.id ?? null,
   );
   const [rating, setRating] = useState<Rating | null>(null);
   const [note, setNote] = useState('');
@@ -51,7 +54,7 @@ export default function DoneSheet() {
 
   const save = () => {
     if (placeId && entry.kind === 'activity' && !visitedPlaceIds.has(placeId)) toggleVisited(placeId, entry.activityId);
-    const placeName = places.find((p) => p.place.id === placeId)?.place.name ?? null;
+    const placeName = spots.find((s) => s.id === placeId)?.name ?? null;
     recordReflection({ entryId: entry.id, placeId, placeName, rating, note: note.trim(), photo });
     router.back();
   };
@@ -83,11 +86,11 @@ export default function DoneSheet() {
           {triedCount} of {all.length} tried in {city.name}
         </Text>
 
-        {entry.kind === 'activity' && places.length > 1 && (
+        {spots.length > 1 && (
           <View style={styles.group}>
-            <Text style={[styles.question, { color: colors.label }]}>Where did you go?</Text>
+            <Text style={[styles.question, { color: colors.label }]}>{home ? 'Where did you do it?' : 'Where did you go?'}</Text>
             <View style={styles.chips}>
-              {places.slice(0, 6).map(({ place }) => {
+              {spots.map((place) => {
                 const selected = place.id === placeId;
                 return (
                   <Pressable

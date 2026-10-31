@@ -232,6 +232,25 @@ export function seasonLabel(months: number[]): string {
   return `${MONTHS[months[0] - 1]} to ${MONTHS[months[months.length - 1] - 1]}`;
 }
 
+export const AT_HOME = 'At home';
+
+/** Doing an activity at home is logged like a visit to a place of its own, so it checks off and can be planned like one. */
+export function homeSpotId(activityId: string): string {
+  return `home:${activityId}`;
+}
+
+export function isHomeSpot(id: string | null | undefined): boolean {
+  return !!id?.startsWith('home:');
+}
+
+export type Spot = { id: string; name: string };
+
+/** What to pick from when planning or looking back: home first when it can be done there, then its places. */
+export function spotsFor(entry: Entry, places: Place[]): Spot[] {
+  const home = entry.kind === 'activity' && entry.home ? [{ id: homeSpotId(entry.activityId), name: AT_HOME }] : [];
+  return [...home, ...places.map((p) => ({ id: p.id, name: p.name }))];
+}
+
 /** The specific activities under a broad one, like origami and tie-dye under "Try a new craft". */
 export function kindsOf(entries: Entry[], entry: Entry): Entry[] {
   return entries.filter((e) => e.parent === entry.id);
