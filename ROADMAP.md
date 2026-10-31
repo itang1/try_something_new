@@ -129,7 +129,7 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
-- [x] **Do an accessibility pass** · UX. A role on every button, labels where the icon was the only cue, done states read on map rows, the swipe hint and memory ratings readable, and card buttons that go two by two with large text. Swipes already had buttons and screen reader actions. Still to check on a device. PR #PRNUM.
+- [x] **Do an accessibility pass** · UX. A role on every button, labels where the icon was the only cue, done states read on map rows, the swipe hint and memory ratings readable, and card buttons that go two by two with large text. Swipes already had buttons and screen reader actions. Still to check on a device. PR #8.
 - [x] **Set up EAS builds** · Launch. Development, preview and production profiles. PR #2.
 - [x] **Add a Google Maps key for Android** · Launch. From the environment, never committed. PR #2.
 - [x] **Credit OpenStreetMap and Overture in the app** · Launch. About screen, map label and activity sheet. PR #1.
