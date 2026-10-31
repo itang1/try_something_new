@@ -5,7 +5,7 @@ import { aliasFor } from './catalog.js';
 import { activityPage, landingPage, notFoundPage, privacyPage, thanksPage } from './pages.js';
 import { parseShareKind, storeUrl, validateCount, validateWaitlist } from './validate.js';
 
-const BUNDLE_ID = 'com.pastureraised.trysomethingnew';
+const BUNDLE_ID = 'com.poodlestrategy.trysomethingnew';
 const PAGE_CACHE = 'public, max-age=300';
 const SECURITY_HEADERS = {
   'Content-Security-Policy':

@@ -264,7 +264,7 @@ Drafted from the code as of commit 2c02b83. Re-check them against the build you 
 - **Location, for drive times.** The app sends the home (or trip start) point and up to 25 nearby place ids to the drive-time Worker (`src/data/routing.ts`, `server/drive-times`). The Worker rounds the point to 2 decimals (about 1 km) before calling OpenRouteService and caching the answer on Cloudflare for 30 days. It keeps no log. Note that the phone sends the point unrounded today; rounding it on the phone too (the same `toFixed(2)` the app already uses for its cache key) would make the "coarse" answer below true end to end. That's a one-line change for the app thread, not this file. Location is optional: without it the app shows at-home ideas and straight-line estimates. Cloudflare sees the IP address for per-IP rate limiting and doesn't store it.
 - **Crash reports and performance** through Sentry, release builds only (`src/crash-reporting.ts`): crash stack traces, device model and OS, and a 20% sample of screen timings. `sendDefaultPii` is off, so no user details are attached. In Sentry's project settings, turn on "Prevent storing of IP addresses" so the server side matches.
 - **Opt-in anonymous usage counts** (`app_events` in `supabase/migrations/20261031200000_growth_counts.sql`): an event name, platform, app version and days since install. No device id, account or location. Off unless the person turns it on.
-- **Nothing else.** Plans, memories, notes, photos, ratings and the checklist stay on the phone. Calendar entries are written to the phone's calendar. Shares go through the system share sheet. The account and sync code (`src/data/sync.ts`) exists but nothing calls it until sign-in ships. No ads, no ad SDKs, no tracking.
+- **Nothing else.** Plans, memories, notes, photos, ratings and the checklist stay on the phone. Calendar entries are written to the phone's calendar. Shares go through the system share sheet. Optional sign-in and sync (PR #32) are in Settings, so the answers under "Changes when sign-in ships" below now apply. No ads, no ad SDKs, no tracking.
 
 ### App Store privacy label
 
@@ -280,7 +280,7 @@ Drafted from the code as of commit 2c02b83. Re-check them against the build you 
 
 Everything else: not collected. Apple counts data as collected when it leaves the device and is kept longer than it takes to answer the request. The precise point is used only for the request; the rounded point is cached, which is why the answer is Coarse Location.
 
-**Changes when sign-in ships** (mark these in the label the same day):
+**Changes when sign-in ships** (sign-in shipped in PR #32, so include these):
 
 - Contact Info: Email Address, linked, App Functionality (Sign in with Apple may give a relay address; Google gives the real one).
 - Identifiers: User ID, linked, App Functionality.
@@ -304,7 +304,7 @@ Everything else: not collected. Apple counts data as collected when it leaves th
 
 Play calls a location "approximate" only when it's no more precise than about 3 square kilometers. The Worker's 2-decimal rounding is about 1 square kilometer, so Play's honest answer is Precise location, even after the phone rounds too.
 
-**Changes when sign-in ships:** Personal info: Email address and User IDs (collected, required for an account, App functionality, Account management). Photos and videos once photo backup ships. App activity: Other user-generated content for synced plans, notes and ratings. All not shared.
+**Changes when sign-in ships** (shipped in PR #32, so include these): Personal info: Email address and User IDs (collected, required for an account, App functionality, Account management). Photos and videos once photo backup ships. App activity: Other user-generated content for synced plans, notes and ratings. All not shared.
 
 ## 6. Checklist for you
 

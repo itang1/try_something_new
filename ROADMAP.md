@@ -1,6 +1,6 @@
 # Try Something New: Roadmap
 
-The single list of what to build next. It replaces `TODO.md`. Last refreshed 2026-10-31, against `main` at `7256db5`. Growth items come from [MARKETING.md](MARKETING.md), the marketing and launch plan.
+The single list of what to build next. It replaces `TODO.md`. Last refreshed 2026-10-31, against `main` at `9f0138a` (PR #29). Growth items come from [MARKETING.md](MARKETING.md), the marketing and launch plan.
 
 At a glance: the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquBL) shows Up next, what's in progress, decisions and the inbox.
 
@@ -34,7 +34,7 @@ At a glance: the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquB
 
 **Finishing an item:** the PR that finishes it also ticks it here (`[x]`), moves it to Done with the PR number, and pulls the next item into Up next. A PR that only does part of an item marks it `[~]` and says what's left.
 
-**Keeping the Roadmap page fresh:** the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquBL) is built from this file, and an artifact can't read GitHub when you open it, so it only changes when someone republishes it. Any thread whose merged PR changed `ROADMAP.md` does this as its last step: on up-to-date `main`, run `npm run roadmap-page` (writes `dist/roadmap.html`), then publish that file as a new version of artifact `7e2bc319-4297-4cad-9526-45be58589527` (publish_files with `slug` and the live `base_version` from get_artifact). Don't create a new artifact. The page's header shows the commit it was built from, so a stale page is easy to spot.
+**Keeping the Roadmap page fresh:** the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquBL) is built from this file and only changes when someone republishes it. Every PR that finishes, starts or changes an item updates this file in the same PR, and after it merges the thread republishes the page. The exact steps are under **Roadmap page** in [AGENTS.md](AGENTS.md), which `CLAUDE.md` loads into every thread. The page's header shows the commit it was built from, so a stale page is easy to spot.
 
 **Refreshing:** every few weeks, or after a batch of PRs merges, re-check statuses against merged PRs, re-order Up next, and update the date at the top.
 
@@ -50,12 +50,12 @@ At a glance: the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquB
 
 In order. These are the ones to start a thread on.
 
-1. [~] **Optional account with cross-device sync** · Backend · L. The Supabase backend and the sync client (`src/data/sync.ts`, PR #27) are in. Left, as M items: **Turn on Apple and Google sign-in** (needs you: Google OAuth client ids, and the bundle id entered for Apple in the Supabase dashboard), and **Add Back up and sync to Settings** (sign in, sync now, sign out with `resetSync`, delete account through the `delete-account` function). Set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env.local` and EAS first (see `supabase/README.md`).
-2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), the rating prompt after closing the card for a "Loved it", and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
-3. [ ] **Finish Seoul's parks and trails** · Data · S. Needs your computer: the cloud can't reach Overpass. Run `node scripts/import-osm.mjs seoul 37.19,126.5,37.95,127.46` and commit the result. Overture has few parks and no bike routes there, so Seoul's outdoors list is mostly hand-picked until then.
-4. [ ] **Remind on a plan's day** · Feature · S. A local notification the morning of a planned activity, using the weekend ideas notification setup.
-5. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
-6. [ ] **Use the app without a city** · Feature · M. Someone outside the 5 cities, or who skips location, should still get at-home and host-friends ideas instead of an empty Explore.
+1. [~] **Optional account with cross-device sync** · Backend · L. Backend, sync client, sign-in and Back up and sync in Settings are in (PR #32). Left: **Turn on Apple and Google sign-in in the dashboards** (needs you; exact steps in `supabase/README.md` under Dashboard setup), then **Sync automatically** (on launch and when the app comes back, so Sync now is rarely needed), and **Back up memory photos**.
+2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), the rating prompt after closing the card for a "Loved it", a plan reminder on the morning of a plan, Explore with no location set, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
+3. [~] **Wheelchair and stroller access** · Data · S. The data is in: 518 places across the five cities carry OSM's `wheelchair` tag (`yes`, `limited` or `no`), PR #36. Left: store it in the app's catalog tables and add an "Accessible" filter.
+4. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
+5. [ ] **Opt-in, privacy-friendly analytics** · Growth · S. Anonymous counts with TelemetryDeck or Aptabase, off by default, so the beta can measure activation and retention.
+6. [ ] **Weather-aware suggestions** · Feature · M. Open-Meteo is free with no key. On rainy or very hot days lean toward indoor and at-home picks.
 
 ## Now: before launch
 
@@ -63,8 +63,7 @@ In order. These are the ones to start a thread on.
 - [~] **Make the tabs easier to get around** · UX · M. PR #11: one header pattern on every tab (the tab's own filter or sort button, then Settings, always top right), Map filters for Not done, Done, Saved and kind, a Checklist grouped by kind with folding sections, and Memories opened from the progress card. Left: check it on a phone.
 - [~] **Protect the drive-time Worker** · Backend · S. Per-IP rate limiting is in, and goes live on the next `npx wrangler deploy`. Left: App Attest / Play Integrity once the app is in the stores.
 - [ ] **Check merged work on a real phone** · Launch · S. See Up next.
-- [~] **Optional account with cross-device sync** · Backend · L. Backend and sync client done; see Up next.
-- [ ] **Finish Seoul's parks and trails** · Data · S. See Up next.
+- [~] **Optional account with cross-device sync** · Backend · L. Sign-in and sync in Settings done; dashboard setup left. See Up next.
 - [ ] **Build the Android widget** · Feature · M. From the old TODO.
 - [ ] **Finish the release setup** · Launch · S. Needs your accounts: `eas init`, EAS environment variables, Apple and Play developer accounts, then EAS Update with a fingerprint runtime version. Steps are in PR #2's description and the README.
 - [ ] **Test on a cheap Android phone** · Launch · S. Cold start, parsing the Los Angeles file, and the map with every pin. The map spike only ran in the iOS Simulator.
@@ -78,7 +77,6 @@ In order. These are the ones to start a thread on.
 - [?] **Set the launch date** · Growth · S. Recommended: early January, for "try new things" New Year's resolutions, with a beta in November and December.
 - [~] **Start a beta with a waitlist** · Growth · S. The landing page with an email signup is built (`server/web`, signups go to Supabase's `waitlist` table). Left, needs you: deploy it (`server/web/README.md`), then TestFlight and Play internal testing for 50 to 200 testers mostly in the launch city, which needs **Finish the release setup**.
 - [~] **Invite links that open the idea** · Growth · M. Built in the growth PR: a page per activity at `/activity/<id>?s=<kind>` on the website Worker, visits and button taps counted in Supabase's `link_events`, invites that include the page, the site's host on the share card, and universal and app links from `app.config.ts`. All of it turns on with `EXPO_PUBLIC_WEB_URL`. Left, needs you: deploy the website and pick a domain, set `APPLE_TEAM_ID` and the Play signing fingerprint on the Worker, set `EXPO_PUBLIC_WEB_URL` in EAS, and make a new build.
-- [ ] **Remind on a plan's day** · Feature · S. See Up next.
 - [x] **Opt-in, privacy-friendly analytics** · Growth · S. Done in the growth PR; see Done.
 - [ ] **Post the weekend video series** · Growth · M. Needs you. "My app picked my weekend" short videos, 3 a week from the beta on, on TikTok and Instagram Reels. Plan in MARKETING.md section 5.
 - [ ] **Launch publicly** · Growth · M. Waitlist email, founder video, city subreddit posts within each sub's rules, local creators and newsletters, and Product Hunt on a weekday, the same week. Launch kit and order in MARKETING.md sections 5 and 9.
@@ -87,17 +85,16 @@ In order. These are the ones to start a thread on.
 
 **Location-agnostic and at-home ideas** (building on PR #6)
 
-- [ ] **Use the app without a city** · Feature · M. See Up next.
 - [ ] **Draw custom icons for crafts** · UX · S. The activities without a Material Symbol, mostly crafts, in the same style.
 
 **Accounts and sync**
 
-- [~] **Optional account with cross-device sync** · Backend · L. Backend and sync client done; see Up next. "Back up and sync" in Settings with Sign in with Apple or Google, push and pull the logs, merge by latest event, in-app account deletion. Recommended backend: Supabase (see Storage decision below). From the old TODO.
+- [~] **Optional account with cross-device sync** · Backend · L. Sign-in and sync in Settings done; see Up next. "Back up and sync" in Settings with Sign in with Apple or Google, push and pull the logs, merge by latest event, in-app account deletion. Recommended backend: Supabase (see Storage decision below). From the old TODO.
 - [ ] **Back up memory photos** · Backend · M. The private `photos` bucket is ready, one folder per account. Resize to about 1600 px, upload on Wi-Fi in the background, keep the local copy as the one shown.
 
 **Better suggestions**
 
-- [ ] **Weather-aware suggestions** · Feature · M. Open-Meteo is free with no key. On rainy or very hot days lean toward indoor and at-home picks.
+- [ ] **Weather-aware suggestions** · Feature · M. See Up next.
 - [ ] **Learn from ratings** · Feature · M. "Loved it" boosts that kind and level, "Not for me" lowers similar ones. All on the phone.
 - [ ] **Themed collections** · Data · M. Date ideas, rainy day, under $20, with kids, free this weekend. Built from existing tags.
 - [ ] **Gentle milestones and a monthly recap** · Feature · M. "Tried something from all 9 kinds", a month in review, and a shareable memory card. Still no streaks.
@@ -112,9 +109,9 @@ In order. These are the ones to start a thread on.
 - [ ] **Directions in Korea** · UX · S. Google Maps has no driving directions in South Korea, so on Android open Naver Map or KakaoMap for Seoul places, with Google Maps as the fallback.
 - [ ] **Show kilometers outside the US** · UX · S. Default to kilometers for cities like Seoul, alongside a miles or kilometers setting. Only needed once the app shows distances; today it shows drive minutes.
 - [ ] **English names for Seoul places** · Data · M. Overture only has Korean names there. Options: OpenStreetMap's `name:en` (comes with the OSM import), or the Korea Tourism Organization's English TourAPI, which needs a free key from data.go.kr.
-- [ ] **Add more cities** · Data · M. The 25 largest US metros, then a few international ones. Re-import monthly from a scheduled Action.
-- [ ] **Show opening hours where known** · Data · M. OpenStreetMap `opening_hours`, an "Open now" badge, never hiding places without hours.
-- [ ] **Wheelchair and stroller access** · Data · S. Read OpenStreetMap's `wheelchair` tag and add an "Accessible" filter.
+- [ ] **Add more cities** · Data · M. The 25 largest US metros, then a few international ones. Re-import monthly from a scheduled Action; the **Import OpenStreetMap places** Action already does the OSM half on demand.
+- [~] **Show opening hours where known** · Data · M. The data is in: about 2,500 places across the five cities carry OSM's `opening_hours` as `hours`, PR #36. Left: store it in the app, parse it on the phone, and show an "Open now" badge, never hiding places without hours.
+- [~] **Wheelchair and stroller access** · Data · S. See Up next.
 - [ ] **Report a place through a form** · Data · S. A Worker endpoint that opens a GitHub issue with the place id, instead of email.
 
 **Growth after launch**
@@ -148,12 +145,19 @@ Unsorted ideas. Move them into a horizon at the next refresh.
 
 ## Storage decision
 
-Recommendation: **Supabase** (Postgres with row-level security, Sign in with Apple and Google, Storage for photos), with a small hand-written push/pull of the existing append-only logs. Cloudflare D1 + R2 is the runner-up: cheapest, but more to build. Add PowerSync only if shared plans make conflicts real. Do **Prepare the data for sync** first, whichever backend wins. Offering Google sign-in means also offering Sign in with Apple, and any app with accounts needs in-app account deletion. The full comparison is on the [roadmap page](https://claude.ai/code/artifact/4e24e846-bd46-4e59-b7b8-1c71c340fc67).
+Recommendation: **Supabase** (Postgres with row-level security, Sign in with Apple and Google, Storage for photos), with a small hand-written push/pull of the existing append-only logs. Cloudflare D1 + R2 is the runner-up: cheapest, but more to build. Add PowerSync only if shared plans make conflicts real. Do **Prepare the data for sync** first, whichever backend wins. Offering Google sign-in means also offering Sign in with Apple, and any app with accounts needs in-app account deletion. The full comparison is on the [old storage comparison page](https://claude.ai/code/artifact/4e24e846-bd46-4e59-b7b8-1c71c340fc67).
 
 ## Done
 
 - [x] **Opt-in, privacy-friendly analytics** · Growth. "Share anonymous usage counts" in Settings, off by default. Events (`app_open`, `plan_made`, `done_saved`, `memory_saved`, `card_shared`, `invite_sent`) go to Supabase's insert-only `app_events` with the platform, app version and days since first open, which is enough for activation and week 2 and 4 retention without a device id. Our own table instead of TelemetryDeck or Aptabase, so no third party and no extra account. SQL to read them is in `server/web/README.md`. Growth PR.
 - [x] **Round the location on the phone** · Backend. The drive-time request now sends a location rounded to about a kilometer, instead of relying on the Worker to round it. Growth PR.
+- [x] **Clean up the repo** · Tooling. Removed the finished SwiftUI parity checklist (`design/parity.md`) and the leftover Xcode, Swift Package Manager, CocoaPods, Carthage and Fastlane rules in `.gitignore`. The ignore file now also covers Overture extracts, test coverage and tool caches. No app changes.
+- [x] **Use the app without a city** · Feature. With no location, or more than 150 km from every city, the app uses "your area": every idea that needs no venue (at home, hosting friends, anywhere outside, or a maps search) instead of a far-off city's places. The Map says no places are mapped there yet and offers a trip to a city. PR #34.
+- [x] **Remind on a plan's day** · Feature. A notification at 9 am on the day of each plan, in every city, naming the place when there is one, and opening the idea when tapped. Asks for notification permission the first time you make a plan, with a "Plan reminders" switch in Settings (on by default). Weekend ideas and plan reminders now keep their own notifications instead of clearing each other's. PR #31.
+- [x] **Add Back up and sync to Settings** · Backend. Optional, signed out by default. Sign in with Apple (the system sheet on iPhone, the browser on Android) or Google (the browser, with the web client id), then Sync now with the last sync time, Sign out (keeps local data, resets the sync marks) and Delete account through the `delete-account` function. Supabase URL and publishable key now ship in `.env`. Adds expo-apple-authentication, expo-web-browser and expo-crypto, so it needs a new development build. PR #32.
+- [x] **Refresh OpenStreetMap places in every city** · Data. The first run of the Action: about 2,500 more parks, trails, venues and restaurants in Chicago, Columbus, Los Angeles and Seattle, 43 closed ones gone, and wheelchair access and opening hours on the places that have them. Seoul keeps the same places and gains both fields. Reaches phones with the next catalog download, no rebuild. PR #36.
+- [x] **Import OpenStreetMap places from GitHub Actions** · Data. The cloud can't reach Overpass, so an Action ("Import OpenStreetMap places" in the Actions tab) runs `scripts/import-osm.mjs` for one city or all of them and pushes an `osm-import/...` branch to open a pull request from (the repository doesn't let Actions open pull requests themselves). Without a box the script now takes 40 km around the city's center, and it keeps OSM's wheelchair access and opening hours. PR #29.
+- [x] **Finish Seoul's parks and trails** · Data. OpenStreetMap parks, trails, bike routes and venues for Seoul. PR #28.
 - [x] **Ask for a rating at a happy moment** · Growth. The system review prompt (expo-store-review) when the share card closes after a "Loved it", shared or not, at most once every 120 days. Never on launch or after "Not for me". Adds a native module, so it needs a new development build. PR #27.
 - [x] **Add the sync client** · Backend. `sync()` in `src/data/sync.ts` pushes `changesSince` in pages and pulls each table by `(updated_at, id)` into `applyChanges`, saving each cursor only after its step succeeds. Uses `@supabase/supabase-js`, with the session kept in the SQLite key-value store. Nothing calls it until sign-in lands. PR #27.
 - [x] **Share a "tried it" card** · Growth. After Save on the done sheet, and from a share button on each memory: an image card with your photo (or the activity's colors), the activity's icon and name, the place, "Loved it", "#12 in Seattle" and the app's name, in story (1080×1920) and square (1080×1080) sizes, through the share sheet. Adds react-native-view-shot, so it needs a new development build. The short link waits for **Invite links that open the idea**. PR #26.

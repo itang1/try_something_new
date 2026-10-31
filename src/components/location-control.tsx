@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { ANYWHERE_ID } from '@/data/cities';
 import { useAppState } from '@/state/app-state';
 import { useColors } from '@/theme';
 import { Icon } from '@/components/icon';
@@ -12,14 +13,15 @@ export function LocationControl() {
 
   let icon: IconName = 'location_on';
   let title = 'Set your location';
-  let subtitle = `Showing ${city.name}. Add yours for drive times.`;
+  const anywhere = city.id === ANYWHERE_ID;
+  let subtitle = anywhere ? 'Ideas for home and anywhere. Add yours for places nearby.' : `Showing ${city.name}. Add yours for drive times.`;
   if (trip) {
     icon = 'flight';
     title = `Trip to ${city.name}`;
     subtitle = trip.start ? `From ${trip.start.name}` : "Set where you're staying";
   } else if (home) {
     title = home.name;
-    subtitle = `Out around ${city.name}, or right at home`;
+    subtitle = anywhere ? 'No places mapped near you yet. Ideas for home and anywhere.' : `Out around ${city.name}, or right at home`;
   }
 
   return (

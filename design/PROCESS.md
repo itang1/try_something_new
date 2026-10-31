@@ -3,7 +3,7 @@
 ## Order of operations
 
 1. **Spike the risky part.** Before porting, a throwaway map with 5,000 clustered pins checked that Expo could handle scale. It lives on the [`map-spike`](../../../tree/map-spike) branch.
-2. **Port to parity.** The Expo app matched the SwiftUI app screen by screen, using [`parity.md`](parity.md) as the checklist. The SwiftUI version is saved on the [`native-ios`](../../../tree/native-ios) branch.
+2. **Port to parity.** The Expo app matched the SwiftUI app screen by screen. The SwiftUI version is saved on the [`native-ios`](../../../tree/native-ios) branch, and the finished parity checklist is in git history.
 3. **Mock up new screens.** New screens and flows are designed in the [UI mockup](https://claude.ai/artifact/1U6jG3YQMjzWfiNjXJMhVv) first, where changes are cheap.
 4. **Write the data schema** the approved screens need.
 5. **Build** each approved screen. From then on the code is the source of truth, and the mockup is history.

@@ -1,10 +1,26 @@
 // Adds OpenStreetMap places to a city file, matched to activities by their tags and names.
-// Usage: node scripts/import-osm.mjs <city> <south,west,north,east> [saved-overpass.json]
+// Usage: node scripts/import-osm.mjs <city> [south,west,north,east] [saved-overpass.json]
+// Without a box, it takes 40 km around the city's center, the same as the Overture import. Pass "-" as the box to use that
+// default with a saved Overpass response. The "Import OpenStreetMap places" GitHub Action runs this where Overpass is reachable.
 // Re-running replaces the earlier OSM places; hand-picked places keep their ids and gain matched activities.
+// Each place also keeps OSM's wheelchair access ("yes", "limited" or "no") and opening hours, when they're mapped.
 import { readFileSync, writeFileSync } from 'node:fs';
 
-const [cityId, bbox, saved] = process.argv.slice(2);
-if (!cityId || !bbox) throw new Error('Usage: node scripts/import-osm.mjs <city> <south,west,north,east> [saved.json]');
+const [cityId, bboxArg, saved] = process.argv.slice(2);
+if (!cityId) throw new Error('Usage: node scripts/import-osm.mjs <city> [south,west,north,east] [saved.json]');
+const file = `data/cities/${cityId}.json`;
+const city = JSON.parse(readFileSync(file, 'utf8'));
+const RADIUS_KM = 40;
+const bbox =
+  bboxArg && bboxArg !== '-'
+    ? bboxArg
+    : (() => {
+        const dLat = RADIUS_KM / 111.32;
+        const dLng = RADIUS_KM / (111.32 * Math.cos((city.lat * Math.PI) / 180));
+        const r = (n) => Math.round(n * 100) / 100;
+        return [r(city.lat - dLat), r(city.lng - dLng), r(city.lat + dLat), r(city.lng + dLng)].join(',');
+      })();
+console.log(`Asking Overpass for ${cityId} in ${bbox}`);
 
 // Cuisines most people haven't tried yet. Common ones like Italian or Mexican don't count as new.
 const CUISINES =
@@ -15,7 +31,7 @@ const NEW_CUISINE = new RegExp(`\\b(${CUISINES})\\b`);
 // A city's own cuisine isn't new there: Seoul has thousands of Korean restaurants.
 const LOCAL_CUISINE = { KR: 'korean' };
 
-const QUERY = `[out:json][timeout:90];
+const QUERY = `[out:json][timeout:240];
 (
  nwr["leisure"~"^(bowling_alley|escape_game|golf_course|ice_rink|horse_riding|fishing|nature_reserve|stadium|dance|park|garden|water_park|sports_centre|fitness_centre|swimming_pool|pitch|miniature_golf|trampoline_park|amusement_arcade|disc_golf_course|sauna|bird_hide)$"]["name"](BBOX);
  nwr["tourism"~"^(museum|gallery|zoo|aquarium|theme_park|attraction|viewpoint)$"]["name"](BBOX);
@@ -134,8 +150,19 @@ function km(a, b) {
   return Math.hypot(x, y) * 6371;
 }
 
-const file = `data/cities/${cityId}.json`;
-const city = JSON.parse(readFileSync(file, 'utf8'));
+// Matches the validator. Longer opening_hours values are rare, and usually a list of exceptions nobody can read on a phone.
+const MAX_HOURS = 255;
+const WHEELCHAIR = new Set(['yes', 'limited', 'no']);
+/** Wheelchair access and opening hours, when OSM has them. */
+function extras(t) {
+  const out = {};
+  if (WHEELCHAIR.has(t.wheelchair)) out.wheelchair = t.wheelchair;
+  const hours = t.opening_hours?.trim();
+  if (hours && hours.length <= MAX_HOURS) out.hours = hours;
+  return out;
+}
+
+const before = new Set(city.places.filter((p) => p.id.startsWith('osm:')).map((p) => p.id));
 const handPicked = city.places.filter((p) => !p.id.startsWith('osm:'));
 const imported = [];
 let merged = 0;
@@ -156,6 +183,7 @@ for (const e of await fetchElements()) {
     lat: Math.round(center.lat * 1e4) / 1e4,
     lng: Math.round(center.lon * 1e4) / 1e4,
     activities: [...activities].sort(),
+    ...extras(t),
   };
   // The same venue can be mapped twice (a point and a building), or already be hand-picked.
   // Big parks and trails are often mapped in pieces, while chain stores sharing a name sit farther apart.
@@ -163,6 +191,8 @@ for (const e of await fetchElements()) {
   const same = [...handPicked, ...imported].find((p) => normal(p.name) === normal(place.name) && km(p, place) < range);
   if (same) {
     same.activities = [...new Set([...same.activities, ...place.activities])].sort();
+    // A place's own details win; OSM only fills in what's missing.
+    for (const [key, value] of Object.entries(extras(t))) same[key] ??= value;
     merged++;
   } else {
     imported.push(place);
@@ -177,4 +207,12 @@ writeFileSync(
   `{\n${Object.entries(head).map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v)},\n`).join('')}` +
     `  "icons": [\n${icons.map(line).join(',\n')}\n  ],\n  "places": [\n${places.map(line).join(',\n')}\n  ]\n}\n`,
 );
-console.log(`${imported.length} OSM places added, ${merged} merged into existing ones, ${city.places.length} in total`);
+const after = new Set(imported.map((p) => p.id));
+const gone = [...before].filter((id) => !after.has(id)).length;
+const fresh = [...after].filter((id) => !before.has(id)).length;
+const withAccess = city.places.filter((p) => p.wheelchair).length;
+const withHours = city.places.filter((p) => p.hours).length;
+console.log(
+  `${imported.length} OSM places (${fresh} new, ${gone} gone since the last import), ${merged} merged into existing ones, ` +
+    `${city.places.length} in total. ${withAccess} with wheelchair access, ${withHours} with opening hours.`,
+);

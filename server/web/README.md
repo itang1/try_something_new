@@ -45,7 +45,7 @@ Set in `wrangler.jsonc` under `vars`, then redeploy.
 | `SUPABASE_URL` | Already set | `https://fueiospwqwukvqmwcfrn.supabase.co` |
 | `CONTACT_EMAIL` | Now, if there's an address to use | Shown on the privacy page for waitlist removal and questions. Empty: the page says to use Send feedback in the app |
 | `APP_STORE_URL` | The app is on the App Store | `https://apps.apple.com/app/id<number>`. Replaces the waitlist with store buttons |
-| `PLAY_STORE_URL` | The app is on Google Play | `https://play.google.com/store/apps/details?id=com.pastureraised.trysomethingnew` |
+| `PLAY_STORE_URL` | The app is on Google Play | `https://play.google.com/store/apps/details?id=com.poodlestrategy.trysomethingnew` |
 | `APPLE_TEAM_ID` | There's an Apple Developer account | Membership details > Team ID (10 characters) |
 | `ANDROID_SHA256_FINGERPRINTS` | The app is in the Play Console | Test and release > App integrity > App signing > SHA-256 of the app signing key, plus the upload key's if internal-testing builds should open links too. Comma-separated |
 
