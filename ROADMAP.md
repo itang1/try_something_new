@@ -53,9 +53,9 @@ In order. These are the ones to start a thread on.
 1. [ ] **Store places in indexed SQLite tables** · Architecture · M. Each city is one JSON blob parsed whole, and Seoul makes five. Query by bounding box instead, to cut memory and launch time.
 2. [ ] **Optional account with cross-device sync** · Backend · L. Ask for a plan first and split it into M items here. Builds on the item above and on **Prepare the data for sync** (done); see Storage decision below.
 3. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
-4. [ ] **More broad ideas like crafts** · Data · S. Use the same parent model as "Try a new craft" for "Cook something new" and "Learn a new skill" now that PR #6 is in.
-5. [ ] **Finish Seoul's parks and trails** · Data · S. Needs your computer: the cloud can't reach Overpass. Run `node scripts/import-osm.mjs seoul 37.19,126.5,37.95,127.46` and commit the result. Overture has few parks and no bike routes there, so Seoul's outdoors list is mostly hand-picked until then.
-6. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
+4. [ ] **Finish Seoul's parks and trails** · Data · S. Needs your computer: the cloud can't reach Overpass. Run `node scripts/import-osm.mjs seoul 37.19,126.5,37.95,127.46` and commit the result. Overture has few parks and no bike routes there, so Seoul's outdoors list is mostly hand-picked until then.
+5. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
+6. [ ] **Use the app without a city** · Feature · M. Someone outside the 5 cities, or who skips location, should still get at-home and host-friends ideas instead of an empty Explore.
 
 ## Now: before launch
 
@@ -77,8 +77,7 @@ In order. These are the ones to start a thread on.
 
 **Location-agnostic and at-home ideas** (building on PR #6)
 
-- [ ] **Use the app without a city** · Feature · M. Someone outside the 5 cities, or who skips location, should still get at-home and host-friends ideas instead of an empty Explore.
-- [ ] **More broad ideas like crafts** · Data · S. See Up next.
+- [ ] **Use the app without a city** · Feature · M. See Up next.
 - [ ] **More at-home and DIY versions** · Data · S. Add a `home` line to activities that can work at home and don't have one yet, and a few new home-only crafts.
 - [ ] **Draw custom icons for crafts** · UX · S. The activities without a Material Symbol, mostly crafts, in the same style.
 
@@ -135,6 +134,7 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **More broad ideas like crafts** · Data. "Cook something new" (dumplings, sushi, kimchi, tortillas, no-churn ice cream, plus bread, pasta and cooking classes) and "Learn a new skill" (a language, chess, sign language, a card trick, juggling, first aid, code, plus music lessons), on the same parent model as "Try a new craft". PR #PRNUM.
 - [x] **Offer Host friends in the Where picker** · UX. The Explore card's Change list ends with Host friends wherever an activity has it, with an Invite button. PR #14.
 - [x] **Run expo-doctor in CI** · Architecture. Plus the Expo package patch versions it asked for. PR #12.
 - [x] **Change where to do an idea on the Explore card** · UX. Pick at home, a nearby place or a maps search right on the card. PR #10.
