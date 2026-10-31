@@ -179,7 +179,7 @@ export default function ActivitySheet() {
               )}
             </View>
             {sources.length > 0 && (
-              <Pressable onPress={() => router.push('/about')} accessibilityRole="link" hitSlop={8}>
+              <Pressable onPress={() => router.push('/settings')} accessibilityRole="link" hitSlop={8}>
                 <Text style={[styles.credit, { color: colors.tertiary }]}>
                   Places from {sources.map((c) => c.name).join(' and ')}
                 </Text>

@@ -15,3 +15,6 @@ Sentry.init({
 });
 
 export const wrap = Sentry.wrap;
+
+/** Expo Router's per-route error boundary, reporting to Sentry before it shows the fallback. */
+export const wrapErrorBoundary = Sentry.wrapExpoRouterErrorBoundary;

@@ -1,5 +1,5 @@
 // First, so crash reporting is running before anything else loads.
-import { wrap } from '@/crash-reporting';
+import { wrap, wrapErrorBoundary } from '@/crash-reporting';
 import { useEffect } from 'react';
 import { DarkTheme, DefaultTheme, router, Stack, ThemeProvider, type Href } from 'expo-router';
 import { useColorScheme } from 'react-native';
@@ -10,6 +10,10 @@ import { ToastProvider } from '@/state/toast';
 import { NudgeSync } from '@/state/nudge-sync';
 import { WidgetSync } from '@/state/widget-sync';
 import { useColors } from '@/theme';
+import { CrashScreen } from '@/components/crash-screen';
+
+// A screen that throws while rendering shows a friendly retry screen instead of crashing the app.
+export const ErrorBoundary = wrapErrorBoundary(CrashScreen);
 
 /** Opens the idea a weekend nudge suggested, whether the app was running or not. */
 function useNudgeTaps() {
@@ -96,7 +100,7 @@ function RootLayout() {
                 }}
               />
               <Stack.Screen
-                name="about"
+                name="settings"
                 options={{
                   presentation: 'formSheet',
                   sheetAllowedDetents: [0.75, 1],
