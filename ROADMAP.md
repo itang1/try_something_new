@@ -51,11 +51,11 @@ At a glance: the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquB
 In order. These are the ones to start a thread on.
 
 1. [~] **Optional account with cross-device sync** · Backend · L. Backend, sync client, sign-in and Back up and sync in Settings are in (PR #32). Left: **Turn on Apple and Google sign-in in the dashboards** (needs you; exact steps in `supabase/README.md` under Dashboard setup), then **Sync automatically** (on launch and when the app comes back, so Sync now is rarely needed), and **Back up memory photos**.
-2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), the rating prompt after closing the card for a "Loved it", a plan reminder on the morning of a plan, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
+2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), the rating prompt after closing the card for a "Loved it", a plan reminder on the morning of a plan, Explore with no location set, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
 3. [~] **Wheelchair and stroller access** · Data · S. The OSM import keeps the `wheelchair` tag, and the **Import OpenStreetMap places** Action fills it in for every city. Left: store it in the app's catalog tables and add an "Accessible" filter.
 4. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
-5. [ ] **Use the app without a city** · Feature · M. Someone outside the 5 cities, or who skips location, should still get at-home and host-friends ideas instead of an empty Explore.
-6. [ ] **Opt-in, privacy-friendly analytics** · Growth · S. Anonymous counts with TelemetryDeck or Aptabase, off by default, so the beta can measure activation and retention.
+5. [ ] **Opt-in, privacy-friendly analytics** · Growth · S. Anonymous counts with TelemetryDeck or Aptabase, off by default, so the beta can measure activation and retention.
+6. [ ] **Weather-aware suggestions** · Feature · M. Open-Meteo is free with no key. On rainy or very hot days lean toward indoor and at-home picks.
 
 ## Now: before launch
 
@@ -85,7 +85,6 @@ In order. These are the ones to start a thread on.
 
 **Location-agnostic and at-home ideas** (building on PR #6)
 
-- [ ] **Use the app without a city** · Feature · M. See Up next.
 - [ ] **Draw custom icons for crafts** · UX · S. The activities without a Material Symbol, mostly crafts, in the same style.
 
 **Accounts and sync**
@@ -95,7 +94,7 @@ In order. These are the ones to start a thread on.
 
 **Better suggestions**
 
-- [ ] **Weather-aware suggestions** · Feature · M. Open-Meteo is free with no key. On rainy or very hot days lean toward indoor and at-home picks.
+- [ ] **Weather-aware suggestions** · Feature · M. See Up next.
 - [ ] **Learn from ratings** · Feature · M. "Loved it" boosts that kind and level, "Not for me" lowers similar ones. All on the phone.
 - [ ] **Themed collections** · Data · M. Date ideas, rainy day, under $20, with kids, free this weekend. Built from existing tags.
 - [ ] **Gentle milestones and a monthly recap** · Feature · M. "Tried something from all 9 kinds", a month in review, and a shareable memory card. Still no streaks.
@@ -148,6 +147,7 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **Use the app without a city** · Feature. With no location, or more than 150 km from every city, the app uses "your area": every idea that needs no venue (at home, hosting friends, anywhere outside, or a maps search) instead of a far-off city's places. The Map says no places are mapped there yet and offers a trip to a city. PR #34.
 - [x] **Remind on a plan's day** · Feature. A notification at 9 am on the day of each plan, in every city, naming the place when there is one, and opening the idea when tapped. Asks for notification permission the first time you make a plan, with a "Plan reminders" switch in Settings (on by default). Weekend ideas and plan reminders now keep their own notifications instead of clearing each other's. PR #31.
 - [x] **Add Back up and sync to Settings** · Backend. Optional, signed out by default. Sign in with Apple (the system sheet on iPhone, the browser on Android) or Google (the browser, with the web client id), then Sync now with the last sync time, Sign out (keeps local data, resets the sync marks) and Delete account through the `delete-account` function. Supabase URL and publishable key now ship in `.env`. Adds expo-apple-authentication, expo-web-browser and expo-crypto, so it needs a new development build. PR #32.
 - [x] **Import OpenStreetMap places from GitHub Actions** · Data. The cloud can't reach Overpass, so an Action ("Import OpenStreetMap places" in the Actions tab) runs `scripts/import-osm.mjs` for one city or all of them and opens a pull request. Without a box the script now takes 40 km around the city's center, and it keeps OSM's wheelchair access and opening hours. PR #29.

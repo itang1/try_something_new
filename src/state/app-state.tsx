@@ -4,6 +4,7 @@ import {
   applyCatalogAliases,
   citySummary,
   cityWithoutPlaces,
+  cityIdFor,
   DEFAULT_CITY_ID,
   downloadCity,
   findEntryAnywhere,
@@ -122,7 +123,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const hiddenIds = useMemo(() => new Set(hidden), [hidden]);
 
   const [catalogVersion, setCatalogVersion] = useState(0);
-  const wantedId = trip?.cityId ?? (home ? nearestCity(home).city.id : DEFAULT_CITY_ID);
+  const wantedId = trip?.cityId ?? cityIdFor(home);
   const wanted = localCity(wantedId);
   const wantedSummary = citySummary(wantedId);
   const standIn = wantedSummary && nearestCity({ latitude: wantedSummary.lat, longitude: wantedSummary.lng }, true).city.id;
