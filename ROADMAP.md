@@ -50,7 +50,7 @@ At a glance: the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquB
 
 In order. These are the ones to start a thread on.
 
-1. [~] **Optional account with cross-device sync** · Backend · L. The Supabase backend and the sync client (`src/data/sync.ts`, PR #27) are in. Left, as M items: **Turn on Apple and Google sign-in** (needs you: Google OAuth client ids, and the bundle id entered for Apple in the Supabase dashboard), and **Add Back up and sync to Settings** (sign in, sync now, sign out with `resetSync`, delete account through the `delete-account` function). Set `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env.local` and EAS first (see `supabase/README.md`).
+1. [~] **Optional account with cross-device sync** · Backend · L. Backend, sync client, sign-in and Back up and sync in Settings are in (PR #29). Left: **Turn on Apple and Google sign-in in the dashboards** (needs you; exact steps in `supabase/README.md` under Dashboard setup), then **Sync automatically** (on launch and when the app comes back, so Sync now is rarely needed), and **Back up memory photos**.
 2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), the rating prompt after closing the card for a "Loved it", and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
 3. [ ] **Finish Seoul's parks and trails** · Data · S. Needs your computer: the cloud can't reach Overpass. Run `node scripts/import-osm.mjs seoul 37.19,126.5,37.95,127.46` and commit the result. Overture has few parks and no bike routes there, so Seoul's outdoors list is mostly hand-picked until then.
 4. [ ] **Remind on a plan's day** · Feature · S. A local notification the morning of a planned activity, using the weekend ideas notification setup.
@@ -63,7 +63,7 @@ In order. These are the ones to start a thread on.
 - [~] **Make the tabs easier to get around** · UX · M. PR #11: one header pattern on every tab (the tab's own filter or sort button, then Settings, always top right), Map filters for Not done, Done, Saved and kind, a Checklist grouped by kind with folding sections, and Memories opened from the progress card. Left: check it on a phone.
 - [~] **Protect the drive-time Worker** · Backend · S. Per-IP rate limiting is in, and goes live on the next `npx wrangler deploy`. Left: App Attest / Play Integrity once the app is in the stores.
 - [ ] **Check merged work on a real phone** · Launch · S. See Up next.
-- [~] **Optional account with cross-device sync** · Backend · L. Backend and sync client done; see Up next.
+- [~] **Optional account with cross-device sync** · Backend · L. Sign-in and sync in Settings done; dashboard setup left. See Up next.
 - [ ] **Finish Seoul's parks and trails** · Data · S. See Up next.
 - [ ] **Build the Android widget** · Feature · M. From the old TODO.
 - [ ] **Finish the release setup** · Launch · S. Needs your accounts: `eas init`, EAS environment variables, Apple and Play developer accounts, then EAS Update with a fingerprint runtime version. Steps are in PR #2's description and the README.
@@ -92,7 +92,7 @@ In order. These are the ones to start a thread on.
 
 **Accounts and sync**
 
-- [~] **Optional account with cross-device sync** · Backend · L. Backend and sync client done; see Up next. "Back up and sync" in Settings with Sign in with Apple or Google, push and pull the logs, merge by latest event, in-app account deletion. Recommended backend: Supabase (see Storage decision below). From the old TODO.
+- [~] **Optional account with cross-device sync** · Backend · L. Sign-in and sync in Settings done; see Up next. "Back up and sync" in Settings with Sign in with Apple or Google, push and pull the logs, merge by latest event, in-app account deletion. Recommended backend: Supabase (see Storage decision below). From the old TODO.
 - [ ] **Back up memory photos** · Backend · M. The private `photos` bucket is ready, one folder per account. Resize to about 1600 px, upload on Wi-Fi in the background, keep the local copy as the one shown.
 
 **Better suggestions**
@@ -150,6 +150,7 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **Add Back up and sync to Settings** · Backend. Optional, signed out by default. Sign in with Apple (the system sheet on iPhone, the browser on Android) or Google (the browser, with the web client id), then Sync now with the last sync time, Sign out (keeps local data, resets the sync marks) and Delete account through the `delete-account` function. Supabase URL and publishable key now ship in `.env`. Adds expo-apple-authentication, expo-web-browser and expo-crypto, so it needs a new development build. PR #29.
 - [x] **Ask for a rating at a happy moment** · Growth. The system review prompt (expo-store-review) when the share card closes after a "Loved it", shared or not, at most once every 120 days. Never on launch or after "Not for me". Adds a native module, so it needs a new development build. PR #27.
 - [x] **Add the sync client** · Backend. `sync()` in `src/data/sync.ts` pushes `changesSince` in pages and pulls each table by `(updated_at, id)` into `applyChanges`, saving each cursor only after its step succeeds. Uses `@supabase/supabase-js`, with the session kept in the SQLite key-value store. Nothing calls it until sign-in lands. PR #27.
 - [x] **Share a "tried it" card** · Growth. After Save on the done sheet, and from a share button on each memory: an image card with your photo (or the activity's colors), the activity's icon and name, the place, "Loved it", "#12 in Seattle" and the app's name, in story (1080×1920) and square (1080×1080) sizes, through the share sheet. Adds react-native-view-shot, so it needs a new development build. The short link waits for **Invite links that open the idea**. PR #26.
