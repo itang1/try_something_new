@@ -9,6 +9,7 @@ import { AppStateProvider } from '@/state/app-state';
 import { ToastProvider } from '@/state/toast';
 import { NudgeSync, PlanReminderSync } from '@/state/nudge-sync';
 import { WidgetSync } from '@/state/widget-sync';
+import { AutoSync } from '@/state/auto-sync';
 import { useColors } from '@/theme';
 import { appOpened } from '@/data/analytics';
 import { CrashScreen } from '@/components/crash-screen';
@@ -55,6 +56,7 @@ function RootLayout() {
           <WidgetSync />
           <NudgeSync />
           <PlanReminderSync />
+          <AutoSync />
           <ToastProvider>
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(tabs)" />
