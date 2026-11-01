@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, { ZoomIn } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import type { Entry } from '@/data/catalog';
-import { formatMinutes } from '@/data/drive';
+import { formatMinutes, travelMode, type TravelMode } from '@/data/drive';
 import { subcategory, useColors } from '@/theme';
 import type { IconName } from '@/icons/paths';
 import { GradientIcon, Icon } from './icon';
@@ -15,6 +15,7 @@ export const ActivityRow = memo(function ActivityRow({
   done,
   saved,
   minutes,
+  mode,
   hint,
   progress,
   planned,
@@ -25,6 +26,8 @@ export const ActivityRow = memo(function ActivityRow({
   done: boolean;
   saved: boolean;
   minutes: number | null;
+  /** How the person gets around, for the minutes' icon. */
+  mode: TravelMode;
   hint: string;
   /** Shown once you've visited one of several places. */
   progress: PlaceProgress | null;
@@ -35,6 +38,7 @@ export const ActivityRow = memo(function ActivityRow({
 }) {
   const colors = useColors();
   const tint = subcategory(activity.subcategory).color;
+  const travel = travelMode(mode);
   return (
     <Pressable
       onPress={() => onOpen(activity.id)}
@@ -45,7 +49,7 @@ export const ActivityRow = memo(function ActivityRow({
         planned && `planned for ${planned}`,
         activity.cost,
         activity.duration,
-        minutes != null && `${formatMinutes(minutes)} drive`,
+        minutes != null && `${formatMinutes(minutes)} ${travel.noun}`,
         progress && `${progress.visited} of ${progress.total} places`,
       ]
         .filter(Boolean)
@@ -74,7 +78,7 @@ export const ActivityRow = memo(function ActivityRow({
         <View style={styles.meta}>
           <Meta icon="payments" text={activity.cost} color={colors.secondary} />
           <Meta icon="schedule" text={activity.duration} color={colors.secondary} />
-          {minutes != null && <Meta icon="directions_car" text={formatMinutes(minutes)} color={colors.secondary} />}
+          {minutes != null && <Meta icon={travel.icon} text={formatMinutes(minutes)} color={colors.secondary} />}
           {planned && <Meta icon="calendar_month" text={planned} color={colors.accent} />}
         </View>
         {progress ? (

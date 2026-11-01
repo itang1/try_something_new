@@ -20,10 +20,10 @@ export function LocationControl() {
   if (trip) {
     icon = 'flight';
     title = `Trip to ${cityName}`;
-    subtitle = trip.start ? `Drive times from ${trip.start.name}` : "Set where you're staying for drive times";
+    subtitle = trip.start ? `Travel times from ${trip.start.name}` : "Set where you're staying for travel times";
   } else if (!home) {
     title = anywhere ? 'Set your location' : cityName;
-    subtitle = anywhere ? 'Ideas for home and anywhere. Pick a city or set yours for places nearby.' : 'Add where you are for drive times';
+    subtitle = anywhere ? 'Ideas for home and anywhere. Pick a city or set yours for places nearby.' : 'Add where you are for travel times';
   } else if (anywhere) {
     title = home.name;
     subtitle =

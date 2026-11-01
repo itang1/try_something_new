@@ -137,7 +137,7 @@ export default function LocationSheet() {
       icon: 'cottage',
       tint: colors.accent,
       title: 'Ideas for home and anywhere',
-      body: 'You chose no city, so there are no places or drive times.',
+      body: 'You chose no city, so there are no places or travel times.',
       action: home ? { label: 'Follow my location', onPress: () => pickCity(null) } : undefined,
     };
   } else if (cityChoice) {
@@ -146,8 +146,8 @@ export default function LocationSheet() {
       tint: colors.done,
       title: `Showing ${shownName}`,
       body: home
-        ? `You picked it. ${home.name} is ${roughDrive(haversineKm(home, city.lat, city.lng))} away, and drive times start there.`
-        : 'You picked it. Add where you are for drive times from your door.',
+        ? `You picked it. ${home.name} is ${roughDrive(haversineKm(home, city.lat, city.lng))} away, and travel times start there.`
+        : 'You picked it. Add where you are for travel times from your door.',
       action: home && autoId !== cityChoice ? { label: 'Follow my location', onPress: () => pickCity(null) } : undefined,
     };
   } else if (home && covered && nearest) {
@@ -231,7 +231,7 @@ export default function LocationSheet() {
       )}
 
       <View style={styles.group}>
-        <Text style={[styles.section, { color: colors.secondary }]}>{trip ? 'Drive times start here' : 'Where you live'}</Text>
+        <Text style={[styles.section, { color: colors.secondary }]}>{trip ? 'Travel times start here' : 'Where you live'}</Text>
         <View style={[styles.field, { backgroundColor: colors.fill }]}>
           <Icon name="search" size={20} color={colors.secondary} />
           <TextInput
@@ -245,7 +245,7 @@ export default function LocationSheet() {
             placeholderTextColor={colors.tertiary}
             returnKeyType="search"
             autoCorrect={false}
-            accessibilityLabel={trip ? 'Drive times start here' : 'Where you live'}
+            accessibilityLabel={trip ? 'Travel times start here' : 'Where you live'}
             style={[styles.input, { color: colors.label }]}
           />
           {busy === 'address' ? (
@@ -269,7 +269,7 @@ export default function LocationSheet() {
           </Text>
         ) : (
           <Text style={[styles.note, { color: colors.tertiary }]}>
-            {trip ? 'Drive times start from here.' : 'Used only for nearby places and drive times.'}
+            {trip ? 'Travel times start from here.' : 'Used only for nearby places and travel times.'}
           </Text>
         )}
       </View>
@@ -302,7 +302,7 @@ export default function LocationSheet() {
                 key={s.key}
                 accessibilityRole="button"
                 accessibilityLabel={s.detail ? `${s.title}, ${s.detail}` : s.title}
-                accessibilityHint={trip ? 'Starts drive times here' : 'Sets this as where you live'}
+                accessibilityHint={trip ? 'Starts travel times here' : 'Sets this as where you live'}
                 disabled={busy !== null}
                 onPress={() => finish({ latitude: s.latitude, longitude: s.longitude, name: s.name }, true, '')}
                 style={({ pressed }) => [

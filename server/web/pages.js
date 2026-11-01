@@ -181,9 +181,9 @@ export function privacyPage(site) {
 <h2>What stays on your phone</h2>
 <p>Your ideas, saved and hidden ideas, plans, what you’ve done, ratings, notes and memory photos are stored on your device. A backup you export is a file you keep.</p>
 
-<h2>Your location and drive times</h2>
-<p>The app asks for your location only to show nearby places and how long it takes to drive there. It works without it, with at-home ideas and a city you pick.</p>
-<p>To get drive times, the app sends your location <strong>rounded to about 1 km</strong>, with the nearby places it wants times for, to our drive-time server (run on Cloudflare). That server asks <a href="https://openrouteservice.org">OpenRouteService</a> for driving times, so OpenRouteService sees only the rounded location and the places, never your IP address. Answers are cached for up to 30 days by rounded location, so nearby people share them; nothing records who asked. Cloudflare sees your IP address to deliver the request, and we use it only for a moment to stop abuse.</p>
+<h2>Your location and travel times</h2>
+<p>The app asks for your location only to show nearby places and how long it takes to get there. It works without it, with at-home ideas and a city you pick.</p>
+<p>To get travel times, the app sends your location <strong>rounded to about 1 km</strong>, with the nearby places it wants times for and whether you drive, walk or bike, to our drive-time server (run on Cloudflare). That server asks <a href="https://openrouteservice.org">OpenRouteService</a> for the times, so OpenRouteService sees only the rounded location and the places, never your IP address. Answers are cached for up to 30 days by rounded location, so nearby people share them; nothing records who asked. Cloudflare sees your IP address to deliver the request, and we use it only for a moment to stop abuse.</p>
 <p>When you search for your town or address, the phone’s own geocoder (Apple’s or Google’s) looks it up first. As you type, the app also sends what you’ve typed, with your area <strong>rounded to about 10 km</strong> so nearby matches come first, to the same drive-time server, which asks <a href="https://photon.komoot.io">Photon</a> (run by komoot, with OpenStreetMap data) for matching towns and addresses. Photon sees only the text and the rounded area, never your IP address. Answers are cached for up to 7 days by text and rounded area; nothing records who asked.</p>
 <p>If you report a problem with a place, the app sends the place, the activity, the city, the reason you picked and any note you wrote to the drive-time server, which opens a public issue on our GitHub repository with them. It sends nothing else about you.</p>
 <p>The map is drawn by Apple Maps on iPhone and Google Maps on Android, which load the area you look at. Directions and map searches open in your maps app, under its own policy.</p>
@@ -208,7 +208,7 @@ export function privacyPage(site) {
 <ul>
 <li>Cloudflare hosts this website and the drive-time server.</li>
 <li>GitHub Pages hosts the lists of places the app downloads for each city. Those downloads carry nothing about you, though like any website it sees your IP address.</li>
-<li>OpenRouteService works out drive times from rounded locations.</li>
+<li>OpenRouteService works out drive, walking and cycling times from rounded locations.</li>
 <li>Photon, run by komoot, suggests towns and addresses from what you type in the location search.</li>
 <li>Open-Meteo gives the current weather for a location rounded to about 10 km.</li>
 <li>Sentry receives crash reports.</li>

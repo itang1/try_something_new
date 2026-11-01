@@ -20,12 +20,12 @@ export default function PlanSheet() {
   const router = useRouter();
   // `spot` is where the Explore card was showing, so a new plan starts there.
   const { id, spot } = useLocalSearchParams<{ id: string; spot?: string }>();
-  const { city, origin, driveTimes, plans, setPlan, findEntry, filters, planReminders } = useAppState();
+  const { city, origin, travelTimes, plans, setPlan, findEntry, filters, planReminders } = useAppState();
   const entry = findEntry(id);
   const existing = plans.get(id);
   const days = upcomingDays(DAYS_AHEAD);
   const keys = days.map(dayKey);
-  const places = entry ? placesByDistance(entry, origin, driveTimes) : [];
+  const places = entry ? placesByDistance(entry, origin, travelTimes) : [];
   const shown = places.slice(0, 6);
   const picked = places.find((p) => p.place.id === spot);
   if (picked && !shown.includes(picked)) shown.push(picked);

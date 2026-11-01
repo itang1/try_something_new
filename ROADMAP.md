@@ -100,7 +100,7 @@ In order. These are the ones to start a thread on.
 
 **Getting there**
 
-- [ ] **Walking, cycling and transit times** · Feature · M. OpenRouteService has walking and cycling on the same matrix API. Add a "How do you get around?" setting.
+- [ ] **Real transit times** · Feature · M. Transit is an estimate from the distance today. A transit router (OpenTripPlanner with each city's GTFS, or a paid matrix API) would give real times.
 
 **Data**
 
@@ -146,6 +146,7 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **Walking, cycling and transit times** · Feature. "How do you get around?" in Settings: Drive, Walk, Bike or Transit. Times on every list, the time filter and the Go and Directions buttons follow it, with the mode's icon. Walking and cycling get real times for the 25 closest places from OpenRouteService through the Worker, which now takes a `mode` and caches each one apart; the rest, and all of transit, are estimates from the distance (transit has no free router). Real walk and bike times go live with the next `npx wrangler deploy` of `server/drive-times`; until then the app estimates them. PR #42.
 - [x] **Sync automatically** · Backend. Part of **Optional account with cross-device sync**. While signed in, the app syncs on launch, when it goes to the background (so changes leave the phone), and when it comes back after 5 minutes or more. Offline just waits for next time, and a sync already running is shared with Sync now. Auto sync PR.
 - [x] **Milestones and a month in review on Memories** · Feature. Part of **Gentle milestones and a monthly recap**. Memories shows the milestones you've earned (first try, 5, 10, 25 and 50 things, every kind, five favorites, three at home, five photos, two cities) and a bar toward the closest next one. In the first week of a month, a card sums up the month before: how many things, how many kinds, how many loved and one favorite. Counts only go up, so there are still no streaks. Milestones PR.
 - [x] **Report a place through a form** · Data. The flag next to a place opens a Report a problem sheet (closed, not for this activity, wrong location, something else, plus a note), and the drive-time Worker's new `POST /report` opens a GitHub issue labeled `place report` with the place and activity ids. Rate-limited to 5 a minute per IP, text from the app escaped so it can't mention people or link issues. Falls back to email when the Worker isn't set or the send fails. Goes live after `npx wrangler secret put GITHUB_TOKEN` (a fine-grained token with Issues read and write on this repo) and `npx wrangler deploy`. The privacy policy says so. Report PR.

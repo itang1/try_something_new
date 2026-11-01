@@ -10,7 +10,7 @@ import { openDirections, searchNearby } from '@/data/directions';
 import { inviteFriend } from '@/data/invite';
 import { allowNudges } from '@/data/nudge';
 import { ANYWHERE_ID } from '@/data/cities';
-import { placesByDistance } from '@/data/drive';
+import { placesByDistance, type TravelMode } from '@/data/drive';
 import { CARD_PLACES, defaultWhere, planSpot, whereOptions, type WhereOption } from '@/data/where';
 import { accessibleEntry, describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
 import { loadRatings, readSetting, writeSetting } from '@/data/storage';
@@ -36,7 +36,7 @@ function sample<T>(items: T[], n: number): T[] {
 export default function ExploreScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { city, entries, findEntry, home, origin, driveTimes, isDone, savedIds, toggleSaved, hiddenIds, hide, plans, filters, setFilters, weekendNudge, setWeekendNudge } =
+  const { city, entries, findEntry, home, origin, travelTimes, isDone, savedIds, toggleSaved, hiddenIds, hide, plans, filters, setFilters, weekendNudge, setWeekendNudge } =
     useAppState();
   const markDone = useMarkDone();
   const toast = useToast();
@@ -61,7 +61,7 @@ export default function ExploreScreen() {
   const showAnother = (exclude?: string) => {
     const current = exclude ?? activity?.id;
     const allowed = entries.filter(
-      (e) => e.id !== current && !hiddenIds.has(e.id) && inSeason(e) && matchesFilters(e, filters, origin, driveTimes),
+      (e) => e.id !== current && !hiddenIds.has(e.id) && inSeason(e) && matchesFilters(e, filters, origin, travelTimes),
     );
     const fresh = allowed.filter((e) => !isDone(e.id));
     // Early on, skip the stretches so the first few tries are easy wins, unless levels were picked on purpose.
@@ -319,7 +319,7 @@ type CardProps = {
 
 function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onPickKind, onNotForMe, onSave, onDone }: CardProps) {
   const colors = useColors();
-  const { driveTimes, entries, filters } = useAppState();
+  const { travelTimes, entries, filters } = useAppState();
   // With large text, four buttons in a row would squeeze their labels, so they go two by two.
   const { fontScale } = useWindowDimensions();
   const roomy = fontScale >= 1.3;
@@ -327,7 +327,7 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onP
   // Staying in leads with the home version, even for something that also has places nearby.
   const stayIn = filters.where === 'home';
   // With the Accessible filter on, the card offers only the accessible places.
-  const places = placesByDistance((filters.accessible && accessibleEntry(entry)) || entry, origin, driveTimes);
+  const places = placesByDistance((filters.accessible && accessibleEntry(entry)) || entry, origin, travelTimes);
   const [whereId, setWhereId] = useState<string | null>(null);
   const options = whereOptions(entry, places, whereId);
   const where = options.find((o) => o.id === whereId) ?? defaultWhere(options, stayIn);
@@ -397,7 +397,7 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onP
               icon={whereIcon(where)}
               title={where.title}
               detail={where.detail}
-              action={whereAction(where, entry, origin)}
+              action={whereAction(where, entry, origin, travelTimes.mode)}
             />
           }
           more={places.length > CARD_PLACES ? `See all ${places.length} places` : 'See details'}
@@ -470,8 +470,8 @@ function whereIcon(o: WhereOption): IconName {
   return WHERE_ICONS[o.kind];
 }
 
-function whereAction(o: WhereOption, entry: Entry, origin: CardProps['origin']): RowAction | undefined {
-  if (o.kind === 'place') return { icon: 'directions', label: 'Go', a11y: `Directions to ${o.title}`, onPress: () => openDirections(o.place) };
+function whereAction(o: WhereOption, entry: Entry, origin: CardProps['origin'], mode: TravelMode): RowAction | undefined {
+  if (o.kind === 'place') return { icon: 'directions', label: 'Go', a11y: `Directions to ${o.title}`, onPress: () => openDirections(o.place, mode) };
   if (o.kind === 'search') return { icon: 'search', label: 'Search', a11y: `Search maps for ${entry.search}`, onPress: () => searchNearby(entry.search!, origin) };
   if (o.kind === 'host') return { icon: 'person_add', label: 'Invite', a11y: `Invite friends to ${entry.name}`, onPress: () => inviteFriend(entry, null, null) };
   return undefined;
