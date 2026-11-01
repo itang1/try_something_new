@@ -104,8 +104,13 @@ export default function ExploreScreen() {
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
-      {/* A scroll view lets the large title lay out natively; the button sits outside it, above the tabs. */}
-      <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
+      {/* The header stays put: no large title, and short content doesn't bounce. The button sits outside, above the tabs. */}
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        alwaysBounceVertical={false}
+        overScrollMode="never"
+        contentContainerStyle={styles.content}
+      >
         <LocationControl />
 
         {activeFilters.length > 0 && (

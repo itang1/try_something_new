@@ -6,22 +6,33 @@ import { useColors } from '@/theme';
 import { Icon } from '@/components/icon';
 import type { IconName } from '@/icons/paths';
 
+/** Where Explore and the Map are showing, and a clear Change button that opens the location sheet. */
 export function LocationControl() {
   const colors = useColors();
   const router = useRouter();
-  const { city, home, trip } = useAppState();
+  const { city, pendingCity, home, trip, cityChoice, nearest } = useAppState();
 
+  const anywhere = city.id === ANYWHERE_ID && !pendingCity;
+  const cityName = (pendingCity ?? city).name;
   let icon: IconName = 'location_on';
-  let title = 'Set your location';
-  const anywhere = city.id === ANYWHERE_ID;
-  let subtitle = anywhere ? 'Ideas for home and anywhere. Add yours for places nearby.' : `Showing ${city.name}. Add yours for drive times.`;
+  let title: string;
+  let subtitle: string;
   if (trip) {
     icon = 'flight';
-    title = `Trip to ${city.name}`;
-    subtitle = trip.start ? `From ${trip.start.name}` : "Set where you're staying";
-  } else if (home) {
+    title = `Trip to ${cityName}`;
+    subtitle = trip.start ? `Drive times from ${trip.start.name}` : "Set where you're staying for drive times";
+  } else if (!home) {
+    title = anywhere ? 'Set your location' : cityName;
+    subtitle = anywhere ? 'Ideas for home and anywhere. Pick a city or set yours for places nearby.' : 'Add where you are for drive times';
+  } else if (anywhere) {
     title = home.name;
-    subtitle = anywhere ? 'No places mapped near you yet. Ideas for home and anywhere.' : `Out around ${city.name}, or right at home`;
+    subtitle =
+      cityChoice === ANYWHERE_ID || !nearest
+        ? 'Ideas for home and anywhere'
+        : `No places mapped here yet. ${nearest.city.name} is the nearest city.`;
+  } else {
+    title = home.name;
+    subtitle = cityChoice ? `Places around ${cityName}, your pick` : `Places around ${cityName}, or right at home`;
   }
 
   return (
@@ -29,26 +40,33 @@ export function LocationControl() {
       onPress={() => router.push('/location')}
       accessibilityRole="button"
       accessibilityLabel={`${title}. ${subtitle}`}
-      accessibilityHint="Changes where drive times start"
-      style={({ pressed }) => [styles.row, { opacity: pressed ? 0.6 : 1 }]}
+      accessibilityHint="Changes your location or city"
+      style={({ pressed }) => [styles.row, { backgroundColor: colors.card, opacity: pressed ? 0.7 : 1 }]}
     >
-      <Icon name={icon} size={20} color={colors.accent} />
+      <View style={[styles.badge, { backgroundColor: colors.accentSoft }]}>
+        <Icon name={icon} size={20} color={colors.accent} />
+      </View>
       <View style={styles.text}>
-        <Text style={[styles.title, { color: colors.accent }]} numberOfLines={2}>
+        <Text style={[styles.title, { color: colors.label }]} numberOfLines={1}>
           {title}
         </Text>
         <Text style={[styles.subtitle, { color: colors.secondary }]} numberOfLines={2}>
           {subtitle}
         </Text>
       </View>
-      <Icon name="keyboard_arrow_down" size={20} color={colors.accent} />
+      <View style={[styles.change, { backgroundColor: colors.accentSoft }]}>
+        <Text style={[styles.changeText, { color: colors.accent }]}>{anywhere && !home && !trip ? 'Set' : 'Change'}</Text>
+      </View>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, alignSelf: 'flex-start' },
-  text: { flexShrink: 1 },
-  title: { fontSize: 17, fontWeight: '600' },
-  subtitle: { fontSize: 13 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, paddingVertical: 10, paddingHorizontal: 12, borderRadius: 16 },
+  badge: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  text: { flex: 1 },
+  title: { fontSize: 16, fontWeight: '600' },
+  subtitle: { fontSize: 13, marginTop: 1 },
+  change: { minHeight: 32, paddingHorizontal: 12, borderRadius: 16, justifyContent: 'center' },
+  changeText: { fontSize: 14, fontWeight: '600' },
 });

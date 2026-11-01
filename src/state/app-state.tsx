@@ -2,6 +2,8 @@ import { createContext, use, useCallback, useEffect, useMemo, useState, type Rea
 import { track } from '@/data/analytics';
 import { customEntry, entriesForCity, spotName, withParents, type City, type CitySummary, type CustomActivity, type Entry } from '@/data/catalog';
 import {
+  ANYWHERE_ID,
+  AREA_KM,
   applyCatalogAliases,
   citySummary,
   cityWithoutPlaces,
@@ -64,6 +66,15 @@ type AppState = {
   startTrip: (cityId: string) => void;
   endTrip: () => void;
   recentPlaces: HomeLocation[];
+  /** A city picked by hand, which wins over the one nearest home. Null follows home. */
+  cityChoice: string | null;
+  /** Pass null to follow home again. */
+  chooseCity: (cityId: string | null) => void;
+  /** How far from home a city's places still count, in km. */
+  rangeKm: number;
+  setRangeKm: (km: number) => void;
+  /** The nearest city to home and how far it is, when home is set. */
+  nearest: { city: CitySummary; km: number } | null;
   doneIds: Set<string>;
   isDone: (activityId: string) => boolean;
   /** Checking off a city icon also logs a visit to its place and checks off its activity. */
@@ -111,6 +122,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [home, setHome, reloadHome] = useSetting<HomeLocation | null>('homeLocation', null);
   const [trip, setTrip, reloadTrip] = useSetting<Trip | null>('trip', null);
   const [recentPlaces, setRecentPlaces, reloadRecentPlaces] = useSetting<HomeLocation[]>('recentPlaces', []);
+  const [cityChoice, setCityChoice, reloadCityChoice] = useSetting<string | null>('cityChoice', null);
+  const [rangeKm, setRangeKm, reloadRangeKm] = useSetting('cityRangeKm', AREA_KM);
+  const [catalogVersion, setCatalogVersion] = useState(0);
   const [doneIds, setDoneIds] = useState(loadDoneIds);
   const [visitedPlaceIds, setVisitedPlaceIds] = useState(loadVisitedPlaceIds);
   const [saved, setSaved] = useState(() => loadList('saved'));
@@ -123,8 +137,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const savedIds = useMemo(() => new Set(saved), [saved]);
   const hiddenIds = useMemo(() => new Set(hidden), [hidden]);
 
-  const [catalogVersion, setCatalogVersion] = useState(0);
-  const wantedId = trip?.cityId ?? cityIdFor(home);
+  // A hand-picked city only counts while the catalog still has it.
+  const chosen = cityChoice && (cityChoice === ANYWHERE_ID || citySummary(cityChoice)) ? cityChoice : null;
+  const wantedId = trip?.cityId ?? chosen ?? cityIdFor(home, rangeKm);
+  const nearest = home ? nearestCity(home) : null;
   const wanted = localCity(wantedId);
   const wantedSummary = citySummary(wantedId);
   const standIn = wantedSummary && nearestCity({ latitude: wantedSummary.lat, longitude: wantedSummary.lng }, true).city.id;
@@ -212,13 +228,18 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const setLocation = useCallback(
     (next: HomeLocation, options?: { remember?: boolean }) => {
       if (trip) setTrip({ ...trip, start: next });
-      else setHome(next);
+      else {
+        setHome(next);
+        // A new home picks its own city again.
+        setCityChoice(null);
+      }
       if (options?.remember) {
         setRecentPlaces([next, ...recentPlaces.filter((p) => p.name !== next.name)].slice(0, MAX_RECENT));
       }
     },
-    [trip, setTrip, setHome, recentPlaces, setRecentPlaces],
+    [trip, setTrip, setHome, setCityChoice, recentPlaces, setRecentPlaces],
   );
+  const chooseCity = useCallback((cityId: string | null) => setCityChoice(cityId), [setCityChoice]);
 
   const startTrip = useCallback((cityId: string) => setTrip({ cityId, start: null }), [setTrip]);
   const endTrip = useCallback(() => setTrip(null), [setTrip]);
@@ -278,6 +299,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     reloadHome();
     reloadTrip();
     reloadRecentPlaces();
+    reloadCityChoice();
+    reloadRangeKm();
     setSaved(loadList('saved'));
     setHidden(loadList('hidden'));
     reloadFilters();
@@ -285,7 +308,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setVisitedPlaceIds(loadVisitedPlaceIds());
     setAllPlans(loadPlans());
     setCustoms(loadCustomActivities());
-  }, [reloadHome, reloadTrip, reloadRecentPlaces, reloadFilters]);
+  }, [reloadHome, reloadTrip, reloadRecentPlaces, reloadCityChoice, reloadRangeKm, reloadFilters]);
 
   const isDone = useCallback((activityId: string) => doneIds.has(activityId), [doneIds]);
 
@@ -341,6 +364,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         startTrip,
         endTrip,
         recentPlaces,
+        cityChoice: chosen,
+        chooseCity,
+        rangeKm,
+        setRangeKm,
+        nearest,
         doneIds,
         isDone,
         toggleDone,

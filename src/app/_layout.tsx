@@ -64,7 +64,8 @@ function RootLayout() {
                 name="location"
                 options={{
                   presentation: 'formSheet',
-                  sheetAllowedDetents: [0.5, 1],
+                  // Full height: the search field, the cities and the keyboard don't fit in half a screen.
+                  sheetAllowedDetents: [1],
                   sheetGrabberVisible: true,
                   contentStyle: { backgroundColor: colors.background },
                 }}

@@ -1,4 +1,5 @@
 import seedCity from './seed-city.json';
+import knownCities from './city-index.json';
 import { ACTIVITY_ALIASES, findEntry, resolveAliases, type City, type CitySummary, type Entry, type Place } from './catalog';
 import { haversineKm, type Coordinate } from './drive';
 import {
@@ -22,8 +23,25 @@ const BUNDLED = [seedCity] as City[];
 
 export const DEFAULT_CITY_ID = 'los-angeles';
 
-/** Farther than this from every city center, a place has no city: the app offers ideas that need no venue. */
+/** Farther than this from every city center, a place has no city: the app offers ideas that need no venue. The default for `RANGES`. */
 export const AREA_KM = 150;
+
+/** How far someone will go for a city's places, as rough drive times. A wider range reaches a city from a neighboring one. */
+export const RANGES: { km: number; label: string }[] = [
+  { km: 40, label: '30 min' },
+  { km: 80, label: '1 hr' },
+  { km: AREA_KM, label: '2 hr' },
+  { km: 300, label: '3 hr+' },
+];
+
+/** A rough drive time for a straight-line distance, like "about 40 min" or "about 3 hr". Roads wind, so it's padded. */
+export function roughDrive(km: number): string {
+  const minutes = (km * 1.2 * 60) / 90;
+  if (minutes < 15) return 'nearby';
+  if (minutes < 55) return `about ${Math.round(minutes / 5) * 5} min`;
+  const hours = Math.round(minutes / 60);
+  return hours > 12 ? 'a flight away' : `about ${hours} hr`;
+}
 
 export const ANYWHERE_ID = 'anywhere';
 
@@ -33,11 +51,11 @@ export const ANYWHERE_ID = 'anywhere';
  */
 export const ANYWHERE: City = { id: ANYWHERE_ID, name: 'your area', country: '', lat: 39.8, lng: -98.6, icons: [], places: [] };
 
-/** The city a location belongs to, or `ANYWHERE_ID` without one or when it's far from every city. */
-export function cityIdFor(point: Coordinate | null): string {
+/** The city a location belongs to, or `ANYWHERE_ID` without one or when it's farther than `rangeKm` from every city. */
+export function cityIdFor(point: Coordinate | null, rangeKm = AREA_KM): string {
   if (!point) return ANYWHERE_ID;
   const { city, km } = nearestCity(point);
-  return km <= AREA_KM ? city.id : ANYWHERE_ID;
+  return km <= rangeKm ? city.id : ANYWHERE_ID;
 }
 
 const summary = ({ id, name, region, country, lat, lng }: CitySummary): CitySummary => ({ id, name, region, country, lat, lng });
@@ -62,7 +80,8 @@ for (const city of BUNDLED) {
 }
 readOnDevice();
 
-let index: CitySummary[] = readSetting<CitySummary[] | null>('cityIndex', null) ?? BUNDLED.map(summary);
+// Until the index downloads, the app knows every city from the list bundled by `npm run catalog`, without their hashes.
+let index: CitySummary[] = readSetting<CitySummary[] | null>('cityIndex', null) ?? (knownCities as CitySummary[]).map(summary);
 
 // Only the city in use is kept whole in memory. Others are read from their tables when needed.
 let loaded: City | undefined;
