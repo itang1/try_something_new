@@ -677,7 +677,7 @@ function contentKeys(table: SyncedTable): Set<string> {
 
 // Backups carry the synced tables and a few settings. Drive times and downloaded cities are caches that refill on their own.
 // Settings only fill in what the phone doesn't have yet. The weekend nudge and the device id belong to each phone.
-const FILLED_SETTINGS = ['homeLocation', 'trip', 'recentPlaces', 'exploreFilters', 'onboarded', 'planAddsToCalendar', 'swipeNudged'];
+const FILLED_SETTINGS = ['homeLocation', 'trip', 'recentPlaces', 'cityChoice', 'cityRangeKm', 'exploreFilters', 'onboarded', 'planAddsToCalendar', 'swipeNudged'];
 
 /** Everything the user made, in the shape of the current schema. */
 export type UserData = {

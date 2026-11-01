@@ -107,7 +107,8 @@ describe('web: pages', () => {
     expect(landing).toContain(`${ACTIVITY_COUNT} things to try`);
     expect(landing).toContain('Pasadena');
     const privacy = privacyPage(site);
-    expect(privacy).toContain('2026-10-31');
+    expect(privacy).toContain('2026-11-01');
+    expect(privacy).toContain('Photon');
     expect(privacy).toContain('Send feedback');
     expect(privacyPage({ ...site, contactEmail: 'hi@example.com' })).toContain('mailto:hi@example.com');
   });
