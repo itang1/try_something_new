@@ -1,4 +1,4 @@
-import { isAccessible, LEVELS, type Entry, type Level, type Setting } from './catalog';
+import { isAccessible, LEVELS, type Entry, type Level, type Place, type Setting } from './catalog';
 import { collection, inCollection, type CollectionId } from './collections';
 import { driveMinutes, formatMinutes, type Coordinate, type TravelTimes } from './drive';
 import type { IconName } from '@/icons/paths';
@@ -114,6 +114,21 @@ export function matchesFilters(
   const minutes = entry.anywhere ? null : driveMinutes(entry, origin, times);
   if (filters.maxDrive != null && minutes != null && minutes > filters.maxDrive) return false;
   return true;
+}
+
+/**
+ * Explore's filters for one idea at one pin on the Map, so the two tabs agree. Travel time and access are checked for
+ * that pin rather than the idea's nearest place. Go out or Stay in is left out: every pin is somewhere to go.
+ */
+export function matchesFiltersAt(
+  entry: Entry,
+  place: Place,
+  filters: Filters,
+  origin: Coordinate | null,
+  times?: TravelTimes,
+): boolean {
+  if (filters.accessible && !isAccessible(place)) return false;
+  return matchesFilters({ ...entry, places: [place], anywhere: undefined }, { ...filters, where: null }, origin, times);
 }
 
 /** Short labels for the active filters, like "Easy" or "Under 30 min away". */

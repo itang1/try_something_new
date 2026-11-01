@@ -1,5 +1,5 @@
 import type { Entry, Place } from '@/data/catalog';
-import { directionsUrl } from '@/data/directions';
+import { directionsUrl, directionsUrls, inKorea } from '@/data/directions';
 import { driveMinutes, estimateMinutes, formatMinutes, haversineKm, placesByDistance } from '@/data/drive';
 
 const origin = { latitude: 34.05, longitude: -118.25 };
@@ -43,6 +43,22 @@ describe('drive', () => {
     expect(directionsUrl(p, 'bike', 'ios')).not.toContain('dirflg');
     expect(directionsUrl(p, 'transit', 'android')).toContain('travelmode=transit');
     expect(directionsUrl(p, 'bike', 'android')).toContain('travelmode=bicycling');
+  });
+
+  it('opens Naver Map, then KakaoMap, then Google Maps for Korean places on Android', () => {
+    const gyeongbokgung = place('g', 37.5796, 126.977);
+    expect(inKorea(gyeongbokgung)).toBe(true);
+    expect(inKorea(place('tokyo', 35.68, 139.76))).toBe(false);
+    const urls = directionsUrls({ ...gyeongbokgung, name: '경복궁' }, 'transit', 'android');
+    expect(urls).toHaveLength(3);
+    expect(urls[0]).toMatch(/^nmap:\/\/route\/public\?dlat=37.5796&dlng=126.977&dname=%EA%B2%BD/);
+    expect(urls[0]).toContain('appname=com.poodlestrategy.trysomethingnew');
+    expect(urls[1]).toBe('kakaomap://route?ep=37.5796,126.977&by=PUBLICTRANSIT');
+    expect(urls[2]).toContain('google.com/maps');
+    expect(directionsUrls(gyeongbokgung, 'walk', 'android')[0]).toContain('route/walk');
+    // Apple Maps routes in Korea, and Google Maps is fine elsewhere.
+    expect(directionsUrls(gyeongbokgung, 'drive', 'ios')).toHaveLength(1);
+    expect(directionsUrls(place('la', 34, -118), 'drive', 'android')).toHaveLength(1);
   });
 
   it('sorts places nearest first only when there is an origin', () => {
