@@ -71,13 +71,34 @@ async function signInWithAppleSheet(): Promise<Session | null> {
   return data.session;
 }
 
-/** Sends this phone's changes and adds the account's changes from other devices. */
-export async function syncNow(): Promise<{ pushed: number; pulled: number }> {
-  const client = supabase();
-  if (!client) throw new Error('Accounts aren’t set up in this build.');
-  const result = await sync(supabaseRemote(client));
-  writeSetting(LAST_SYNC, new Date().toISOString());
-  return result;
+let inFlight: Promise<{ pushed: number; pulled: number }> | null = null;
+
+/** Sends this phone's changes and adds the account's changes from other devices. A sync already running is shared. */
+export function syncNow(): Promise<{ pushed: number; pulled: number }> {
+  inFlight ??= (async () => {
+    try {
+      const client = supabase();
+      if (!client) throw new Error('Accounts aren’t set up in this build.');
+      const result = await sync(supabaseRemote(client));
+      writeSetting(LAST_SYNC, new Date().toISOString());
+      return result;
+    } finally {
+      inFlight = null;
+    }
+  })();
+  return inFlight;
+}
+
+/** When the app comes back to the front, it syncs again only if the last sync is older than this. */
+export const AUTO_SYNC_GAP_MS = 5 * 60 * 1000;
+
+/**
+ * Whether to sync on its own: always on launch and when the app goes to the background (so changes leave the phone),
+ * and on coming back only after a few minutes, so switching apps doesn't sync every time.
+ */
+export function shouldAutoSync(moment: 'launch' | 'active' | 'background', last: string | null, now = Date.now()): boolean {
+  if (moment !== 'active' || !last) return true;
+  return now - Date.parse(last) >= AUTO_SYNC_GAP_MS;
 }
 
 export const lastSyncedAt = (): string | null => readSetting<string | null>(LAST_SYNC, null);
