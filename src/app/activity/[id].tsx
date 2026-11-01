@@ -7,7 +7,7 @@ import { formatDay } from '@/data/days';
 import { openDirections, searchNearby } from '@/data/directions';
 import { inviteFriend } from '@/data/invite';
 import { placeSources } from '@/data/credits';
-import { canReport, reportPlace } from '@/data/report';
+import { canReport, canReportInApp, emailPlaceReport } from '@/data/report';
 import { formatMinutes, placesByDistance } from '@/data/drive';
 import { openLabel } from '@/data/hours';
 import { useAppState } from '@/state/app-state';
@@ -202,7 +202,11 @@ export default function ActivitySheet() {
                     {canReport && (
                       <Pressable
                         accessibilityRole="button"
-                        onPress={() => reportPlace(place, entry, city.name)}
+                        onPress={() =>
+                          canReportInApp
+                            ? router.push({ pathname: '/report', params: { place: place.id, entry: entry.id } })
+                            : emailPlaceReport(place, entry, city.name)
+                        }
                         hitSlop={8}
                         accessibilityLabel={`Report a problem with ${place.name}`}
                         style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}

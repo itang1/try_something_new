@@ -54,7 +54,7 @@ In order. These are the ones to start a thread on.
 2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), the rating prompt after closing the card for a "Loved it", a plan reminder on the morning of a plan, Explore with no location set, the still Explore header and the new location sheet (pick a city, How far will you go?, search on Android, town and address suggestions as you type), the Wheelchair accessible filter and "Open now" on places (PR #39), the weather line over the Explore card on a rainy day, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
 3. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
 4. [ ] **Themed collections** · Data · M. Date ideas, rainy day, under $20, with kids, free this weekend. Built from existing tags.
-5. [ ] **Report a place through a form** · Data · S. A Worker endpoint that opens a GitHub issue with the place id, instead of email.
+5. [ ] **Gentle milestones and a monthly recap** · Feature · M. "Tried something from all 9 kinds", a month in review, and a shareable memory card. Still no streaks.
 
 ## Now: before launch
 
@@ -110,7 +110,7 @@ In order. These are the ones to start a thread on.
 - [ ] **Add more cities** · Data · M. The 25 largest US metros, then a few international ones. Re-import monthly from a scheduled Action; the **Import OpenStreetMap places** Action already does the OSM half on demand.
 - [x] **Show opening hours where known** · Data · M. Done; see Done.
 - [x] **Wheelchair and stroller access** · Data · S. Done; see Done.
-- [ ] **Report a place through a form** · Data · S. A Worker endpoint that opens a GitHub issue with the place id, instead of email.
+- [~] **Report a place through a form** · Data · S. Built; see Done. Left, needs you: `npx wrangler secret put GITHUB_TOKEN` and deploy the Worker.
 
 **Growth after launch**
 
@@ -146,6 +146,7 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **Report a place through a form** · Data. The flag next to a place opens a Report a problem sheet (closed, not for this activity, wrong location, something else, plus a note), and the drive-time Worker's new `POST /report` opens a GitHub issue labeled `place report` with the place and activity ids. Rate-limited to 5 a minute per IP, text from the app escaped so it can't mention people or link issues. Falls back to email when the Worker isn't set or the send fails. Goes live after `npx wrangler secret put GITHUB_TOKEN` (a fine-grained token with Issues read and write on this repo) and `npx wrangler deploy`. The privacy policy says so. Report PR.
 - [x] **Weather-aware suggestions** · Feature. On wet, very hot (33 °C and up) or freezing (-5 °C and below) days, three picks in four on Explore come from indoor, at-home and hosting ideas (and winter ones in a freeze), with a line over the card saying why. Weather comes from Open-Meteo (no key) for your location rounded to about 10 km, at most once an hour, or the city's center without a location. "Weather-aware ideas" in Settings turns it off, and the privacy policy says so. Suggestions PR.
 - [x] **Learn from ratings** · Feature. Each Explore pick is weighted by your ratings: "Loved it" makes that kind and level up to three times as likely, "Not for me" down to a third, and hiding an idea counts a little. Nothing is ever ruled out. All on the phone, from the latest rating of each thing. Suggestions PR.
 - [x] **Fix the activity count** · Docs. README, MARKETING.md and the store listing kit now say 122 activities and 47,391 places, not 102. From the Inbox. Suggestions PR.

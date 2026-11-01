@@ -18,7 +18,7 @@ import {
 import { restoreBackup, shareBackup } from '@/data/backup';
 import { CREDITS, openCredit } from '@/data/credits';
 import { allowNudges } from '@/data/nudge';
-import { canReport, sendFeedback } from '@/data/report';
+import { canReport, canSendFeedback, sendFeedback } from '@/data/report';
 import { privacyLink } from '@/data/web-links';
 import { useAppState } from '@/state/app-state';
 import { useSetting } from '@/state/use-setting';
@@ -324,7 +324,7 @@ export default function SettingsSheet() {
         {canReport ? ' Places can be out of date, and the flag next to a place reports it.' : ''}
       </Text>
 
-      {canReport && (
+      {canSendFeedback && (
         <>
           <Text style={[styles.section, { color: colors.secondary }]}>Feedback</Text>
           <View style={[styles.list, { backgroundColor: colors.card }]}>

@@ -1,7 +1,8 @@
 // A Cloudflare Worker that answers drive-time requests for the app, so the OpenRouteService key never ships on phones
 // and nearby people asking about the same places share one cached answer. GET /places also proxies town and address
-// suggestions for the location search (see places.js).
+// suggestions for the location search (see places.js), and POST /report files a place report as a GitHub issue (see report.js).
 import { suggestPlaces } from './places.js';
+import { reportPlace } from './report.js';
 
 const MATRIX_URL = 'https://api.openrouteservice.org/v2/matrix/driving-car';
 const MAX_PLACES = 25;
@@ -9,8 +10,10 @@ const CACHE_SECONDS = 30 * 86400;
 
 export default {
   async fetch(request, env, ctx) {
-    if (request.method === 'GET' && new URL(request.url).pathname === '/places') return suggestPlaces(request, env, ctx);
+    const { pathname } = new URL(request.url);
+    if (request.method === 'GET' && pathname === '/places') return suggestPlaces(request, env, ctx);
     if (request.method !== 'POST') return new Response('POST only, or GET /places', { status: 405 });
+    if (pathname === '/report') return reportPlace(request, env);
     // Per-IP limit so one client can't spend the whole OpenRouteService quota. Skipped where the binding isn't set up,
     // like `wrangler dev` without it. Cache hits below are free, but counting them too keeps the check simple.
     if (env.LIMITER) {
