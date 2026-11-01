@@ -91,6 +91,24 @@ function RootLayout() {
                 }}
               />
               <Stack.Screen
+                name="share/recap"
+                options={{
+                  presentation: 'formSheet',
+                  sheetAllowedDetents: [1],
+                  sheetGrabberVisible: true,
+                  contentStyle: { backgroundColor: colors.background },
+                }}
+              />
+              <Stack.Screen
+                name="share/bucket-list"
+                options={{
+                  presentation: 'formSheet',
+                  sheetAllowedDetents: [1],
+                  sheetGrabberVisible: true,
+                  contentStyle: { backgroundColor: colors.background },
+                }}
+              />
+              <Stack.Screen
                 name="report"
                 options={{
                   presentation: 'formSheet',

@@ -120,29 +120,48 @@ export default function ChecklistScreen() {
     <View style={styles.header}>
       <LocationControl />
       {/* Progress and Memories are the same story: what you've tried. Tapping it opens the memories. */}
-      <Pressable
-        onPress={() => router.push('/checklist/memories')}
-        style={({ pressed }) => [styles.progress, { backgroundColor: colors.accentSoft, opacity: pressed ? 0.7 : 1 }]}
-        accessibilityRole="button"
-        accessibilityLabel={`${doneCount} of ${cityActivities.length} tried, ${Math.floor(fraction * 100)} percent`}
-        accessibilityHint="Opens your memories"
-      >
-        <View style={styles.progressTop}>
-          <Icon name="trophy" size={18} color={colors.accent} />
-          <Text style={[styles.progressText, styles.grow, { color: colors.label }]}>
-            {doneCount} of {cityActivities.length} tried
-          </Text>
-          <Text style={[styles.progressText, { color: colors.accent }]}>{Math.floor(fraction * 100)}%</Text>
+      <View style={[styles.progress, { backgroundColor: colors.accentSoft }]}>
+        <Pressable
+          onPress={() => router.push('/checklist/memories')}
+          style={({ pressed }) => [styles.progressMain, { opacity: pressed ? 0.7 : 1 }]}
+          accessibilityRole="button"
+          accessibilityLabel={`${doneCount} of ${cityActivities.length} tried, ${Math.floor(fraction * 100)} percent`}
+          accessibilityHint="Opens your memories"
+        >
+          <View style={styles.progressTop}>
+            <Icon name="trophy" size={18} color={colors.accent} />
+            <Text style={[styles.progressText, styles.grow, { color: colors.label }]}>
+              {doneCount} of {cityActivities.length} tried
+            </Text>
+            <Text style={[styles.progressText, { color: colors.accent }]}>{Math.floor(fraction * 100)}%</Text>
+          </View>
+          <View style={[styles.track, { backgroundColor: colors.fill }]}>
+            <View style={[styles.bar, { width: `${fraction * 100}%`, backgroundColor: colors.accent }]} />
+          </View>
+        </Pressable>
+        <View style={styles.progressBottom}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Share your ${city.name} bucket list`}
+            onPress={() => router.push('/share/bucket-list')}
+            hitSlop={8}
+            style={({ pressed }) => [styles.memories, { opacity: pressed ? 0.6 : 1 }]}
+          >
+            <Icon name="ios_share" size={16} color={colors.accent} />
+            <Text style={[styles.memoriesText, { color: colors.accent }]}>Share list</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/checklist/memories')}
+            hitSlop={8}
+            style={({ pressed }) => [styles.memories, { opacity: pressed ? 0.6 : 1 }]}
+          >
+            <Icon name="photo_library" size={16} color={colors.accent} />
+            <Text style={[styles.memoriesText, { color: colors.accent }]}>Memories</Text>
+            <Icon name="chevron_right" size={16} color={colors.accent} />
+          </Pressable>
         </View>
-        <View style={[styles.track, { backgroundColor: colors.fill }]}>
-          <View style={[styles.bar, { width: `${fraction * 100}%`, backgroundColor: colors.accent }]} />
-        </View>
-        <View style={styles.memories}>
-          <Icon name="photo_library" size={16} color={colors.accent} />
-          <Text style={[styles.memoriesText, { color: colors.accent }]}>Memories</Text>
-          <Icon name="chevron_right" size={16} color={colors.accent} />
-        </View>
-      </Pressable>
+      </View>
 
       <SegmentedControl
         values={[...STATUSES]}
@@ -275,7 +294,9 @@ const styles = StyleSheet.create({
   track: { height: 4, borderRadius: 2, overflow: 'hidden' },
   bar: { height: 4, borderRadius: 2 },
   caption: { fontSize: 13, textAlign: 'center' },
-  memories: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-end' },
+  progressMain: { gap: 8 },
+  progressBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  memories: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   memoriesText: { fontSize: 14, fontWeight: '600' },
   sectionRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 12, paddingHorizontal: 4, minHeight: 28 },
   sectionButton: { minHeight: 44, paddingHorizontal: 12, borderRadius: 12, marginTop: 4 },

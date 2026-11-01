@@ -48,7 +48,15 @@ export function milestonesToShow(all: Milestone[]): { earned: Milestone[]; next:
   return { earned, next };
 }
 
-export type MonthRecap = { label: string; tried: number; kinds: number; loved: number; favorite?: string };
+export type MonthRecap = {
+  label: string;
+  tried: number;
+  kinds: number;
+  loved: number;
+  favorite?: string;
+  /** What was tried, in order, for the recap card. */
+  picks: { id: string; name: string; icon: IconName; subcategory: string; loved: boolean }[];
+};
 
 /** Last month in review, shown in the first week of the next one. Null otherwise, or when nothing was tried. */
 export function lastMonthRecap(items: Pick<MemoryItem, 'at' | 'entry' | 'rating'>[], now = new Date()): MonthRecap | null {
@@ -66,5 +74,8 @@ export function lastMonthRecap(items: Pick<MemoryItem, 'at' | 'entry' | 'rating'
     kinds: new Set(month.map((i) => i.entry.subcategory)).size,
     loved: month.filter((i) => i.rating === 'loved').length,
     favorite: month.find((i) => i.rating === 'loved')?.entry.name,
+    picks: [...month]
+      .sort((a, b) => a.at.localeCompare(b.at))
+      .map((i) => ({ id: i.entry.id, name: i.entry.name, icon: i.entry.icon, subcategory: i.entry.subcategory, loved: i.rating === 'loved' })),
   };
 }

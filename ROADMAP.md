@@ -51,10 +51,10 @@ At a glance: the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquB
 In order. These are the ones to start a thread on.
 
 1. [~] **Optional account with cross-device sync** · Backend · L. Backend, sync client, sign-in and Back up and sync in Settings are in (PR #32). Sync automatically is in too (Auto sync PR). Left: **Turn on Apple and Google sign-in in the dashboards** (needs you; exact steps in `supabase/README.md` under Dashboard setup), and **Back up memory photos**.
-2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), the rating prompt after closing the card for a "Loved it", a plan reminder on the morning of a plan, Explore with no location set, the still Explore header and the new location sheet (pick a city, How far will you go?, search on Android, town and address suggestions as you type), the Wheelchair accessible filter and "Open now" on places (PR #39), the weather line over the Explore card on a rainy day, the Report a problem sheet, milestones and the month in review on Memories, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
+2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), the rating prompt after closing the card for a "Loved it", a plan reminder on the morning of a plan, Explore with no location set, the still Explore header and the new location sheet (pick a city, How far will you go?, search on Android, town and address suggestions as you type), the Wheelchair accessible filter and "Open now" on places (PR #39), the weather line over the Explore card on a rainy day, the Report a problem sheet, milestones and the month in review on Memories, the collections row on Explore, the monthly recap card and the bucket list poster, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
 3. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
-4. [~] **Gentle milestones and a monthly recap** · Feature · M. Milestones and the month in review are on Memories (Milestones PR). Left: a shareable recap card, on the same renderer as the "tried it" card.
-5. [ ] **Share your city bucket list** · Growth · S. The checklist as a poster image with done items lit up, from the progress card.
+4. [ ] **Back up memory photos** · Backend · M. The private `photos` bucket is ready, one folder per account. Resize to about 1600 px, upload on Wi-Fi in the background, keep the local copy as the one shown.
+5. [ ] **Directions in Korea** · UX · S. Google Maps has no driving directions in South Korea, so on Android open Naver Map or KakaoMap for Seoul places, with Google Maps as the fallback.
 
 ## Now: before launch
 
@@ -89,14 +89,14 @@ In order. These are the ones to start a thread on.
 **Accounts and sync**
 
 - [~] **Optional account with cross-device sync** · Backend · L. Sign-in and sync in Settings done; see Up next. "Back up and sync" in Settings with Sign in with Apple or Google, push and pull the logs, merge by latest event, in-app account deletion. Recommended backend: Supabase (see Storage decision below). From the old TODO.
-- [ ] **Back up memory photos** · Backend · M. The private `photos` bucket is ready, one folder per account. Resize to about 1600 px, upload on Wi-Fi in the background, keep the local copy as the one shown.
+- [ ] **Back up memory photos** · Backend · M. In Up next. The private `photos` bucket is ready, one folder per account. Resize to about 1600 px, upload on Wi-Fi in the background, keep the local copy as the one shown.
 
 **Better suggestions**
 
 - [x] **Weather-aware suggestions** · Feature · M. Done; see Done.
 - [x] **Learn from ratings** · Feature · M. Done; see Done.
 - [x] **Themed collections** · Data · M. Done; see Done.
-- [~] **Gentle milestones and a monthly recap** · Feature · M. See Up next.
+- [x] **Gentle milestones and a monthly recap** · Feature · M. Done; see Done.
 
 **Getting there**
 
@@ -104,7 +104,7 @@ In order. These are the ones to start a thread on.
 
 **Data**
 
-- [ ] **Directions in Korea** · UX · S. Google Maps has no driving directions in South Korea, so on Android open Naver Map or KakaoMap for Seoul places, with Google Maps as the fallback.
+- [ ] **Directions in Korea** · UX · S. In Up next. Google Maps has no driving directions in South Korea, so on Android open Naver Map or KakaoMap for Seoul places, with Google Maps as the fallback.
 - [ ] **Show kilometers outside the US** · UX · S. Default to kilometers for cities like Seoul, alongside a miles or kilometers setting. Only needed once the app shows distances; today it shows drive minutes.
 - [ ] **English names for Seoul places** · Data · M. Overture only has Korean names there. Options: OpenStreetMap's `name:en` (comes with the OSM import), or the Korea Tourism Organization's English TourAPI, which needs a free key from data.go.kr.
 - [ ] **Add more cities** · Data · M. The 25 largest US metros, then a few international ones. Re-import monthly from a scheduled Action; the **Import OpenStreetMap places** Action already does the OSM half on demand.
@@ -114,7 +114,7 @@ In order. These are the ones to start a thread on.
 
 **Growth after launch**
 
-- [ ] **Share your city bucket list** · Growth · S. See Up next.
+- [x] **Share your city bucket list** · Growth · S. Done; see Done.
 - [ ] **Year in review** · Feature · M. A story-style recap each December: things tried, kinds, favorite memory, photos. Builds on the monthly recap; share as cards.
 - [ ] **Make a kit for local partners** · Growth · S. A "Featured on Try Something New" sticker and poster with a QR code, and a page per partner that opens their activity. For studios, gyms, run clubs and cafés in the launch city.
 - [ ] **Web pages for each city** · Growth · L. Moved up from Later: "Things to try in Seattle" pages built from the catalog, for search, Reddit and partners. Start with the launch city's page only (S), then the rest.
@@ -146,7 +146,9 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
-- [x] **Themed collections** · Data. A row of collections at the top of Explore, and a Collections group in Filters: Date ideas, Rainy day, Under $20, With kids and Free this weekend. Tapping one shows an idea from it straight away and works alongside the other filters; tapping it again goes back to everything. Built from the catalog's tags (indoor or at home, cost, kids), except date ideas, a hand-picked list of 56 activities in `src/data/collections.ts` since the catalog has no date tag. No rebuild needed. Collections PR.
+- [x] **Share a monthly recap card** · Feature. Finishes **Gentle milestones and a monthly recap**. The month in review on Memories has a "Share your October" button that opens a story or square card: the month, how many new things and kinds, how many loved, a tile for each thing tried (a heart on the loved ones) and the favorite. Cards PR.
+- [x] **Share your city bucket list** · Growth. "Share list" on the Checklist's progress card makes a poster of the city's whole list, a tile per idea grouped by kind, lit up in color when done and dim when not, with "12 of 122 tried" and a progress bar. Story or square, through the share sheet. The three share sheets now share one component. Cards PR.
+- [x] **Themed collections** · Data. A row of collections at the top of Explore, and a Collections group in Filters: Date ideas, Rainy day, Under $20, With kids and Free this weekend. Tapping one shows an idea from it straight away and works alongside the other filters; tapping it again goes back to everything. Built from the catalog's tags (indoor or at home, cost, kids), except date ideas, a hand-picked list of 56 activities in `src/data/collections.ts` since the catalog has no date tag. No rebuild needed. PR #46.
 - [x] **Walking, cycling and transit times** · Feature. "How do you get around?" in Settings: Drive, Walk, Bike or Transit. Times on every list, the time filter and the Go and Directions buttons follow it, with the mode's icon. Walking and cycling get real times for the 25 closest places from OpenRouteService through the Worker, which now takes a `mode` and caches each one apart; the rest, and all of transit, are estimates from the distance (transit has no free router). Real walk and bike times go live with the next `npx wrangler deploy` of `server/drive-times`; until then the app estimates them. PR #42.
 - [x] **Sync automatically** · Backend. Part of **Optional account with cross-device sync**. While signed in, the app syncs on launch, when it goes to the background (so changes leave the phone), and when it comes back after 5 minutes or more. Offline just waits for next time, and a sync already running is shared with Sync now. Auto sync PR.
 - [x] **Milestones and a month in review on Memories** · Feature. Part of **Gentle milestones and a monthly recap**. Memories shows the milestones you've earned (first try, 5, 10, 25 and 50 things, every kind, five favorites, three at home, five photos, two cities) and a bar toward the closest next one. In the first week of a month, a card sums up the month before: how many things, how many kinds, how many loved and one favorite. Counts only go up, so there are still no streaks. Milestones PR.
