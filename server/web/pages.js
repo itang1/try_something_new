@@ -5,7 +5,7 @@ import { html, layout, raw, SITE_NAME } from './layout.js';
 export const PROMISE = 'One new thing to try near you, one card at a time.';
 const PITCH =
   'Stuck doing the same things every weekend? Try Something New suggests something you’ve never done, shows the closest place to do it (or how to do it at home), and keeps a checklist and memories of everything you’ve tried in your city.';
-const PRIVACY_DATE = '2026-10-31';
+const PRIVACY_DATE = '2026-11-01';
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 // A first line for someone who opened a shared link. Never says who shared it, because the link doesn't know.
@@ -184,6 +184,7 @@ export function privacyPage(site) {
 <h2>Your location and drive times</h2>
 <p>The app asks for your location only to show nearby places and how long it takes to drive there. It works without it, with at-home ideas and a city you pick.</p>
 <p>To get drive times, the app sends your location <strong>rounded to about 1 km</strong>, with the nearby places it wants times for, to our drive-time server (run on Cloudflare). That server asks <a href="https://openrouteservice.org">OpenRouteService</a> for driving times, so OpenRouteService sees only the rounded location and the places, never your IP address. Answers are cached for up to 30 days by rounded location, so nearby people share them; nothing records who asked. Cloudflare sees your IP address to deliver the request, and we use it only for a moment to stop abuse.</p>
+<p>When you search for your town or address, the phone’s own geocoder (Apple’s or Google’s) looks it up first. As you type, the app also sends what you’ve typed, with your area <strong>rounded to about 10 km</strong> so nearby matches come first, to the same drive-time server, which asks <a href="https://photon.komoot.io">Photon</a> (run by komoot, with OpenStreetMap data) for matching towns and addresses. Photon sees only the text and the rounded area, never your IP address. Answers are cached for up to 7 days by text and rounded area; nothing records who asked.</p>
 <p>The map is drawn by Apple Maps on iPhone and Google Maps on Android, which load the area you look at. Directions and map searches open in your maps app, under its own policy.</p>
 
 <h2>Crash reports</h2>
@@ -206,6 +207,7 @@ export function privacyPage(site) {
 <li>Cloudflare hosts this website and the drive-time server.</li>
 <li>GitHub Pages hosts the lists of places the app downloads for each city. Those downloads carry nothing about you, though like any website it sees your IP address.</li>
 <li>OpenRouteService works out drive times from rounded locations.</li>
+<li>Photon, run by komoot, suggests towns and addresses from what you type in the location search.</li>
 <li>Sentry receives crash reports.</li>
 <li>Supabase stores optional accounts, synced data, the waitlist and the anonymous counts.</li>
 <li>Apple and Google provide sign-in, maps and the app stores.</li>

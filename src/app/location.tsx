@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
@@ -6,6 +6,7 @@ import { cityLabel, type CitySummary } from '@/data/catalog';
 import { ANYWHERE_ID, cityIdFor, cityIndex, nearestCity, RANGES, roughDrive } from '@/data/cities';
 import { haversineKm } from '@/data/drive';
 import { currentLocation, geocodeAddress, type GeocodeFailure } from '@/data/location';
+import { searchPlaces, type PlaceKind, type PlaceSuggestion } from '@/data/places';
 import { useAppState, type HomeLocation } from '@/state/app-state';
 import { useColors } from '@/theme';
 import { Icon } from '@/components/icon';
@@ -13,6 +14,10 @@ import type { IconName } from '@/icons/paths';
 
 // With more cities than this, the trip picker searches instead of listing them all.
 const MAX_TRIP_CHIPS = 8;
+// How long typing pauses before asking for suggestions.
+const SUGGEST_DELAY_MS = 300;
+const MAX_SUGGESTIONS = 5;
+const KIND_ICONS: Record<PlaceKind, IconName> = { town: 'location_city', street: 'directions', address: 'house', place: 'location_on' };
 
 /** Matches a typed name against the cities with places, like "sea" or "Seattle, WA". */
 function matchingCities(cities: CitySummary[], text: string): CitySummary[] {
@@ -33,6 +38,32 @@ export default function LocationSheet() {
   const [cityQuery, setCityQuery] = useState('');
   const [busy, setBusy] = useState<'gps' | 'address' | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
+
+  // Suggestions rank matches near the trip's city, or near home, first.
+  const nearLat = trip ? city.lat : home?.latitude;
+  const nearLng = trip ? city.lng : home?.longitude;
+  const near = nearLat != null && nearLng != null ? { latitude: nearLat, longitude: nearLng } : null;
+
+  useEffect(() => {
+    const query = text.trim();
+    if (query.length < 3) return;
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      const found = await searchPlaces(
+        query,
+        nearLat != null && nearLng != null ? { latitude: nearLat, longitude: nearLng } : null,
+        controller.signal,
+      );
+      if (!controller.signal.aborted) setSuggestions(found.slice(0, MAX_SUGGESTIONS));
+    }, SUGGEST_DELAY_MS);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [text, nearLat, nearLng]);
+  // The last answer stays up while the next one loads, so the list doesn't flicker with each letter.
+  const shownSuggestions = text.trim().length >= 3 ? suggestions : [];
 
   const finish = (found: HomeLocation | null, remember: boolean, failure: string) => {
     setBusy(null);
@@ -56,7 +87,12 @@ export default function LocationSheet() {
     if (!trimmed || busy) return;
     setError(null);
     setBusy('address');
-    const found: HomeLocation | GeocodeFailure = await geocodeAddress(trimmed);
+    let found: HomeLocation | GeocodeFailure = await geocodeAddress(trimmed);
+    if (typeof found === 'string') {
+      // The phone's geocoder found nothing, or wasn't allowed to run: try OpenStreetMap's before giving up.
+      const [best] = await searchPlaces(trimmed, near);
+      if (best) found = { latitude: best.latitude, longitude: best.longitude, name: best.name };
+    }
     const failure =
       found === 'no-permission'
         ? 'Searching needs location permission on Android. Turn it on in Settings, or pick a city below.'
@@ -255,6 +291,41 @@ export default function LocationSheet() {
               </View>
             </Pressable>
           ))}
+        </View>
+      )}
+
+      {shownSuggestions.length > 0 && busy !== 'address' && (
+        <View style={styles.group}>
+          <View style={[styles.card, { backgroundColor: colors.card }]}>
+            {shownSuggestions.map((s, i) => (
+              <Pressable
+                key={s.key}
+                accessibilityRole="button"
+                accessibilityLabel={s.detail ? `${s.title}, ${s.detail}` : s.title}
+                accessibilityHint={trip ? 'Starts drive times here' : 'Sets this as where you live'}
+                disabled={busy !== null}
+                onPress={() => finish({ latitude: s.latitude, longitude: s.longitude, name: s.name }, true, '')}
+                style={({ pressed }) => [
+                  styles.option,
+                  i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
+                  { opacity: pressed ? 0.6 : 1 },
+                ]}
+              >
+                <Icon name={KIND_ICONS[s.kind]} size={20} color={colors.secondary} />
+                <View style={styles.grow}>
+                  <Text style={[styles.optionTitle, { color: colors.label }]} numberOfLines={1}>
+                    {s.title}
+                  </Text>
+                  {!!s.detail && (
+                    <Text style={[styles.optionSubtitle, { color: colors.secondary }]} numberOfLines={1}>
+                      {s.detail}
+                    </Text>
+                  )}
+                </View>
+              </Pressable>
+            ))}
+          </View>
+          <Text style={[styles.note, { color: colors.tertiary }]}>Suggestions © OpenStreetMap contributors</Text>
         </View>
       )}
 
