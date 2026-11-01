@@ -28,7 +28,7 @@ Lovable is an AI tool that builds web apps from a chat. It grew very fast in 202
 - **One line:** One new thing to try near you, one card at a time.
 - **Longer:** Stuck doing the same things every weekend? Try Something New suggests something you've never done, shows the closest place to do it (or how to do it at home), and keeps a checklist and memories of everything you've tried in your city.
 - **What it isn't:** not an events app (nothing expires), not a review site, not a feed.
-- **Proof points to repeat:** 102 activities, tens of thousands of real places, mostly free or cheap, no account, no ads, no streaks.
+- **Proof points to repeat:** 122 activities, tens of thousands of real places, mostly free or cheap, no account, no ads, no streaks.
 
 ## 3. Who it's for, in order
 
@@ -56,7 +56,7 @@ Build these in this order; each is on the roadmap.
 **Channels, roughly in order of expected value for this app:**
 
 - **Short video (TikTok, Instagram Reels, YouTube Shorts).** The founder series: "My app picked my weekend: pottery in Fremont." One idea, the place, the honest result, 20 to 40 seconds. Post three to five a week from beta onward; it takes many posts before any one lands, so consistency matters more than polish.
-- **Reddit, carefully.** City subreddits and r/[city] newcomer threads ban self-promotion, so read each sub's rules and lead with something useful, like a free "102 things to try in Seattle" list on the web with the app mentioned once. Ask moderators before posting about the app itself. Communities like r/SideProject and r/reactnative are fine for the build story.
+- **Reddit, carefully.** City subreddits and r/[city] newcomer threads ban self-promotion, so read each sub's rules and lead with something useful, like a free "100+ things to try in Seattle" list on the web with the app mentioned once. Ask moderators before posting about the app itself. Communities like r/SideProject and r/reactnative are fine for the build story.
 - **Local partners.** Pottery studios, climbing gyms, run clubs, board game cafés and the like. Offer a free "Featured on Try Something New" sticker with a QR code and a page that sends their customers to the app. They gain visitors; we gain installs from people who are already out trying things.
 - **Local newsletters, blogs and creators.** City newsletters and small local creators (a few thousand followers) are reachable and trusted. Pitch a story, not an ad: "a local made a free app that turns the city into a checklist."
 - **Product Hunt.** Good for credibility, feedback and a launch-day spike from tech-curious people; not where most of our users are. Launch there on a weekday in the launch week, with the founder story.

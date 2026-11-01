@@ -160,6 +160,12 @@ export function withParents(ids: string[]): string[] {
   return [...new Set([...ids, ...parents])];
 }
 
+/** An activity's kind and level, from the catalog, whatever city it was done in. */
+export function activityTraits(id: string): Pick<Activity, 'subcategory' | 'level'> | undefined {
+  const a = ACTIVITIES.get(ACTIVITY_ALIASES[id] ?? id);
+  return a && { subcategory: a.subcategory, level: a.level };
+}
+
 const icons = iconMapping as Record<string, { material: string }>;
 
 function seasonIn(city: City, a: Activity): number[] | undefined {

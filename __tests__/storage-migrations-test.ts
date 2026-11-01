@@ -688,3 +688,20 @@ describe('cities read from the tables', () => {
     expect(cities.localCity('columbus')).toBe(city);
   });
 });
+
+describe('ratings', () => {
+  it('keeps the latest rating of each thing, and skips ones without', () => {
+    const storage = launch(newPhone());
+    const reflect = (entryId: string, rating: 'loved' | 'fine' | 'not-for-me' | null) =>
+      storage.recordReflection({ entryId, placeId: null, placeName: null, rating, note: '', photo: null });
+    reflect('archery', 'not-for-me');
+    reflect('archery', 'loved');
+    reflect('pottery-class', null);
+    reflect('kayaking', 'fine');
+
+    expect(storage.loadRatings().sort((a, b) => a.entryId.localeCompare(b.entryId))).toEqual([
+      { entryId: 'archery', rating: 'loved' },
+      { entryId: 'kayaking', rating: 'fine' },
+    ]);
+  });
+});

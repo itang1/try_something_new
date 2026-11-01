@@ -391,6 +391,14 @@ export function recordReflection(r: Reflection): void {
   });
 }
 
+/** The latest rating of each thing rated, so suggestions can learn from it. */
+export function loadRatings(): { entryId: string; rating: Rating }[] {
+  return db.getAllSync<{ entryId: string; rating: Rating }>(`
+    SELECT r.entry_id AS entryId, r.rating FROM reflections r
+    WHERE ${latest('reflections', 'r', ['entry_id'])} AND r.rating IS NOT NULL
+  `);
+}
+
 export type Memory = {
   entryId: string;
   at: string;

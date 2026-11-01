@@ -34,6 +34,7 @@ export default function SettingsSheet() {
   const router = useRouter();
   const { weekendNudge, setWeekendNudge, planReminders, setPlanReminders, reload } = useAppState();
   const [shareCounts, setShareCounts] = useSetting(ANALYTICS_SETTING, false);
+  const [weatherAware, setWeatherAware] = useSetting('weatherAware', true);
   const showToast = useToast();
   const version = Constants.expoConfig?.version;
 
@@ -169,6 +170,23 @@ export default function SettingsSheet() {
             onValueChange={toggleNudges(setPlanReminders)}
             trackColor={{ true: colors.accent }}
             accessibilityLabel="Plan reminders"
+          />
+        </View>
+      </View>
+
+      <Text style={[styles.section, { color: colors.secondary }]}>Suggestions</Text>
+      <View style={[styles.list, { backgroundColor: colors.card }]}>
+        <View style={styles.row}>
+          <Icon name="rainy" size={22} color={colors.accent} />
+          <View style={styles.grow}>
+            <Text style={[styles.name, { color: colors.label }]}>Weather-aware ideas</Text>
+            <Text style={[styles.use, { color: colors.secondary }]}>More indoor and at-home ideas on wet, very hot or freezing days</Text>
+          </View>
+          <Switch
+            value={weatherAware}
+            onValueChange={setWeatherAware}
+            trackColor={{ true: colors.accent }}
+            accessibilityLabel="Weather-aware ideas"
           />
         </View>
       </View>
