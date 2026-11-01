@@ -14,6 +14,7 @@ import { placeSources } from '@/data/credits';
 import { buildIndex, featuresInRegion, zoomToDelta } from '@/data/clusters';
 import { openDirections } from '@/data/directions';
 import { formatMinutes, haversineKm, minutesTo } from '@/data/drive';
+import { describeFilters, matchesFiltersAt, NO_FILTERS } from '@/data/filters';
 import { matchesStatus, STATUSES, type Status } from '@/data/status';
 import { useAppState } from '@/state/app-state';
 import { useSetting } from '@/state/use-setting';
@@ -39,7 +40,7 @@ export default function MapScreen() {
   const colors = useColors();
   const router = useRouter();
   const headerHeight = useHeaderHeight();
-  const { city, entries, origin, travelTimes, doneIds, savedIds } = useAppState();
+  const { city, entries, origin, travelTimes, doneIds, savedIds, filters, setFilters } = useAppState();
   const mapRef = useRef<MapView>(null);
   const [status, setStatus] = useSetting<Status>('mapStatus', 'All');
   // The kind remembers its city, so switching cities clears it without an effect. Both are kept between launches.
@@ -72,18 +73,26 @@ export default function MapScreen() {
   // A remembered kind the city no longer has is ignored rather than showing an empty map.
   const kind = kindPick?.city === city.id && kinds.some((k) => k === kindPick.kind) ? kindPick.kind : null;
   const isPlaceDone = (p: PinPlace) => p.entries.length > 0 && p.entries.every((e) => doneIds.has(e.id));
+  // Explore's filters apply here too (except Go out or Stay in), so the two tabs agree.
+  const exploreFilters = describeFilters({ ...filters, where: null }, (id) => subcategory(id).label);
+  const usesExplore = exploreFilters.length > 0;
   // Filtering by kind also narrows each pin to that kind, so its icon and card match the filter.
   const shown = useMemo(
     () =>
       places
-        .map((p) => (kind ? { ...p, entries: p.entries.filter((e) => e.subcategory === kind) } : p))
+        .map((p) => ({
+          ...p,
+          entries: p.entries.filter(
+            (e) => (!kind || e.subcategory === kind) && (!usesExplore || matchesFiltersAt(e, p, filters, origin, travelTimes)),
+          ),
+        }))
         .filter((p) => p.entries.length > 0)
         .filter((p) => matchesStatus(p.entries.map((e) => e.id), status, doneIds, savedIds)),
-    [places, kind, status, doneIds, savedIds],
+    [places, kind, status, doneIds, savedIds, usesExplore, filters, origin, travelTimes],
   );
   const byId = useMemo(() => new Map(shown.map((p) => [p.id, p])), [shown]);
-  const filtered = status !== 'All' || kind !== null;
-  const filterSummary = [status !== 'All' && status, kind && subcategory(kind).label].filter(Boolean).join(' · ');
+  const filtered = status !== 'All' || kind !== null || usesExplore;
+  const filterSummary = [status !== 'All' && status, kind && subcategory(kind).label, ...exploreFilters].filter(Boolean).join(' · ');
   const sources = useMemo(() => placeSources(city.places), [city]);
   const index = useMemo(() => buildIndex(shown), [shown]);
   const features = featuresInRegion(index, region);
@@ -177,6 +186,7 @@ export default function MapScreen() {
                 Haptics.selectionAsync();
                 setStatus('All');
                 setKindPick(null);
+                setFilters(NO_FILTERS);
               }}
               hitSlop={10}
               accessibilityRole="button"
@@ -262,6 +272,9 @@ export default function MapScreen() {
               </Stack.Toolbar.MenuAction>
             ))}
           </Stack.Toolbar.Menu>
+          <Stack.Toolbar.MenuAction onPress={() => router.push('/filters')}>
+            {usesExplore ? 'Explore filters (on)' : 'Explore filters'}
+          </Stack.Toolbar.MenuAction>
         </Stack.Toolbar.Menu>
         {settingsButton(colors.accent, router)}
       </Stack.Toolbar>

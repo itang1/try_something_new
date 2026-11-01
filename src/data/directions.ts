@@ -15,9 +15,41 @@ export function directionsUrl(place: Place, mode: TravelMode, os = process.env.E
   return `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=${GOOGLE_MODES[mode]}`;
 }
 
+// Naver Map and KakaoMap name the ways to get around differently.
+const NAVER_MODES: Record<TravelMode, string> = { drive: 'car', walk: 'walk', bike: 'bicycle', transit: 'public' };
+const KAKAO_MODES: Record<TravelMode, string> = { drive: 'CAR', walk: 'FOOT', bike: 'BICYCLE', transit: 'PUBLICTRANSIT' };
+/** Naver asks apps that open it to say who they are. */
+const APP_ID = 'com.poodlestrategy.trysomethingnew';
+
+/** Roughly South Korea, mainland and Jeju. Google Maps has no driving or walking directions there. */
+export function inKorea({ lat, lng }: { lat: number; lng: number }): boolean {
+  return lat > 32.9 && lat < 38.65 && lng > 124.5 && lng < 131.0;
+}
+
+/**
+ * Where to send someone for directions, best first. On Android in South Korea that's Naver Map, then KakaoMap, which
+ * both route there, before Google Maps. Everywhere else, and on iPhone where Apple Maps routes in Korea, just one.
+ */
+export function directionsUrls(place: Place, mode: TravelMode, os = process.env.EXPO_OS): string[] {
+  const fallback = directionsUrl(place, mode, os);
+  if (os !== 'android' || !inKorea(place)) return [fallback];
+  const naver = `nmap://route/${NAVER_MODES[mode]}?dlat=${place.lat}&dlng=${place.lng}&dname=${encodeURIComponent(place.name)}&appname=${APP_ID}`;
+  const kakao = `kakaomap://route?ep=${place.lat},${place.lng}&by=${KAKAO_MODES[mode]}`;
+  return [naver, kakao, fallback];
+}
+
 /** Opens turn-by-turn directions in the phone's own maps app, for the way the person gets around. */
-export function openDirections(place: Place, mode: TravelMode = 'drive') {
-  Linking.openURL(directionsUrl(place, mode));
+export async function openDirections(place: Place, mode: TravelMode = 'drive') {
+  const urls = directionsUrls(place, mode);
+  for (const [i, url] of urls.entries()) {
+    try {
+      await Linking.openURL(url);
+      return;
+    } catch (e) {
+      // The app isn't installed, so try the next one. The last one is a web link, which always opens.
+      if (i === urls.length - 1) throw e;
+    }
+  }
 }
 
 /** Searches the phone's maps app near a point, for activities whose places the catalog can't list. */

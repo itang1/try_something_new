@@ -1,5 +1,5 @@
 import type { Entry } from '@/data/catalog';
-import { accessibleEntry, describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
+import { accessibleEntry, describeFilters, matchesFilters, matchesFiltersAt, NO_FILTERS } from '@/data/filters';
 
 const origin = { latitude: 34.05, longitude: -118.25 };
 const archery = {
@@ -60,5 +60,20 @@ describe('filters', () => {
     const atHome = { ...archery, places: [], home: 'A kit' } as Entry;
     expect(matchesFilters(atHome, filters, null)).toBe(true);
     expect(describeFilters(filters, (id) => id)).toEqual(['Wheelchair accessible']);
+  });
+
+  it('checks travel time and access at one pin for the Map', () => {
+    const near = { id: 'near', name: 'Near', lat: 34.06, lng: -118.25, activities: [], wheelchair: 'yes' } as unknown as Entry['places'][number];
+    const far = archery.places[0];
+    const both = { ...archery, places: [near, far] } as Entry;
+    const drive = { ...NO_FILTERS, maxDrive: 30 };
+    expect(matchesFiltersAt(both, near, drive, origin)).toBe(true);
+    expect(matchesFiltersAt(both, far, drive, origin)).toBe(false);
+    const access = { ...NO_FILTERS, accessible: true };
+    expect(matchesFiltersAt(both, near, access, null)).toBe(true);
+    expect(matchesFiltersAt({ ...both, home: 'At home' } as Entry, far, access, null)).toBe(false);
+    // Stay in doesn't hide every pin.
+    expect(matchesFiltersAt(both, far, { ...NO_FILTERS, where: 'home' }, null)).toBe(true);
+    expect(matchesFiltersAt(both, far, { ...NO_FILTERS, maxCost: 0 }, null)).toBe(false);
   });
 });

@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { useCallback, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useFocusEffect, useRouter } from 'expo-router';
 import FiltersIcon from '@expo/material-symbols/tune.xml';
 import * as Haptics from 'expo-haptics';
 import { activityTraits, entryHint, inSeason, isAnywhereSpot, isHomeSpot, kindsOf, LEVELS, listOr, type Entry } from '@/data/catalog';
@@ -49,11 +49,16 @@ export default function ExploreScreen() {
   const footer = useRef<ComponentRef<typeof View>>(null);
   const [toastBottom, setToastBottom] = useState<number>();
 
-  useEffect(() => {
-    if (!home && !readSetting('onboarded', false)) router.push('/welcome');
-    // Only on first mount: later changes to home shouldn't bring the welcome back.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // The welcome waits until Explore is on screen, so an invite link opens its idea first and the welcome comes after.
+  // Only once: later changes to home shouldn't bring it back.
+  const welcomed = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (welcomed.current) return;
+      welcomed.current = true;
+      if (!home && !readSetting('onboarded', false)) router.push('/welcome');
+    }, [home, router]),
+  );
 
   const activity = pick?.city === city.id ? findEntry(pick.id) : undefined;
   // Rain, heat or a hard freeze where you are, or in the city when no location is set. "Your area" has no center to ask about.
