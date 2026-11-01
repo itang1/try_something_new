@@ -1,6 +1,6 @@
 # Try Something New: Roadmap
 
-The single list of what to build next. It replaces `TODO.md`. Last refreshed 2026-11-01, against `main` at `9f0138a` (PR #29). Growth items come from [MARKETING.md](MARKETING.md), the marketing and launch plan.
+The single list of what to build next. It replaces `TODO.md`. Last refreshed 2026-10-31, against `main` at `9f0138a` (PR #29). Growth items come from [MARKETING.md](MARKETING.md), the marketing and launch plan.
 
 At a glance: the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquBL) shows Up next, what's in progress, decisions and the inbox.
 
