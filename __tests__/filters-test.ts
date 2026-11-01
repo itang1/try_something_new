@@ -1,5 +1,5 @@
 import type { Entry } from '@/data/catalog';
-import { describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
+import { accessibleEntry, describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
 
 const origin = { latitude: 34.05, longitude: -118.25 };
 const archery = {
@@ -43,5 +43,22 @@ describe('filters', () => {
   it('describes active filters', () => {
     const labels = describeFilters({ ...NO_FILTERS, levels: ['easy'], maxDrive: 30, maxCost: 0 }, (id) => id);
     expect(labels).toEqual(['Easy', 'Under 30 min away', 'Free']);
+  });
+
+  it('keeps only accessible places, or staying in, with the Accessible filter', () => {
+    const filters = { ...NO_FILTERS, accessible: true };
+    expect(matchesFilters(archery, filters, null)).toBe(false);
+
+    const ramp = { id: 'ramp', name: 'Ramp Range', lat: 34.06, lng: -118.25, activities: [], wheelchair: 'yes' };
+    const steps = { id: 'steps', name: 'Step Range', lat: 34.05, lng: -118.25, activities: [], wheelchair: 'no' };
+    const both = { ...archery, places: [steps, ramp] } as Entry;
+    expect(matchesFilters(both, filters, null)).toBe(true);
+    expect(accessibleEntry(both)?.places.map((p) => p.id)).toEqual(['ramp']);
+    // The drive filter counts only the accessible place, which is farther away.
+    expect(matchesFilters(both, { ...filters, maxDrive: 15 }, origin, new Map([['steps', 5], ['ramp', 20]]))).toBe(false);
+
+    const atHome = { ...archery, places: [], home: 'A kit' } as Entry;
+    expect(matchesFilters(atHome, filters, null)).toBe(true);
+    expect(describeFilters(filters, (id) => id)).toEqual(['Wheelchair accessible']);
   });
 });

@@ -11,7 +11,7 @@ import { inviteFriend } from '@/data/invite';
 import { allowNudges } from '@/data/nudge';
 import { placesByDistance } from '@/data/drive';
 import { CARD_PLACES, defaultWhere, planSpot, whereOptions, type WhereOption } from '@/data/where';
-import { describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
+import { accessibleEntry, describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
 import { readSetting, writeSetting } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
 import { readable, readableOn, subcategory, useColors } from '@/theme';
@@ -310,7 +310,8 @@ function ActivityCard({ entry, origin, done, saved, planned, onPlan, onOpen, onP
   const sub = subcategory(entry.subcategory);
   // Staying in leads with the home version, even for something that also has places nearby.
   const stayIn = filters.where === 'home';
-  const places = placesByDistance(entry, origin, driveTimes);
+  // With the Accessible filter on, the card offers only the accessible places.
+  const places = placesByDistance((filters.accessible && accessibleEntry(entry)) || entry, origin, driveTimes);
   const [whereId, setWhereId] = useState<string | null>(null);
   const options = whereOptions(entry, places, whereId);
   const where = options.find((o) => o.id === whereId) ?? defaultWhere(options, stayIn);

@@ -1,4 +1,4 @@
-import { LEVELS, type Entry, type Level, type Setting } from './catalog';
+import { isAccessible, LEVELS, type Entry, type Level, type Setting } from './catalog';
 import { driveMinutes, formatMinutes, type Coordinate, type DriveTimes } from './drive';
 import type { IconName } from '@/icons/paths';
 
@@ -16,6 +16,8 @@ export type Filters = {
   /** Missing from filters saved before these existed. */
   setting?: Setting | null;
   company?: Company | null;
+  /** Only wheelchair-accessible places, or staying in. Missing from filters saved before it existed. */
+  accessible?: boolean;
   levels: Level[];
   maxDrive: number | null;
   maxCost: number | null;
@@ -27,6 +29,7 @@ export const NO_FILTERS: Filters = {
   where: null,
   setting: null,
   company: null,
+  accessible: false,
   levels: [],
   maxDrive: null,
   maxCost: null,
@@ -58,6 +61,18 @@ function matchesCompany(entry: Entry, company: Company): boolean {
   return company === 'together' ? !!entry.together : !entry.together;
 }
 
+/**
+ * With the Accessible filter on, an entry keeps only its places mapped as fully or partly wheelchair accessible. Staying
+ * in or hosting at home always counts. Places with no access data are left out, since there's no way to know.
+ */
+export function accessibleEntry(entry: Entry): Entry | null {
+  const places = entry.places.filter(isAccessible);
+  if (places.length) return places.length === entry.places.length ? entry : { ...entry, places };
+  return entry.home || entry.host ? { ...entry, places: [] } : null;
+}
+
+export const ACCESSIBLE_OPTION: { label: string; icon: IconName } = { label: 'Wheelchair accessible', icon: 'accessible' };
+
 export const DRIVE_OPTIONS = [15, 30, 60];
 export const COST_OPTIONS: { level: number; label: string }[] = [
   { level: 0, label: 'Free' },
@@ -80,6 +95,12 @@ export function matchesFilters(
   if (filters.where && !matchesWhere(entry, filters.where)) return false;
   if (filters.setting && entry.setting && entry.setting !== filters.setting) return false;
   if (filters.company && !matchesCompany(entry, filters.company)) return false;
+  if (filters.accessible) {
+    const reachable = accessibleEntry(entry);
+    if (!reachable) return false;
+    // Drive times then count only the accessible places.
+    entry = reachable;
+  }
   if (filters.levels.length && !filters.levels.includes(entry.level)) return false;
   if (filters.maxCost != null && entry.costLevel > filters.maxCost) return false;
   if (filters.maxDuration != null && entry.durationMinutes > filters.maxDuration) return false;
@@ -97,6 +118,7 @@ export function describeFilters(filters: Filters, subcategoryLabel: (id: string)
     filters.where && WHERE_OPTIONS.find((w) => w.where === filters.where)?.label,
     filters.setting && SETTING_OPTIONS.find((s) => s.setting === filters.setting)?.label,
     filters.company && COMPANY_OPTIONS.find((c) => c.company === filters.company)?.label,
+    filters.accessible && ACCESSIBLE_OPTION.label,
     ...filters.levels.map((l) => LEVELS[l].label),
     filters.maxDrive != null && `Under ${formatMinutes(filters.maxDrive)} away`,
     filters.maxCost != null && COST_OPTIONS.find((c) => c.level === filters.maxCost)?.label,

@@ -64,7 +64,7 @@ const VERSION_0_SCHEMA = `
   CREATE TABLE catalog_cities (id TEXT PRIMARY KEY, hash TEXT NOT NULL, json TEXT NOT NULL, at TEXT NOT NULL);
 `;
 
-const LATEST_VERSION = 8;
+const LATEST_VERSION = 9;
 
 /** Loads storage.ts against a database, the way the app does on launch. */
 function launch(fake: Fake): Storage {
@@ -554,7 +554,8 @@ describe('catalog places in tables (version 8)', () => {
     const phone = firstVersionPhone();
     const storage = launch(phone);
 
-    expect(storage.loadCatalogCities()).toEqual([{ hash: 'abc', meta: expect.objectContaining({ id: 'columbus', aliases: COLUMBUS.aliases }) }]);
+    // Version 9 then marks it stale, so it downloads again with wheelchair access and opening hours.
+    expect(storage.loadCatalogCities()).toEqual([{ hash: '', meta: expect.objectContaining({ id: 'columbus', aliases: COLUMBUS.aliases }) }]);
     expect(storage.loadCatalogCities()[0].meta).not.toHaveProperty('places');
     expect(storage.loadCatalogPlaces('columbus')).toEqual(
       COLUMBUS.places.map((p) => ({ ...p, activities: expect.arrayContaining(p.activities) })),
@@ -594,6 +595,47 @@ describe('catalog places in tables (version 8)', () => {
     expect(storage.loadCatalogCities()).toEqual([expect.objectContaining({ hash: 'def' })]);
     expect(storage.loadCatalogPlaces('columbus').map((p) => p.id)).toEqual(['ovt:clay']);
     expect(storage.placesFor('columbus', 'neighborhood')).toEqual([]);
+  });
+});
+
+describe('wheelchair access and opening hours (version 9)', () => {
+  /** A phone at version 8: the catalog tables without the new columns, holding a downloaded and a bundled city. */
+  function version8Phone(): Fake {
+    const phone = newPhone();
+    const storage = launch(phone);
+    storage.saveCatalogCity(COLUMBUS as never, 'abc');
+    storage.saveCatalogCity({ ...COLUMBUS, id: 'seattle', name: 'Seattle' } as never, null);
+    phone.db.exec('ALTER TABLE catalog_places DROP COLUMN wheelchair; ALTER TABLE catalog_places DROP COLUMN hours; PRAGMA user_version = 8;');
+    return phone;
+  }
+
+  it('adds the columns, marks downloaded cities stale and drops bundled ones to be seeded again', () => {
+    const phone = version8Phone();
+    const storage = launch(phone);
+
+    expect(version(phone.db)).toBe(LATEST_VERSION);
+    expect(column(phone.db, "SELECT name FROM pragma_table_info('catalog_places') WHERE name IN ('wheelchair', 'hours') ORDER BY name")).toEqual([
+      'hours',
+      'wheelchair',
+    ]);
+    expect(storage.loadCatalogCities()).toEqual([expect.objectContaining({ hash: '', meta: expect.objectContaining({ id: 'columbus' }) })]);
+    // The stale city keeps its places until the new download replaces them.
+    expect(storage.loadCatalogPlaces('columbus')).toHaveLength(3);
+    expect(storage.loadCatalogPlaces('seattle')).toEqual([]);
+  });
+
+  it('keeps wheelchair access and hours on each place', () => {
+    const storage = launch(newPhone());
+    const places = [
+      { ...COLUMBUS.places[0], wheelchair: 'limited', hours: 'Mo-Su 09:00-17:00' },
+      ...COLUMBUS.places.slice(1),
+    ];
+    storage.saveCatalogCity({ ...COLUMBUS, places } as never, 'abc');
+
+    const [snow, shortNorth] = storage.loadCatalogPlaces('columbus');
+    expect(snow).toEqual(expect.objectContaining({ wheelchair: 'limited', hours: 'Mo-Su 09:00-17:00' }));
+    expect(shortNorth).not.toHaveProperty('wheelchair');
+    expect(shortNorth).not.toHaveProperty('hours');
   });
 });
 
