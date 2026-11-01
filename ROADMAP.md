@@ -1,6 +1,6 @@
 # Try Something New: Roadmap
 
-The single list of what to build next. It replaces `TODO.md`. Last refreshed 2026-10-31, against `main` at `9f0138a` (PR #29). Growth items come from [MARKETING.md](MARKETING.md), the marketing and launch plan.
+The single list of what to build next. It replaces `TODO.md`. Last refreshed 2026-11-01, against `main` at `9f0138a` (PR #29). Growth items come from [MARKETING.md](MARKETING.md), the marketing and launch plan.
 
 At a glance: the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquBL) shows Up next, what's in progress, decisions and the inbox.
 
@@ -51,7 +51,7 @@ At a glance: the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquB
 In order. These are the ones to start a thread on.
 
 1. [~] **Optional account with cross-device sync** · Backend · L. Backend, sync client, sign-in and Back up and sync in Settings are in (PR #32). Left: **Turn on Apple and Google sign-in in the dashboards** (needs you; exact steps in `supabase/README.md` under Dashboard setup), then **Sync automatically** (on launch and when the app comes back, so Sync now is rarely needed), and **Back up memory photos**.
-2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), the rating prompt after closing the card for a "Loved it", a plan reminder on the morning of a plan, Explore with no location set, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
+2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), the rating prompt after closing the card for a "Loved it", a plan reminder on the morning of a plan, Explore with no location set, the still Explore header and the new location sheet (pick a city, How far will you go?, search on Android), and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
 3. [~] **Wheelchair and stroller access** · Data · S. The data is in: 518 places across the five cities carry OSM's `wheelchair` tag (`yes`, `limited` or `no`), PR #36. Left: store it in the app's catalog tables and add an "Accessible" filter.
 4. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
 5. [ ] **Opt-in, privacy-friendly analytics** · Growth · S. Anonymous counts with TelemetryDeck or Aptabase, off by default, so the beta can measure activation and retention.
@@ -102,7 +102,7 @@ In order. These are the ones to start a thread on.
 **Getting there**
 
 - [ ] **Walking, cycling and transit times** · Feature · M. OpenRouteService has walking and cycling on the same matrix API. Add a "How do you get around?" setting.
-- [ ] **Address autocomplete** · UX · M. Proxy Photon (free, OpenStreetMap) through the Worker so no key ships.
+- [ ] **Address autocomplete** · UX · M. Proxy Photon (free, OpenStreetMap) through the Worker so no key ships. The location sheet already suggests cities with places as you type (PR #38); this adds towns and addresses, and a fallback when the phone's geocoder fails.
 
 **Data**
 
@@ -149,6 +149,8 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **Keep the Explore header still** · UX. Explore drops the large title, which grew, shrank and bounced with every scroll, for a plain solid title bar, and short content no longer bounces. PR #38.
+- [x] **Make location clear and easy to change** · UX. A location card with a Change button on Explore and the Map. The location sheet says what's showing and why, lists every city with places (bundled, so all five show on a fresh install), lets you pick a city by hand or no city, and asks how far you'll go (30 min to 3 hr+) so a neighboring town gets the nearest city. Out of range, it says your area isn't covered and offers the nearest city. Search has a button, suggests cities as you type, and asks for location permission on Android, where it used to find nothing. PR #38.
 - [x] **Opt-in, privacy-friendly analytics** · Growth. "Share anonymous usage counts" in Settings, off by default. Events (`app_open`, `plan_made`, `done_saved`, `memory_saved`, `card_shared`, `invite_sent`) go to Supabase's insert-only `app_events` with the platform, app version and days since first open, which is enough for activation and week 2 and 4 retention without a device id. Our own table instead of TelemetryDeck or Aptabase, so no third party and no extra account. SQL to read them is in `server/web/README.md`. Growth PR.
 - [x] **Round the location on the phone** · Backend. The drive-time request now sends a location rounded to about a kilometer, instead of relying on the Worker to round it. Growth PR.
 - [x] **Clean up the repo** · Tooling. Removed the finished SwiftUI parity checklist (`design/parity.md`) and the leftover Xcode, Swift Package Manager, CocoaPods, Carthage and Fastlane rules in `.gitignore`. The ignore file now also covers Overture extracts, test coverage and tool caches. No app changes.
