@@ -4,6 +4,7 @@ import { Stack, useRouter } from 'expo-router';
 import BackupIcon from '@expo/material-symbols/backup.xml';
 import { restoreBackup, shareBackup } from '@/data/backup';
 import { memoryItems, type MemoryItem } from '@/data/memories';
+import { lastMonthRecap, milestones, milestonesToShow } from '@/data/milestones';
 import { keptPhotoUri } from '@/data/photos';
 import { loadMemories, type Rating } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
@@ -24,6 +25,9 @@ const FILTERS = ['All', 'Loved it', 'With photos'] as const;
 type Filter = (typeof FILTERS)[number];
 
 type Item = MemoryItem;
+
+/** Like "Every kind, 6 of 9: Tried something from all 9 kinds". */
+const m = (x: { title: string; detail: string; progress: number; goal: number }) => `${x.title}, ${x.progress} of ${x.goal}: ${x.detail}`;
 
 /** Monday-based week number since the epoch, for counting distinct weeks. */
 function weekOf(iso: string): number {
@@ -50,13 +54,58 @@ function Stats({ items }: { items: Item[] }) {
     .slice(0, 5);
   const most = kinds[0]?.count ?? 1;
 
+  const recap = lastMonthRecap(items, now);
+  const { earned, next } = milestonesToShow(milestones(items));
+
   return (
     <View style={styles.stats}>
+      {recap && (
+        <View style={[styles.recap, { backgroundColor: colors.accentSoft }]} accessible>
+          <Text style={[styles.recapTitle, { color: colors.accent }]}>{recap.label} in review</Text>
+          <Text style={[styles.recapBody, { color: colors.label }]}>
+            {recap.tried} new {recap.tried === 1 ? 'thing' : 'things'} across {recap.kinds} {recap.kinds === 1 ? 'kind' : 'kinds'}
+            {recap.loved ? `, ${recap.loved} loved` : ''}.{recap.favorite ? ` A favorite: ${recap.favorite}.` : ''}
+          </Text>
+        </View>
+      )}
       <View style={styles.tiles}>
         <Tile value={thisMonth} label="This month" />
         <Tile value={loved} label="Loved" />
         <Tile value={weeks} label={weeks === 1 ? 'Week out' : 'Weeks out'} />
       </View>
+      {(earned.length > 0 || next) && (
+        <View style={[styles.kinds, { backgroundColor: colors.card }]}>
+          <Text style={[styles.milestonesTitle, { color: colors.label }]}>Milestones</Text>
+          {earned.length > 0 && (
+            <View style={styles.badges}>
+              {earned.map((m) => (
+                <View
+                  key={m.id}
+                  style={[styles.badge, { backgroundColor: colors.accentSoft }]}
+                  accessible
+                  accessibilityLabel={`${m.title}: ${m.detail}`}
+                >
+                  <Icon name={m.icon} size={16} color={colors.accent} />
+                  <Text style={[styles.badgeText, { color: colors.label }]}>{m.title}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+          {next && (
+            <View style={styles.kindRow} accessible accessibilityLabel={`Next: ${m(next)}`}>
+              <Text style={[styles.kindLabel, { color: colors.secondary }]} numberOfLines={2}>
+                Next: {next.title}
+              </Text>
+              <View style={[styles.kindTrack, { backgroundColor: colors.fill }]}>
+                <View style={[styles.kindBar, { width: `${(next.progress / next.goal) * 100}%`, backgroundColor: colors.accent }]} />
+              </View>
+              <Text style={[styles.kindCount, { color: colors.secondary }]}>
+                {next.progress}/{next.goal}
+              </Text>
+            </View>
+          )}
+        </View>
+      )}
       {kinds.length > 1 && (
         <View style={[styles.kinds, { backgroundColor: colors.card }]}>
           {kinds.map(({ id, count }) => (
@@ -258,6 +307,13 @@ const styles = StyleSheet.create({
   tileValue: { fontSize: 26, fontWeight: '800' },
   tileLabel: { fontSize: 13, fontWeight: '600' },
   kinds: { borderRadius: 16, padding: 14, gap: 10 },
+  recap: { borderRadius: 16, padding: 14, gap: 4 },
+  recapTitle: { fontSize: 13, fontWeight: '700', textTransform: 'uppercase' },
+  recapBody: { fontSize: 15, lineHeight: 21 },
+  milestonesTitle: { fontSize: 15, fontWeight: '700' },
+  badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  badge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, minHeight: 30, borderRadius: 15 },
+  badgeText: { fontSize: 13, fontWeight: '600' },
   kindRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   kindLabel: { width: '35%', fontSize: 14, fontWeight: '600' },
   kindTrack: { flex: 1, height: 8, borderRadius: 4, overflow: 'hidden' },

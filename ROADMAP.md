@@ -51,10 +51,10 @@ At a glance: the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquB
 In order. These are the ones to start a thread on.
 
 1. [~] **Optional account with cross-device sync** · Backend · L. Backend, sync client, sign-in and Back up and sync in Settings are in (PR #32). Left: **Turn on Apple and Google sign-in in the dashboards** (needs you; exact steps in `supabase/README.md` under Dashboard setup), then **Sync automatically** (on launch and when the app comes back, so Sync now is rarely needed), and **Back up memory photos**.
-2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), the rating prompt after closing the card for a "Loved it", a plan reminder on the morning of a plan, Explore with no location set, the still Explore header and the new location sheet (pick a city, How far will you go?, search on Android, town and address suggestions as you type), the Wheelchair accessible filter and "Open now" on places (PR #39), the weather line over the Explore card on a rainy day, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
+2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), the rating prompt after closing the card for a "Loved it", a plan reminder on the morning of a plan, Explore with no location set, the still Explore header and the new location sheet (pick a city, How far will you go?, search on Android, town and address suggestions as you type), the Wheelchair accessible filter and "Open now" on places (PR #39), the weather line over the Explore card on a rainy day, the Report a problem sheet, milestones and the month in review on Memories, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
 3. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
 4. [ ] **Themed collections** · Data · M. Date ideas, rainy day, under $20, with kids, free this weekend. Built from existing tags.
-5. [ ] **Gentle milestones and a monthly recap** · Feature · M. "Tried something from all 9 kinds", a month in review, and a shareable memory card. Still no streaks.
+5. [~] **Gentle milestones and a monthly recap** · Feature · M. Milestones and the month in review are on Memories (Milestones PR). Left: a shareable recap card, on the same renderer as the "tried it" card.
 
 ## Now: before launch
 
@@ -96,7 +96,7 @@ In order. These are the ones to start a thread on.
 - [x] **Weather-aware suggestions** · Feature · M. Done; see Done.
 - [x] **Learn from ratings** · Feature · M. Done; see Done.
 - [ ] **Themed collections** · Data · M. See Up next.
-- [ ] **Gentle milestones and a monthly recap** · Feature · M. "Tried something from all 9 kinds", a month in review, and a shareable memory card. Still no streaks.
+- [~] **Gentle milestones and a monthly recap** · Feature · M. See Up next.
 
 **Getting there**
 
@@ -146,6 +146,7 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **Milestones and a month in review on Memories** · Feature. Part of **Gentle milestones and a monthly recap**. Memories shows the milestones you've earned (first try, 5, 10, 25 and 50 things, every kind, five favorites, three at home, five photos, two cities) and a bar toward the closest next one. In the first week of a month, a card sums up the month before: how many things, how many kinds, how many loved and one favorite. Counts only go up, so there are still no streaks. Milestones PR.
 - [x] **Report a place through a form** · Data. The flag next to a place opens a Report a problem sheet (closed, not for this activity, wrong location, something else, plus a note), and the drive-time Worker's new `POST /report` opens a GitHub issue labeled `place report` with the place and activity ids. Rate-limited to 5 a minute per IP, text from the app escaped so it can't mention people or link issues. Falls back to email when the Worker isn't set or the send fails. Goes live after `npx wrangler secret put GITHUB_TOKEN` (a fine-grained token with Issues read and write on this repo) and `npx wrangler deploy`. The privacy policy says so. Report PR.
 - [x] **Weather-aware suggestions** · Feature. On wet, very hot (33 °C and up) or freezing (-5 °C and below) days, three picks in four on Explore come from indoor, at-home and hosting ideas (and winter ones in a freeze), with a line over the card saying why. Weather comes from Open-Meteo (no key) for your location rounded to about 10 km, at most once an hour, or the city's center without a location. "Weather-aware ideas" in Settings turns it off, and the privacy policy says so. Suggestions PR.
 - [x] **Learn from ratings** · Feature. Each Explore pick is weighted by your ratings: "Loved it" makes that kind and level up to three times as likely, "Not for me" down to a third, and hiding an idea counts a little. Nothing is ever ruled out. All on the phone, from the latest rating of each thing. Suggestions PR.
