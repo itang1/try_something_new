@@ -193,15 +193,15 @@ export default function MapScreen() {
           <View style={[styles.card, styles.cardBody, { backgroundColor: colors.card }]}>
             <Text style={[styles.placeName, { color: colors.label }]}>No places mapped near you yet</Text>
             <Text style={[styles.meta, { color: colors.secondary }]}>
-              Explore still has ideas for home and anywhere. Visiting a city? Start a trip there to see its places.
+              Explore still has ideas for home and anywhere. To see places, use the nearest city or plan a trip to one.
             </Text>
             <Pressable
               accessibilityRole="button"
               onPress={() => router.push('/location')}
               style={({ pressed }) => [styles.directions, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
             >
-              <Icon name={origin ? 'flight' : 'location_on'} size={20} color={colors.onAccent} />
-              <Text style={[styles.directionsText, { color: colors.onAccent }]}>{origin ? 'Start a trip' : 'Set my location'}</Text>
+              <Icon name={origin ? 'location_city' : 'location_on'} size={20} color={colors.onAccent} />
+              <Text style={[styles.directionsText, { color: colors.onAccent }]}>{origin ? 'Choose a city' : 'Set my location'}</Text>
             </Pressable>
           </View>
         )}
@@ -333,7 +333,7 @@ function PlaceCard({
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   top: { position: 'absolute', top: 0, left: 16, right: 16, gap: 8, alignItems: 'flex-start' },
-  control: { borderRadius: 22, paddingHorizontal: 12, marginTop: 8, boxShadow: '0 4px 14px rgba(0,0,0,0.12)' },
+  control: { alignSelf: 'stretch', borderRadius: 16, marginTop: 8, boxShadow: '0 4px 14px rgba(0,0,0,0.12)' },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',

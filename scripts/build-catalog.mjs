@@ -20,6 +20,9 @@ for (const file of readdirSync('data/cities').filter((f) => f.endsWith('.json'))
   cities.push({ id, name, region, country, lat, lng, hash });
 }
 writeFileSync(`${out}/index.json`, JSON.stringify({ cities }));
+// The app also ships the list of cities without hashes, so the location sheet can show every city before the index downloads.
+const known = cities.map(({ id, name, region, country, lat, lng }) => ({ id, name, region, country, lat, lng }));
+writeFileSync('src/data/city-index.json', `${JSON.stringify(known)}\n`);
 
 // The app ships a slim copy of one city so it works on first launch, offline: its must-dos and hand-picked places.
 // The full file downloads as soon as there's a connection.

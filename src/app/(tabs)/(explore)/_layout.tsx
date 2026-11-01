@@ -6,11 +6,12 @@ export default function ExploreLayout() {
   return (
     <Stack
       screenOptions={{
-        headerLargeTitle: true,
+        // A plain, solid title bar. The large title grew, shrank and bounced with every scroll, so Explore keeps it still.
+        headerLargeTitleEnabled: false,
+        headerTransparent: false,
+        headerStyle: { backgroundColor: colors.background },
         headerTintColor: colors.accent,
-        headerTitleStyle: { color: colors.label },
-        headerLargeTitleStyle: { color: colors.label },
-        headerLargeTitleShadowVisible: false,
+        headerTitleStyle: { color: colors.label, fontSize: 20, fontWeight: '700' },
         headerShadowVisible: false,
         contentStyle: { backgroundColor: colors.background },
       }}
