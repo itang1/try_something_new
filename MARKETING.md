@@ -49,7 +49,7 @@ Build these in this order; each is on the roadmap.
 
 ## 5. Launch plan
 
-**Private beta (November to December).** TestFlight and Play internal testing, 50 to 200 people, almost all in the launch city. Recruit from friends, a waitlist page and local communities. Goal: learn whether people actually go and do things, and collect real shared cards and quotes for the store page and the launch.
+**Private beta (December).** TestFlight and Play internal testing, 50 to 200 people, almost all in the launch city. Recruit from friends, a waitlist page and local communities. Goal: learn whether people actually go and do things, and collect real shared cards and quotes for the store page and the launch.
 
 **Public launch (early January).** App Store and Google Play together, with the New Year angle: "Try 52 new things this year."
 
@@ -107,23 +107,25 @@ In-app numbers need the **opt-in, privacy-friendly analytics** item (TelemetryDe
 
 ## 9. The first 90 days
 
-Starting Monday 2026-11-02. Weeks 1 to 9 are beta and pre-launch; week 10 is the public launch.
+Starting Monday 2026-11-02. November is build and audience time, the beta runs through December, and the public launch is the first week of January (week 10).
 
 | Week | Dates | Product | Marketing |
 | --- | --- | --- | --- |
-| 1 | Nov 2 | Finish the release setup (accounts, EAS). Check merged work on a phone. | Decide name, launch city and budget. Claim handles on TikTok, Instagram, Threads, X, YouTube. Put up a one-page waitlist site. |
-| 2 | Nov 9 | First TestFlight and Play internal build. | Invite 20 friends in the launch city. Post the first build-in-public thread. Start the weekend video series (3 a week from here on). |
-| 3 | Nov 16 | Start the "tried it" share card. | Grow the beta to 50 through the waitlist and local communities. List 30 partner candidates. |
-| 4 | Nov 23 | Ship the share card to beta. Rating prompt after "Loved it". | Talk to 5 beta users by video. Visit or email 10 partners. |
-| 5 | Nov 30 | Invite links that open the idea, plus the small web page per activity. | Pitch 3 local newsletters for a January story. Pick one or two local creators. |
-| 6 | Dec 7 | City bucket list card. Opt-in analytics. | Beta to 100 to 200. Holiday angle: "gift someone an experience" posts. |
+| 1 | Nov 2 | Finish the release setup (accounts, EAS). Check merged work on a phone. | Claim handles on TikTok and Instagram. Deploy the waitlist page. |
+| 2 | Nov 9 | Start the "tried it" share card. | Start the weekend video series (3 a week from here on) and the first build-in-public post. |
+| 3 | Nov 16 | Ship the share card. Rating prompt after "Loved it". | List 30 Pasadena partner candidates. Grow the waitlist. |
+| 4 | Nov 23 | Invite links that open the idea, plus the small web page per activity. Opt-in analytics. First TestFlight and Play internal build to 5 to 10 friends as a smoke test. | Visit or email 10 partners. Pitch 3 local newsletters for a January story. |
+| 5 | Nov 30 | **Beta opens** (Dec 1) to 20 to 50 people from the waitlist, mostly in Pasadena. | Invite the waitlist in batches. Talk to 5 beta users by video. |
+| 6 | Dec 7 | City bucket list card. | Beta to 100 to 200. Holiday angle: "gift someone an experience" posts. Pick one or two local creators. |
 | 7 | Dec 14 | Fix the biggest drop-off the beta showed. | Collect shared cards and quotes for the store page. First partner stickers out. |
 | 8 | Dec 21 | Store listing, screenshots and preview video. Privacy policy and store forms. | Prepare the launch kit: Product Hunt page, press note, the "52 new things" post, creator briefs. |
 | 9 | Dec 28 | Submit for review with time to spare (review can slow around the holidays). | Tease the launch: "Try 52 new things in 2027." Email the waitlist the date. |
-| 10 | Jan 4 | **Public launch** in the launch city. | Waitlist email, founder video, Reddit (by the rules), creators post, Product Hunt on a weekday. |
+| 10 | Jan 4 | **Public launch** in Pasadena and Los Angeles. | Waitlist email, founder video, Reddit (by the rules), creators post, Product Hunt on a weekday. |
 | 11 | Jan 11 | Fix launch bugs; answer every review. | Daily videos while January interest is high. Newsletter stories run. |
 | 12 | Jan 18 | Monthly recap (first version). | Monthly "try-along": everyone tries the same thing. Partners share it. |
 | 13 | Jan 25 | Look at activation and share rate; plan the next quarter around the weakest number. | Write the honest "first 90 days" post. Decide the second city from where installs and requests come from. |
+
+The beta is only about four weeks, so the share card and invite links must be ready before it opens, and the store submission in week 9 cannot slip.
 
 ## 10. What each tactic needs from the app
 
@@ -145,13 +147,10 @@ The plan works at close to $0 beyond the store accounts (Apple's developer progr
 
 ## 12. Decisions
 
-**Decided 2026-10-31**
+**Decided**
 
 - **Name:** keep "Try Something New". It says what the app does and people search that exact phrase. It is generic, so make it distinctive with the open-door icon, a consistent look on every card and video, and a sharper store subtitle, and check the store listing and the TikTok and Instagram handles before launch.
 - **Budget:** $0 for now. Store accounts are the only cost.
 - **Platforms:** TikTok first, because it shows videos to people who don't follow you yet, which is how a new account gets found. Post the same video to Instagram Reels, and use Instagram for Stories (where the share cards go), DMs with local partners and the link in bio. Add YouTube Shorts later with the same videos; it costs nothing extra.
 - **Launch city:** Los Angeles, starting with Pasadena. The LA data has about 750 places in and around Pasadena covering 59 of the activities, and drive-time sorting brings in the rest of LA. Pasadena is small enough to cover well and has its own community: r/pasadena, local newsletters, Caltech, PCC and ArtCenter students, and places like Old Pasadena, Eaton Canyon, the Rose Bowl Flea Market and the Huntington. The Rose Parade on January 1 lines up with the New Year launch. Widen to the rest of LA once Pasadena is going.
-
-**Still open**
-
-- **Launch date:** early January for the New Year moment (recommended), or as soon as the store setup is done.
+- **Launch date:** beta in December, public launch the first week of January (decided 2026-11-01).

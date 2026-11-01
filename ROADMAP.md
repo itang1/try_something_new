@@ -73,7 +73,6 @@ In order. These are the ones to start a thread on.
 **Marketing and launch** (see [MARKETING.md](MARKETING.md))
 
 - [ ] **Claim the handles and check the store name** · Growth · S. Needs you. The name stays "Try Something New" (decided 2026-10-31). Claim the same handle on TikTok and Instagram, check the name is available in both stores, and pick a store subtitle (see MARKETING.md section 6). Also decided: launch in Los Angeles starting with Pasadena, $0 budget for now, TikTok first with the same videos on Instagram Reels.
-- [?] **Set the launch date** · Growth · S. Recommended: early January, for "try new things" New Year's resolutions, with a beta in November and December.
 - [~] **Start a beta with a waitlist** · Growth · S. The landing page with an email signup is built (`server/web`, signups go to Supabase's `waitlist` table). Left, needs you: deploy it (`server/web/README.md`), then TestFlight and Play internal testing for 50 to 200 testers mostly in the launch city, which needs **Finish the release setup**.
 - [~] **Invite links that open the idea** · Growth · M. Built in the growth PR: a page per activity at `/activity/<id>?s=<kind>` on the website Worker, visits and button taps counted in Supabase's `link_events`, invites that include the page, the site's host on the share card, and universal and app links from `app.config.ts`. All of it turns on with `EXPO_PUBLIC_WEB_URL`. Left, needs you: deploy the website and pick a domain, set `APPLE_TEAM_ID` and the Play signing fingerprint on the Worker, set `EXPO_PUBLIC_WEB_URL` in EAS, and make a new build.
 - [x] **Opt-in, privacy-friendly analytics** · Growth · S. Done in the growth PR; see Done.
@@ -145,6 +144,7 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **Set the launch date** · Growth. Beta in December, public launch the first week of January. Schedule in MARKETING.md section 9. Decided 2026-11-01.
 - [x] **Share the year in review** · Feature. Part of **Year in review**. All through December, and in the first week of January for the year just gone, Memories shows "2026 in review" above the month's recap: how many new things, kinds and loved, and a favorite, with a "Share your 2026" card on the same renderer as the monthly one. PR #49.
 - [x] **Directions in Korea** · UX. On Android, Go and Directions for a place in South Korea open Naver Map, then KakaoMap if Naver isn't installed, then Google Maps, in the travel mode you picked. iPhone keeps Apple Maps, which routes there. PR #48.
 - [x] **Let the Map use the Explore filters** · UX. From the Inbox. The Map applies Explore's filters too (collection, kind, who's coming, access, level, cost, time and travel time), checking travel time and wheelchair access at each pin. Go out or Stay in is left out, since every pin is somewhere to go. The map's filter chip lists them, its x clears both, and the filter menu has an Explore filters item that opens the Filters sheet. PR #48.
