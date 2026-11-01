@@ -89,7 +89,7 @@ npx eas-cli@latest submit --profile production --platform android
 | Variable | What it's for |
 | --- | --- |
 | `GOOGLE_MAPS_ANDROID_API_KEY` | Google Maps on Android. Without it the map is blank. |
-| `EXPO_PUBLIC_ROUTING_URL` | The drive-times Worker, for preview and production. |
+| `EXPO_PUBLIC_ROUTING_URL` | The drive-times Worker. Already set in the committed `.env` to `https://try-something-new-drive-times.trysomethingnew.workers.dev`, so every profile gets it; set it on EAS only to point a profile somewhere else. |
 | `EXPO_PUBLIC_REPORT_EMAIL` | Where place reports go. |
 | `EXPO_PUBLIC_SENTRY_DSN` | Where crash reports go. Without it none are sent. |
 | `EXPO_PUBLIC_WEB_URL` | The website's origin, like `https://trysomething.new`: activity pages in invites, the card's short link, the privacy policy, and universal and app links. Not secret. |

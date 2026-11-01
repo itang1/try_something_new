@@ -60,7 +60,7 @@ In order. These are the ones to start a thread on.
 
 - [~] **Add a Settings screen** · UX · M. Weekend ideas on/off, backup, credits, version and a Send feedback email (PR #21) are in, and a Privacy policy row that shows once `EXPO_PUBLIC_WEB_URL` is set (growth PR). Left: set that variable once the website has its domain. Miles or kilometers is dropped for now: the app shows drive minutes, never distances.
 - [~] **Make the tabs easier to get around** · UX · M. PR #11: one header pattern on every tab (the tab's own filter or sort button, then Settings, always top right), Map filters for Not done, Done, Saved and kind, a Checklist grouped by kind with folding sections, and Memories opened from the progress card. Left: check it on a phone.
-- [~] **Protect the drive-time Worker** · Backend · S. Per-IP rate limiting is in, and goes live on the next `npx wrangler deploy`. Left: App Attest / Play Integrity once the app is in the stores.
+- [~] **Protect the drive-time Worker** · Backend · S. Per-IP rate limiting is in and deployed (Nov 1), and the app points at the Worker through `EXPO_PUBLIC_ROUTING_URL` in `.env`. Left: App Attest / Play Integrity once the app is in the stores.
 - [ ] **Check merged work on a real phone** · Launch · S. See Up next.
 - [~] **Optional account with cross-device sync** · Backend · L. Sign-in and sync in Settings done; dashboard setup left. See Up next.
 - [ ] **Build the Android widget** · Feature · M. From the old TODO.
@@ -109,7 +109,7 @@ In order. These are the ones to start a thread on.
 - [ ] **Add more cities** · Data · M. The 25 largest US metros, then a few international ones. Re-import monthly from a scheduled Action; the **Import OpenStreetMap places** Action already does the OSM half on demand.
 - [x] **Show opening hours where known** · Data · M. Done; see Done.
 - [x] **Wheelchair and stroller access** · Data · S. Done; see Done.
-- [~] **Report a place through a form** · Data · S. Built; see Done. Left, needs you: `npx wrangler secret put GITHUB_TOKEN` and deploy the Worker.
+- [~] **Report a place through a form** · Data · S. Built; see Done. The Worker is deployed and the app points at it. Left, needs you: `npx wrangler secret put GITHUB_TOKEN` if it isn't set yet, or reports fail and fall back to email.
 
 **Growth after launch**
 
