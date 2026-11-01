@@ -4,15 +4,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, useRouter } from 'expo-router';
 import FiltersIcon from '@expo/material-symbols/tune.xml';
 import * as Haptics from 'expo-haptics';
-import { entryHint, inSeason, isAnywhereSpot, isHomeSpot, kindsOf, LEVELS, listOr, type Entry } from '@/data/catalog';
+import { activityTraits, entryHint, inSeason, isAnywhereSpot, isHomeSpot, kindsOf, LEVELS, listOr, type Entry } from '@/data/catalog';
 import { addDays, dayKey, formatDay } from '@/data/days';
 import { openDirections, searchNearby } from '@/data/directions';
 import { inviteFriend } from '@/data/invite';
 import { allowNudges } from '@/data/nudge';
+import { ANYWHERE_ID } from '@/data/cities';
 import { placesByDistance } from '@/data/drive';
 import { CARD_PLACES, defaultWhere, planSpot, whereOptions, type WhereOption } from '@/data/where';
 import { accessibleEntry, describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
-import { readSetting, writeSetting } from '@/data/storage';
+import { loadRatings, readSetting, writeSetting } from '@/data/storage';
+import { learnTaste, tasteWeight, weightedPick, type Rated } from '@/data/taste';
+import { MOOD_LABELS, poolForWeather, type Mood } from '@/data/weather';
 import { useAppState } from '@/state/app-state';
 import { readable, readableOn, subcategory, useColors } from '@/theme';
 import { settingsButton, toolbarIcon } from '@/components/header-items';
@@ -22,11 +25,8 @@ import { LocationControl } from '@/components/location-control';
 import { SwipeCard } from '@/components/swipe-card';
 import { useMarkDone } from '@/state/use-mark-done';
 import { useToast } from '@/state/toast';
+import { useWeatherMood, weatherAware } from '@/state/use-weather';
 import type { IconName } from '@/icons/paths';
-
-function randomItem<T>(items: T[]): T {
-  return items[Math.floor(Math.random() * items.length)];
-}
 
 function sample<T>(items: T[], n: number): T[] {
   const rest = [...items];
@@ -41,7 +41,7 @@ export default function ExploreScreen() {
   const markDone = useMarkDone();
   const toast = useToast();
   // The pick remembers its city, so switching cities clears it without an effect.
-  const [pick, setPick] = useState<{ id: string; city: string; n: number; nudge: boolean } | null>(null);
+  const [pick, setPick] = useState<{ id: string; city: string; n: number; nudge: boolean; weather?: Mood } | null>(null);
   const [noMatch, setNoMatch] = useState(false);
   const [nudgeAsked, setNudgeAsked] = useState(() => readSetting('nudgeAsked', false));
   const { height } = useWindowDimensions();
@@ -55,6 +55,8 @@ export default function ExploreScreen() {
   }, []);
 
   const activity = pick?.city === city.id ? findEntry(pick.id) : undefined;
+  // Rain, heat or a hard freeze where you are, or in the city when no location is set. "Your area" has no center to ask about.
+  const weather = useWeatherMood(origin ?? (city.id === ANYWHERE_ID ? null : { latitude: city.lat, longitude: city.lng }));
 
   const showAnother = (exclude?: string) => {
     const current = exclude ?? activity?.id;
@@ -65,7 +67,9 @@ export default function ExploreScreen() {
     // Early on, skip the stretches so the first few tries are easy wins, unless levels were picked on purpose.
     const warmingUp = !filters.levels.length && entries.filter((e) => isDone(e.id)).length < 3;
     const gentle = warmingUp ? fresh.filter((e) => e.level !== 'stretch') : fresh;
-    const pool = gentle.length ? gentle : fresh.length ? fresh : allowed;
+    const unweathered = gentle.length ? gentle : fresh.length ? fresh : allowed;
+    const mood = weatherAware() ? weather : null;
+    const pool = poolForWeather(unweathered, mood);
     Haptics.selectionAsync();
     if (!pool.length) {
       setPick(null);
@@ -75,7 +79,13 @@ export default function ExploreScreen() {
     setNoMatch(false);
     const nudge = !readSetting('swipeNudged', false);
     if (nudge) writeSetting('swipeNudged', true);
-    setPick({ id: randomItem(pool).id, city: city.id, n: (pick?.n ?? 0) + 1, nudge });
+    // Ratings so far make similar ideas come up more or less often.
+    const rated = loadRatings().flatMap(({ entryId, rating }): Rated[] => {
+      const traits = findEntry(entryId) ?? activityTraits(entryId);
+      return traits ? [{ subcategory: traits.subcategory, level: traits.level, rating }] : [];
+    });
+    const taste = learnTaste(rated, entries.filter((e) => hiddenIds.has(e.id)));
+    setPick({ id: weightedPick(pool, (e) => tasteWeight(e, taste)).id, city: city.id, n: (pick?.n ?? 0) + 1, nudge, weather: pool !== unweathered ? mood! : undefined });
   };
 
   // A gentle nudge for a plan that's today or tomorrow. Missed plans just drop off.
@@ -191,6 +201,12 @@ export default function ExploreScreen() {
         )}
 
         <View style={[styles.middle, activity && styles.top]}>
+          {activity && pick?.weather && (
+            <View style={styles.weather}>
+              <Icon name={pick.weather === 'hot' ? 'sunny' : pick.weather === 'cold' ? 'ac_unit' : 'rainy'} size={16} color={colors.secondary} />
+              <Text style={[styles.weatherText, { color: colors.secondary }]}>{MOOD_LABELS[pick.weather]}</Text>
+            </View>
+          )}
           {activity ? (
             <SwipeCard
               key={pick?.n}
@@ -596,6 +612,8 @@ function CardAction({ icon, label, onPress, tint, selected, roomy }: ActionProps
 }
 
 const styles = StyleSheet.create({
+  weather: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'center', marginBottom: 8 },
+  weatherText: { fontSize: 13 },
   screen: { flex: 1 },
   content: { ...readable, flexGrow: 1, padding: 16, gap: 16 },
   middle: { flex: 1, justifyContent: 'center' },

@@ -51,10 +51,10 @@ At a glance: the [Roadmap page](https://claude.ai/artifact/GaeYbeciXuE4subKBdquB
 In order. These are the ones to start a thread on.
 
 1. [~] **Optional account with cross-device sync** · Backend · L. Backend, sync client, sign-in and Back up and sync in Settings are in (PR #32). Left: **Turn on Apple and Google sign-in in the dashboards** (needs you; exact steps in `supabase/README.md` under Dashboard setup), then **Sync automatically** (on launch and when the app comes back, so Sync now is rarely needed), and **Back up memory photos**.
-2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), the rating prompt after closing the card for a "Loved it", a plan reminder on the morning of a plan, Explore with no location set, the still Explore header and the new location sheet (pick a city, How far will you go?, search on Android, town and address suggestions as you type), and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
+2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), the rating prompt after closing the card for a "Loved it", a plan reminder on the morning of a plan, Explore with no location set, the still Explore header and the new location sheet (pick a city, How far will you go?, search on Android, town and address suggestions as you type), the Wheelchair accessible filter and "Open now" on places (PR #39), the weather line over the Explore card on a rainy day, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
 3. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
-4. [ ] **Weather-aware suggestions** · Feature · M. Open-Meteo is free with no key. On rainy or very hot days lean toward indoor and at-home picks.
-5. [ ] **Learn from ratings** · Feature · M. "Loved it" boosts that kind and level, "Not for me" lowers similar ones. All on the phone.
+4. [ ] **Themed collections** · Data · M. Date ideas, rainy day, under $20, with kids, free this weekend. Built from existing tags.
+5. [ ] **Report a place through a form** · Data · S. A Worker endpoint that opens a GitHub issue with the place id, instead of email.
 
 ## Now: before launch
 
@@ -93,9 +93,9 @@ In order. These are the ones to start a thread on.
 
 **Better suggestions**
 
-- [ ] **Weather-aware suggestions** · Feature · M. See Up next.
-- [ ] **Learn from ratings** · Feature · M. "Loved it" boosts that kind and level, "Not for me" lowers similar ones. All on the phone.
-- [ ] **Themed collections** · Data · M. Date ideas, rainy day, under $20, with kids, free this weekend. Built from existing tags.
+- [x] **Weather-aware suggestions** · Feature · M. Done; see Done.
+- [x] **Learn from ratings** · Feature · M. Done; see Done.
+- [ ] **Themed collections** · Data · M. See Up next.
 - [ ] **Gentle milestones and a monthly recap** · Feature · M. "Tried something from all 9 kinds", a month in review, and a shareable memory card. Still no streaks.
 
 **Getting there**
@@ -137,7 +137,6 @@ In order. These are the ones to start a thread on.
 
 Unsorted ideas. Move them into a horizon at the next refresh.
 
-- The activity count in README and MARKETING.md says 102; the catalog has 122 now.
 - A first-time user who opens an activity link sees the welcome screen on top of the activity. Consider showing the activity first.
 - Let the Map use the Explore filters too (cost, time, level, indoor or outdoor), so the two tabs agree. From PR #11.
 
@@ -147,6 +146,9 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **Weather-aware suggestions** · Feature. On wet, very hot (33 °C and up) or freezing (-5 °C and below) days, three picks in four on Explore come from indoor, at-home and hosting ideas (and winter ones in a freeze), with a line over the card saying why. Weather comes from Open-Meteo (no key) for your location rounded to about 10 km, at most once an hour, or the city's center without a location. "Weather-aware ideas" in Settings turns it off, and the privacy policy says so. Suggestions PR.
+- [x] **Learn from ratings** · Feature. Each Explore pick is weighted by your ratings: "Loved it" makes that kind and level up to three times as likely, "Not for me" down to a third, and hiding an idea counts a little. Nothing is ever ruled out. All on the phone, from the latest rating of each thing. Suggestions PR.
+- [x] **Fix the activity count** · Docs. README, MARKETING.md and the store listing kit now say 122 activities and 47,391 places, not 102. From the Inbox. Suggestions PR.
 - [x] **Wheelchair and stroller access** · Data. An "Accessible" filter (Filters, under Access) keeps ideas with a place OSM maps as fully or partly wheelchair accessible, plus anything you can do at home, and the Explore card and drive filter then use only those places. Each place in an activity's list says whether it's wheelchair accessible. Migration 9 stores the access and hours in the catalog tables and downloads each city again to pick them up. Places without data are left out of the filter, never marked inaccessible. Accessible filter PR.
 - [x] **Show opening hours where known** · Data. "Open now" or "Closed now" on each place in an activity's list, read from OSM's `opening_hours` on the phone (`src/data/hours.ts`). It reads about 94% of the hours in the catalog; month ranges, holidays and "by appointment" show nothing rather than a guess, and places without hours are never hidden. Uses the phone's clock, so on a trip in another time zone it follows the phone. Accessible filter PR.
 - [x] **Address autocomplete** · UX. The location sheet suggests towns, streets, addresses and named spots like hotels as you type, nearest first, from Photon (free, OpenStreetMap) through the drive-time Worker's new `GET /places`, so the phone never talks to Photon and only a rough area (about 10 km) leaves it. When the phone's geocoder finds nothing, or Android won't run it without location permission, Search falls back to the same lookup. The privacy policy says so. Goes live with the next `npx wrangler deploy` of `server/drive-times`; development builds without the Worker ask Photon directly. PR #40.
