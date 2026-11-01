@@ -38,6 +38,7 @@ function weekOf(iso: string): number {
 
 function Stats({ items }: { items: Item[] }) {
   const colors = useColors();
+  const router = useRouter();
   const now = new Date();
   const thisMonth = items.filter((i) => {
     const d = new Date(i.at);
@@ -60,12 +61,23 @@ function Stats({ items }: { items: Item[] }) {
   return (
     <View style={styles.stats}>
       {recap && (
-        <View style={[styles.recap, { backgroundColor: colors.accentSoft }]} accessible>
-          <Text style={[styles.recapTitle, { color: colors.accent }]}>{recap.label} in review</Text>
-          <Text style={[styles.recapBody, { color: colors.label }]}>
-            {recap.tried} new {recap.tried === 1 ? 'thing' : 'things'} across {recap.kinds} {recap.kinds === 1 ? 'kind' : 'kinds'}
-            {recap.loved ? `, ${recap.loved} loved` : ''}.{recap.favorite ? ` A favorite: ${recap.favorite}.` : ''}
-          </Text>
+        <View style={[styles.recap, { backgroundColor: colors.accentSoft }]}>
+          <View accessible>
+            <Text style={[styles.recapTitle, { color: colors.accent }]}>{recap.label} in review</Text>
+            <Text style={[styles.recapBody, { color: colors.label }]}>
+              {recap.tried} new {recap.tried === 1 ? 'thing' : 'things'} across {recap.kinds} {recap.kinds === 1 ? 'kind' : 'kinds'}
+              {recap.loved ? `, ${recap.loved} loved` : ''}.{recap.favorite ? ` A favorite: ${recap.favorite}.` : ''}
+            </Text>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={`Share your ${recap.label} as a card`}
+            onPress={() => router.push('/share/recap')}
+            style={({ pressed }) => [styles.recapShare, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
+          >
+            <Icon name="ios_share" size={16} color={colors.onAccent} />
+            <Text style={[styles.recapShareText, { color: colors.onAccent }]}>Share your {recap.label}</Text>
+          </Pressable>
         </View>
       )}
       <View style={styles.tiles}>
@@ -310,6 +322,8 @@ const styles = StyleSheet.create({
   recap: { borderRadius: 16, padding: 14, gap: 4 },
   recapTitle: { fontSize: 13, fontWeight: '700', textTransform: 'uppercase' },
   recapBody: { fontSize: 15, lineHeight: 21 },
+  recapShare: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', minHeight: 36, paddingHorizontal: 14, borderRadius: 18, marginTop: 6 },
+  recapShareText: { fontSize: 14, fontWeight: '600' },
   milestonesTitle: { fontSize: 15, fontWeight: '700' },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   badge: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, minHeight: 30, borderRadius: 15 },

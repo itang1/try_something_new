@@ -1,5 +1,5 @@
 import type { ComponentRef, Ref } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { GradientIcon, Icon } from '@/components/icon';
 import { SHARE_LINK, type CardShape } from '@/data/share-card';
@@ -96,20 +96,30 @@ export function TriedCard({ ref, shape, width, name, icon, subcategoryId, badge,
             </View>
           )}
 
-          <View style={[styles.row, { gap: 8 * u, marginTop: (story ? 14 : 6) * u }]}>
-            <Image
-              source={require('../../assets/images/icon.png')}
-              style={{ width: 22 * u, height: 22 * u, borderRadius: 5 * u }}
-            />
-            <Text style={[styles.white, { fontSize: 13 * u, fontWeight: '700', opacity: 0.95 }]}>
-              Try Something New{SHARE_LINK ? `  ·  ${SHARE_LINK}` : ''}
-            </Text>
-          </View>
+          <CardBrand u={u} style={{ marginTop: (story ? 14 : 6) * u }} />
         </View>
       </View>
     </View>
   );
 }
+
+/** The app's icon, name and website, at the foot of every shared card. */
+export function CardBrand({ u, style }: { u: number; style?: StyleProp<ViewStyle> }) {
+  return (
+    <View style={[styles.row, { gap: 8 * u }, style]}>
+      <Image source={require('../../assets/images/icon.png')} style={{ width: 22 * u, height: 22 * u, borderRadius: 5 * u }} />
+      <Text style={[cardText.white, { fontSize: 13 * u, fontWeight: '700', opacity: 0.95 }]}>
+        Try Something New{SHARE_LINK ? `  ·  ${SHARE_LINK}` : ''}
+      </Text>
+    </View>
+  );
+}
+
+/** White text with a soft shadow, readable over photos and gradients. */
+export const cardText = StyleSheet.create({
+  white: { color: '#FFFFFF', textShadowColor: 'rgba(0,0,0,0.3)', textShadowRadius: 6, textShadowOffset: { width: 0, height: 1 } },
+  kicker: { fontWeight: '800', opacity: 0.9 },
+});
 
 const styles = StyleSheet.create({
   center: { alignItems: 'center', justifyContent: 'center' },

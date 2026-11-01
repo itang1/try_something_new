@@ -3,7 +3,7 @@ import { lastMonthRecap, milestones, milestonesToShow } from '@/data/milestones'
 type Item = Parameters<typeof milestones>[0][number] & { at: string; entry: { name: string; subcategory: string } };
 const item = (n: number, fields: Partial<{ kind: string; rating: 'loved' | 'fine' | null; city: string; placeId: string; photo: string; at: string }> = {}) =>
   ({
-    entry: { name: `Idea ${n}`, subcategory: fields.kind ?? 'make' },
+    entry: { id: `idea-${n}`, name: `Idea ${n}`, icon: 'star', subcategory: fields.kind ?? 'make' },
     city: { id: fields.city ?? 'seattle' },
     rating: fields.rating ?? null,
     placeId: fields.placeId ?? null,
@@ -41,7 +41,17 @@ describe('monthly recap', () => {
   ];
 
   it('sums up last month in the first week of the next', () => {
-    expect(lastMonthRecap(items, new Date(2026, 10, 2))).toEqual({ label: 'October', tried: 2, kinds: 2, loved: 1, favorite: 'Idea 1' });
+    expect(lastMonthRecap(items, new Date(2026, 10, 2))).toEqual({
+      label: 'October',
+      tried: 2,
+      kinds: 2,
+      loved: 1,
+      favorite: 'Idea 1',
+      picks: [
+        { id: 'idea-1', name: 'Idea 1', icon: 'star', subcategory: 'food', loved: true },
+        { id: 'idea-2', name: 'Idea 2', icon: 'star', subcategory: 'make', loved: false },
+      ],
+    });
   });
 
   it('stays quiet later in the month, or after a month with nothing', () => {
