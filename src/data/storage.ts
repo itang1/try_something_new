@@ -83,6 +83,8 @@ const CATALOG_TABLES = `
     lng REAL NOT NULL,
     duration TEXT,
     cost TEXT,
+    wheelchair TEXT,
+    hours TEXT,
     PRIMARY KEY (city_id, id)
   ) WITHOUT ROWID;
   CREATE INDEX IF NOT EXISTS catalog_places_box ON catalog_places (city_id, lat, lng);
@@ -280,6 +282,23 @@ if (version < 8) {
       if (city?.id === id) writeCity(city, hash);
     }
     db.execSync('PRAGMA user_version = 8');
+  });
+}
+
+// Version 9 keeps each place's wheelchair access and opening hours. Places stored before it don't have them, so
+// downloaded cities are marked stale to download again, and bundled ones are seeded again on this launch.
+if (version < 9) {
+  db.withTransactionSync(() => {
+    const columns = new Set(db.getAllSync<{ name: string }>("SELECT name FROM pragma_table_info('catalog_places')").map((c) => c.name));
+    if (!columns.has('wheelchair')) db.execSync('ALTER TABLE catalog_places ADD COLUMN wheelchair TEXT');
+    if (!columns.has('hours')) db.execSync('ALTER TABLE catalog_places ADD COLUMN hours TEXT');
+    db.execSync(`
+      UPDATE catalog_cities SET hash = '' WHERE hash IS NOT NULL;
+      DELETE FROM catalog_places WHERE city_id IN (SELECT id FROM catalog_cities WHERE hash IS NULL);
+      DELETE FROM catalog_place_activities WHERE city_id IN (SELECT id FROM catalog_cities WHERE hash IS NULL);
+      DELETE FROM catalog_cities WHERE hash IS NULL;
+      PRAGMA user_version = 9;
+    `);
   });
 }
 
@@ -503,11 +522,11 @@ function writeCity(city: City, hash: string | null): void {
   db.runSync('DELETE FROM catalog_places WHERE city_id = ?', [city.id]);
   db.runSync('DELETE FROM catalog_place_activities WHERE city_id = ?', [city.id]);
   db.runSync('INSERT OR REPLACE INTO catalog_cities (id, hash, meta, at) VALUES (?, ?, ?, ?)', [city.id, hash, JSON.stringify(meta), now()]);
-  const placeRow = db.prepareSync('INSERT OR IGNORE INTO catalog_places (city_id, id, ord, name, lat, lng, duration, cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+  const placeRow = db.prepareSync('INSERT OR IGNORE INTO catalog_places (city_id, id, ord, name, lat, lng, duration, cost, wheelchair, hours) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
   const activityRow = db.prepareSync('INSERT OR IGNORE INTO catalog_place_activities (city_id, place_id, activity_id) VALUES (?, ?, ?)');
   try {
     places.forEach((p, ord) => {
-      placeRow.executeSync([city.id, p.id, ord, p.name, p.lat, p.lng, p.duration ?? null, p.cost ?? null]);
+      placeRow.executeSync([city.id, p.id, ord, p.name, p.lat, p.lng, p.duration ?? null, p.cost ?? null, p.wheelchair ?? null, p.hours ?? null]);
       for (const activity of p.activities) activityRow.executeSync([city.id, p.id, activity]);
     });
   } finally {
@@ -527,15 +546,27 @@ export function loadCatalogCities(): { meta: CityMeta; hash: string | null }[] {
   return rows.map((r) => ({ meta: JSON.parse(r.meta) as CityMeta, hash: r.hash }));
 }
 
-type PlaceRow = { id: string; name: string; lat: number; lng: number; duration: string | null; cost: string | null; activities: string | null };
+type PlaceRow = {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  duration: string | null;
+  cost: string | null;
+  wheelchair: string | null;
+  hours: string | null;
+  activities: string | null;
+};
 
-const PLACE_COLUMNS = `p.id, p.name, p.lat, p.lng, p.duration, p.cost,
+const PLACE_COLUMNS = `p.id, p.name, p.lat, p.lng, p.duration, p.cost, p.wheelchair, p.hours,
   (SELECT group_concat(a.activity_id, ',') FROM catalog_place_activities a WHERE a.city_id = p.city_id AND a.place_id = p.id) AS activities`;
 
 function toPlace(r: PlaceRow): Place {
   const place: Place = { id: r.id, name: r.name, lat: r.lat, lng: r.lng, activities: r.activities ? r.activities.split(',') : [] };
   if (r.duration) place.duration = r.duration as Place['duration'];
   if (r.cost) place.cost = r.cost as Place['cost'];
+  if (r.wheelchair) place.wheelchair = r.wheelchair as Place['wheelchair'];
+  if (r.hours) place.hours = r.hours;
   return place;
 }
 

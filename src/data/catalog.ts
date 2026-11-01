@@ -15,7 +15,27 @@ export type Place = {
   activities: string[];
   duration?: Duration;
   cost?: Cost;
+  /** OpenStreetMap's wheelchair access, when it's mapped. */
+  wheelchair?: Wheelchair;
+  /** OpenStreetMap's opening_hours, like "Mo-Fr 09:00-17:00; Sa 10:00-14:00". Read it with isOpenAt in hours.ts. */
+  hours?: string;
 };
+
+/** "yes" is fully accessible, "limited" partly, as OpenStreetMap tags it. */
+export type Wheelchair = 'yes' | 'limited' | 'no';
+
+/** Fully or partly wheelchair accessible. Places with no data don't count. */
+export function isAccessible(place: Place): boolean {
+  return place.wheelchair === 'yes' || place.wheelchair === 'limited';
+}
+
+/** Like "Wheelchair accessible", or null when OSM doesn't say. */
+export function accessLabel(place: Place): string | null {
+  if (place.wheelchair === 'yes') return 'Wheelchair accessible';
+  if (place.wheelchair === 'limited') return 'Partly wheelchair accessible';
+  if (place.wheelchair === 'no') return 'Not wheelchair accessible';
+  return null;
+}
 
 /** Something to try, like archery or an art museum. It's done once, at any of its places or in one of its other ways. */
 export type Activity = {

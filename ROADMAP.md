@@ -52,10 +52,9 @@ In order. These are the ones to start a thread on.
 
 1. [~] **Optional account with cross-device sync** · Backend · L. Backend, sync client, sign-in and Back up and sync in Settings are in (PR #32). Left: **Turn on Apple and Google sign-in in the dashboards** (needs you; exact steps in `supabase/README.md` under Dashboard setup), then **Sync automatically** (on launch and when the app comes back, so Sync now is rarely needed), and **Back up memory photos**.
 2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), the rating prompt after closing the card for a "Loved it", a plan reminder on the morning of a plan, Explore with no location set, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
-3. [~] **Wheelchair and stroller access** · Data · S. The data is in: 518 places across the five cities carry OSM's `wheelchair` tag (`yes`, `limited` or `no`), PR #36. Left: store it in the app's catalog tables and add an "Accessible" filter.
-4. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
-5. [ ] **Opt-in, privacy-friendly analytics** · Growth · S. Anonymous counts with TelemetryDeck or Aptabase, off by default, so the beta can measure activation and retention.
-6. [ ] **Weather-aware suggestions** · Feature · M. Open-Meteo is free with no key. On rainy or very hot days lean toward indoor and at-home picks.
+3. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
+4. [ ] **Weather-aware suggestions** · Feature · M. Open-Meteo is free with no key. On rainy or very hot days lean toward indoor and at-home picks.
+5. [ ] **Learn from ratings** · Feature · M. "Loved it" boosts that kind and level, "Not for me" lowers similar ones. All on the phone.
 
 ## Now: before launch
 
@@ -110,8 +109,8 @@ In order. These are the ones to start a thread on.
 - [ ] **Show kilometers outside the US** · UX · S. Default to kilometers for cities like Seoul, alongside a miles or kilometers setting. Only needed once the app shows distances; today it shows drive minutes.
 - [ ] **English names for Seoul places** · Data · M. Overture only has Korean names there. Options: OpenStreetMap's `name:en` (comes with the OSM import), or the Korea Tourism Organization's English TourAPI, which needs a free key from data.go.kr.
 - [ ] **Add more cities** · Data · M. The 25 largest US metros, then a few international ones. Re-import monthly from a scheduled Action; the **Import OpenStreetMap places** Action already does the OSM half on demand.
-- [~] **Show opening hours where known** · Data · M. The data is in: about 2,500 places across the five cities carry OSM's `opening_hours` as `hours`, PR #36. Left: store it in the app, parse it on the phone, and show an "Open now" badge, never hiding places without hours.
-- [~] **Wheelchair and stroller access** · Data · S. See Up next.
+- [x] **Show opening hours where known** · Data · M. Done; see Done.
+- [x] **Wheelchair and stroller access** · Data · S. Done; see Done.
 - [ ] **Report a place through a form** · Data · S. A Worker endpoint that opens a GitHub issue with the place id, instead of email.
 
 **Growth after launch**
@@ -149,6 +148,8 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **Wheelchair and stroller access** · Data. An "Accessible" filter (Filters, under Access) keeps ideas with a place OSM maps as fully or partly wheelchair accessible, plus anything you can do at home, and the Explore card and drive filter then use only those places. Each place in an activity's list says whether it's wheelchair accessible. Migration 9 stores the access and hours in the catalog tables and downloads each city again to pick them up. Places without data are left out of the filter, never marked inaccessible. Accessible filter PR.
+- [x] **Show opening hours where known** · Data. "Open now" or "Closed now" on each place in an activity's list, read from OSM's `opening_hours` on the phone (`src/data/hours.ts`). It reads about 94% of the hours in the catalog; month ranges, holidays and "by appointment" show nothing rather than a guess, and places without hours are never hidden. Uses the phone's clock, so on a trip in another time zone it follows the phone. Accessible filter PR.
 - [x] **Opt-in, privacy-friendly analytics** · Growth. "Share anonymous usage counts" in Settings, off by default. Events (`app_open`, `plan_made`, `done_saved`, `memory_saved`, `card_shared`, `invite_sent`) go to Supabase's insert-only `app_events` with the platform, app version and days since first open, which is enough for activation and week 2 and 4 retention without a device id. Our own table instead of TelemetryDeck or Aptabase, so no third party and no extra account. SQL to read them is in `server/web/README.md`. Growth PR.
 - [x] **Round the location on the phone** · Backend. The drive-time request now sends a location rounded to about a kilometer, instead of relying on the Worker to round it. Growth PR.
 - [x] **Clean up the repo** · Tooling. Removed the finished SwiftUI parity checklist (`design/parity.md`) and the leftover Xcode, Swift Package Manager, CocoaPods, Carthage and Fastlane rules in `.gitignore`. The ignore file now also covers Overture extracts, test coverage and tool caches. No app changes.
