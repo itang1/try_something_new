@@ -1,15 +1,20 @@
 import { useMemo } from 'react';
+import { useLocalSearchParams } from 'expo-router';
 import { RecapCard } from '@/components/recap-card';
 import { ShareSheet } from '@/components/share-sheet';
 import { memoryItems } from '@/data/memories';
-import { lastMonthRecap } from '@/data/milestones';
+import { lastMonthRecap, yearRecap } from '@/data/milestones';
 import { loadMemories } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
 
-/** Last month in review as a shareable card, from the recap on Memories. */
+/** Last month, or the year, in review as a shareable card, from the recaps on Memories. */
 export default function ShareRecapSheet() {
+  const { period } = useLocalSearchParams<{ period?: 'month' | 'year' }>();
   const { findAnyEntry } = useAppState();
-  const recap = useMemo(() => lastMonthRecap(memoryItems(loadMemories(), findAnyEntry)), [findAnyEntry]);
+  const recap = useMemo(() => {
+    const items = memoryItems(loadMemories(), findAnyEntry);
+    return period === 'year' ? yearRecap(items) : lastMonthRecap(items);
+  }, [findAnyEntry, period]);
   if (!recap) return null;
 
   return (

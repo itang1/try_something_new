@@ -4,7 +4,7 @@ import { Stack, useRouter } from 'expo-router';
 import BackupIcon from '@expo/material-symbols/backup.xml';
 import { restoreBackup, shareBackup } from '@/data/backup';
 import { memoryItems, type MemoryItem } from '@/data/memories';
-import { lastMonthRecap, milestones, milestonesToShow } from '@/data/milestones';
+import { lastMonthRecap, milestones, milestonesToShow, yearRecap } from '@/data/milestones';
 import { keptPhotoUri } from '@/data/photos';
 import { loadMemories, type Rating } from '@/data/storage';
 import { useAppState } from '@/state/app-state';
@@ -55,13 +55,17 @@ function Stats({ items }: { items: Item[] }) {
     .slice(0, 5);
   const most = kinds[0]?.count ?? 1;
 
-  const recap = lastMonthRecap(items, now);
+  // In December and early January the year in review comes first, then last month's.
+  const recaps = [
+    { period: 'year' as const, recap: yearRecap(items, now) },
+    { period: 'month' as const, recap: lastMonthRecap(items, now) },
+  ].flatMap(({ period, recap }) => (recap ? [{ period, recap }] : []));
   const { earned, next } = milestonesToShow(milestones(items));
 
   return (
     <View style={styles.stats}>
-      {recap && (
-        <View style={[styles.recap, { backgroundColor: colors.accentSoft }]}>
+      {recaps.map(({ period, recap }) => (
+        <View key={period} style={[styles.recap, { backgroundColor: colors.accentSoft }]}>
           <View accessible>
             <Text style={[styles.recapTitle, { color: colors.accent }]}>{recap.label} in review</Text>
             <Text style={[styles.recapBody, { color: colors.label }]}>
@@ -72,14 +76,14 @@ function Stats({ items }: { items: Item[] }) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={`Share your ${recap.label} as a card`}
-            onPress={() => router.push('/share/recap')}
+            onPress={() => router.push({ pathname: '/share/recap', params: { period } })}
             style={({ pressed }) => [styles.recapShare, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
           >
             <Icon name="ios_share" size={16} color={colors.onAccent} />
             <Text style={[styles.recapShareText, { color: colors.onAccent }]}>Share your {recap.label}</Text>
           </Pressable>
         </View>
-      )}
+      ))}
       <View style={styles.tiles}>
         <Tile value={thisMonth} label="This month" />
         <Tile value={loved} label="Loved" />
