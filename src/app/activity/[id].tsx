@@ -22,7 +22,7 @@ export default function ActivitySheet() {
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { city, entries, origin, driveTimes, isDone, savedIds, toggleSaved, visitedPlaceIds, toggleVisited, plans, findEntry, removeCustom } =
+  const { city, entries, origin, travelTimes, isDone, savedIds, toggleSaved, visitedPlaceIds, toggleVisited, plans, findEntry, removeCustom } =
     useAppState();
   const markDone = useMarkDone();
   // Links from the website and old shares carry an activity id, which may have been renamed or merged since, and
@@ -40,7 +40,7 @@ export default function ActivitySheet() {
   }
 
   const sub = subcategory(entry.subcategory);
-  const places = placesByDistance(entry, origin, driveTimes);
+  const places = placesByDistance(entry, origin, travelTimes);
   const done = isDone(entry.id);
   const saved = savedIds.has(entry.id);
   const visitedCount = places.filter(({ place }) => visitedPlaceIds.has(place.id)).length;
@@ -211,7 +211,7 @@ export default function ActivitySheet() {
                       icon="directions"
                       label="Go"
                       accessibilityLabel={`Directions to ${place.name}`}
-                      onPress={() => openDirections(place)}
+                      onPress={() => openDirections(place, travelTimes.mode)}
                     />
                   </View>
                 );

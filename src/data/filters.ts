@@ -1,5 +1,5 @@
 import { LEVELS, type Entry, type Level, type Setting } from './catalog';
-import { driveMinutes, formatMinutes, type Coordinate, type DriveTimes } from './drive';
+import { driveMinutes, formatMinutes, type Coordinate, type TravelTimes } from './drive';
 import type { IconName } from '@/icons/paths';
 
 /** Going out to a place, or staying in alone or with friends. */
@@ -74,7 +74,7 @@ export function matchesFilters(
   entry: Entry,
   filters: Filters,
   origin: Coordinate | null,
-  times?: DriveTimes,
+  times?: TravelTimes,
 ): boolean {
   if (filters.subcategories.length && !filters.subcategories.includes(entry.subcategory)) return false;
   if (filters.where && !matchesWhere(entry, filters.where)) return false;

@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { inSeason, LEVELS, type Level } from '@/data/catalog';
-import { formatMinutes } from '@/data/drive';
+import { formatMinutes, travelMode } from '@/data/drive';
 import {
   COMPANY_OPTIONS,
   COST_OPTIONS,
@@ -25,11 +25,12 @@ const toggle = <T,>(list: T[], item: T) => (list.includes(item) ? list.filter((x
 export default function FiltersSheet() {
   const colors = useColors();
   const router = useRouter();
-  const { entries, origin, driveTimes, filters, setFilters, hiddenIds, unhide, isDone } = useAppState();
+  const { entries, origin, travelTimes, filters, setFilters, hiddenIds, unhide, isDone } = useAppState();
+  const travel = travelMode(travelTimes.mode);
   const subcategories = [...new Set(entries.map((e) => e.subcategory))].sort();
   const hidden = entries.filter((e) => hiddenIds.has(e.id));
   const matchCount = entries.filter(
-    (e) => !hiddenIds.has(e.id) && !isDone(e.id) && inSeason(e) && matchesFilters(e, filters, origin, driveTimes),
+    (e) => !hiddenIds.has(e.id) && !isDone(e.id) && inSeason(e) && matchesFilters(e, filters, origin, travelTimes),
   ).length;
 
   const update = (next: Partial<Filters>) => {
@@ -118,12 +119,12 @@ export default function FiltersSheet() {
           ))}
         </Group>
 
-        <Group title="Drive" hint={origin ? undefined : 'Set your location to filter by drive time.'}>
+        <Group title={travel.label} hint={origin ? undefined : 'Set your location to filter by travel time.'}>
           {DRIVE_OPTIONS.map((minutes) => (
             <FilterChip
               key={minutes}
               title={`Under ${formatMinutes(minutes)}`}
-              icon="directions_car"
+              icon={travel.icon}
               color={colors.accent}
               selected={filters.maxDrive === minutes}
               onPress={() => update({ maxDrive: filters.maxDrive === minutes ? null : minutes })}

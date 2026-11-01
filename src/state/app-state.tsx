@@ -17,10 +17,10 @@ import {
   needsDownload,
   refreshCatalog,
 } from '@/data/cities';
-import type { Coordinate, DriveTimes } from '@/data/drive';
+import { NO_TIMES, type Coordinate, type TravelMode, type TravelTimes } from '@/data/drive';
 import { NO_FILTERS, type Filters } from '@/data/filters';
 import { useSetting } from './use-setting';
-import { cachedDriveTimes, NEAREST_TIMED, refreshDriveTimes } from '@/data/routing';
+import { cachedTravelTimes, NEAREST_TIMED, refreshTravelTimes } from '@/data/routing';
 import {
   deleteCustomActivity,
   loadCustomActivities,
@@ -40,7 +40,7 @@ import {
 
 export type HomeLocation = Coordinate & { name: string };
 
-/** Visiting another city. Drive times start from where you're staying, once it's set. */
+/** Visiting another city. Travel times start from where you're staying, once it's set. */
 export type Trip = { cityId: string; start: HomeLocation | null };
 
 type AppState = {
@@ -57,10 +57,13 @@ type AppState = {
   removeCustom: (id: string) => void;
   home: HomeLocation | null;
   trip: Trip | null;
-  /** Where drive times start. */
+  /** Where travel times start. */
   origin: HomeLocation | null;
-  /** Real drive minutes from the origin, by place id, as far as they're known. */
-  driveTimes: DriveTimes;
+  /** How the person gets around: drive, walk, bike or transit. */
+  travelMode: TravelMode;
+  setTravelMode: (mode: TravelMode) => void;
+  /** Real minutes from the origin for the travel mode, by place id, as far as they're known. */
+  travelTimes: TravelTimes;
   /** Sets the trip's starting point during a trip, or home otherwise. Typed and picked places are remembered. */
   setLocation: (location: HomeLocation, options?: { remember?: boolean }) => void;
   startTrip: (cityId: string) => void;
@@ -133,6 +136,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [customs, setCustoms] = useState(loadCustomActivities);
   const [filters, setFilters, reloadFilters] = useSetting<Filters>('exploreFilters', NO_FILTERS);
   const [weekendNudge, setWeekendNudge] = useSetting('weekendNudge', false);
+  const [travelMode, setTravelMode, reloadTravelMode] = useSetting<TravelMode>('travelMode', 'drive');
   const [planReminders, setPlanReminders] = useSetting('planReminders', true);
   const savedIds = useMemo(() => new Set(saved), [saved]);
   const hiddenIds = useMemo(() => new Set(hidden), [hidden]);
@@ -156,22 +160,25 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const origin = trip ? trip.start : home;
   const lat = origin?.latitude;
   const lng = origin?.longitude;
-  const cachedTimes = useMemo<DriveTimes>(
-    () => (lat != null && lng != null ? cachedDriveTimes({ latitude: lat, longitude: lng }) : new Map()),
-    [lat, lng],
+  const cachedTimes = useMemo<TravelTimes>(
+    () =>
+      lat != null && lng != null
+        ? cachedTravelTimes({ latitude: lat, longitude: lng }, travelMode)
+        : { ...NO_TIMES, mode: travelMode },
+    [lat, lng, travelMode],
   );
-  const timesKey = `${lat},${lng},${city.id}`;
-  const [fetchedTimes, setFetchedTimes] = useState<{ key: string; times: DriveTimes } | null>(null);
+  const timesKey = `${lat},${lng},${city.id},${travelMode}`;
+  const [fetchedTimes, setFetchedTimes] = useState<{ key: string; times: TravelTimes } | null>(null);
   useEffect(() => {
     if (lat == null || lng == null) return;
     const controller = new AbortController();
     const from = { latitude: lat, longitude: lng };
-    refreshDriveTimes(from, nearestPlaces(city.id, from, NEAREST_TIMED), cachedTimes, controller.signal)
+    refreshTravelTimes(from, nearestPlaces(city.id, from, NEAREST_TIMED), cachedTimes, controller.signal)
       .then((times) => setFetchedTimes({ key: timesKey, times }))
       .catch(() => {});
     return () => controller.abort();
   }, [lat, lng, city, cachedTimes, timesKey]);
-  const driveTimes = fetchedTimes?.key === timesKey ? fetchedTimes.times : cachedTimes;
+  const travelTimes = fetchedTimes?.key === timesKey ? fetchedTimes.times : cachedTimes;
   const entries = useMemo(
     () =>
       [...entriesForCity(city), ...customs.filter((c) => c.cityId === city.id).map(customEntry)].sort((a, b) =>
@@ -304,11 +311,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setSaved(loadList('saved'));
     setHidden(loadList('hidden'));
     reloadFilters();
+    reloadTravelMode();
     setDoneIds(loadDoneIds());
     setVisitedPlaceIds(loadVisitedPlaceIds());
     setAllPlans(loadPlans());
     setCustoms(loadCustomActivities());
-  }, [reloadHome, reloadTrip, reloadRecentPlaces, reloadCityChoice, reloadRangeKm, reloadFilters]);
+  }, [reloadHome, reloadTrip, reloadRecentPlaces, reloadCityChoice, reloadRangeKm, reloadFilters, reloadTravelMode]);
 
   const isDone = useCallback((activityId: string) => doneIds.has(activityId), [doneIds]);
 
@@ -359,7 +367,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         home,
         trip,
         origin,
-        driveTimes,
+        travelTimes,
         setLocation,
         startTrip,
         endTrip,
@@ -384,6 +392,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         unhide,
         weekendNudge,
         setWeekendNudge,
+        travelMode,
+        setTravelMode,
         filters,
         setFilters,
         planReminders,

@@ -28,7 +28,7 @@ describe('filters', () => {
     const filters = { ...NO_FILTERS, maxDrive: 30 };
     expect(matchesFilters(archery, filters, null)).toBe(true);
     expect(matchesFilters(archery, filters, origin)).toBe(false);
-    expect(matchesFilters(archery, filters, origin, new Map([['range', 25]]))).toBe(true);
+    expect(matchesFilters(archery, filters, origin, { mode: 'drive', minutes: new Map([['range', 25]]) })).toBe(true);
   });
 
   it('keeps ideas that work anywhere when going out, and inside any drive limit', () => {

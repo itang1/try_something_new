@@ -35,9 +35,9 @@ export default function DoneSheet() {
   const colors = useColors();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { city, origin, driveTimes, doneIds, visitedPlaceIds, toggleVisited, plans, entries, findEntry, filters } = useAppState();
+  const { city, origin, travelTimes, doneIds, visitedPlaceIds, toggleVisited, plans, entries, findEntry, filters } = useAppState();
   const entry = findEntry(id);
-  const places = entry ? placesByDistance(entry, origin, driveTimes) : [];
+  const places = entry ? placesByDistance(entry, origin, travelTimes) : [];
   const spots = entry && entry.kind === 'activity' ? spotsFor(entry, places.slice(0, 6).map((p) => p.place)) : [];
   const home = spots.find((s) => isHomeSpot(s.id));
   const [placeId, setPlaceId] = useState<string | null>(

@@ -17,6 +17,7 @@ import {
 } from '@/data/account';
 import { restoreBackup, shareBackup } from '@/data/backup';
 import { CREDITS, openCredit } from '@/data/credits';
+import { TRAVEL_MODES } from '@/data/drive';
 import { allowNudges } from '@/data/nudge';
 import { canReport, sendFeedback } from '@/data/report';
 import { privacyLink } from '@/data/web-links';
@@ -32,7 +33,7 @@ const PRIVACY_URL = privacyLink();
 export default function SettingsSheet() {
   const colors = useColors();
   const router = useRouter();
-  const { weekendNudge, setWeekendNudge, planReminders, setPlanReminders, reload } = useAppState();
+  const { weekendNudge, setWeekendNudge, planReminders, setPlanReminders, travelMode, setTravelMode, reload } = useAppState();
   const [shareCounts, setShareCounts] = useSetting(ANALYTICS_SETTING, false);
   const showToast = useToast();
   const version = Constants.expoConfig?.version;
@@ -142,6 +143,35 @@ export default function SettingsSheet() {
           <Icon name="close" size={18} color={colors.secondary} />
         </Pressable>
       </View>
+
+      <Text style={[styles.section, { color: colors.secondary }]}>How do you get around?</Text>
+      <View style={[styles.list, { backgroundColor: colors.card }]} accessibilityRole="radiogroup">
+        {TRAVEL_MODES.map((mode, i) => {
+          const selected = mode.id === travelMode;
+          return (
+            <Pressable
+              key={mode.id}
+              onPress={() => setTravelMode(mode.id)}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: selected }}
+              style={({ pressed }) => [
+                styles.row,
+                i > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.separator },
+                { opacity: pressed ? 0.6 : 1 },
+              ]}
+            >
+              <Icon name={mode.icon} size={22} color={colors.accent} />
+              <Text style={[styles.name, styles.grow, { color: colors.label }]}>{mode.label}</Text>
+              {selected && <Icon name="check" size={20} color={colors.accent} />}
+            </Pressable>
+          );
+        })}
+      </View>
+      <Text style={[styles.footnote, { color: colors.secondary }]}>
+        {travelMode === 'transit'
+          ? 'Transit times are estimates from the distance, since bus and train times aren’t available yet. Directions open with transit in your maps app.'
+          : 'Times, the time filter and directions follow this. The closest places get real times, the rest are estimates.'}
+      </Text>
 
       <Text style={[styles.section, { color: colors.secondary }]}>Reminders</Text>
       <View style={[styles.list, { backgroundColor: colors.card }]}>

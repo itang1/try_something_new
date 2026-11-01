@@ -35,7 +35,7 @@ export const OPENROUTESERVICE: Credit = {
   id: 'ors',
   name: 'openrouteservice',
   notice: '© openrouteservice.org by HeiGIT',
-  use: 'Drive times from your home to each place.',
+  use: 'Drive, walking and cycling times from your home to each place.',
   license: 'Terms of openrouteservice',
   url: 'https://openrouteservice.org/terms-of-service/',
 };

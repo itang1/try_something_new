@@ -39,7 +39,7 @@ export default function MapScreen() {
   const colors = useColors();
   const router = useRouter();
   const headerHeight = useHeaderHeight();
-  const { city, entries, origin, driveTimes, doneIds, savedIds } = useAppState();
+  const { city, entries, origin, travelTimes, doneIds, savedIds } = useAppState();
   const mapRef = useRef<MapView>(null);
   const [status, setStatus] = useSetting<Status>('mapStatus', 'All');
   // The kind remembers its city, so switching cities clears it without an effect. Both are kept between launches.
@@ -214,7 +214,7 @@ export default function MapScreen() {
           >
             <PlaceCard
               place={selected}
-              minutes={origin ? minutesTo(selected, origin, driveTimes) : null}
+              minutes={origin ? minutesTo(selected, origin, travelTimes) : null}
               doneIds={doneIds}
               onOpen={(id) => router.push(`/activity/${id}`)}
             />
@@ -281,6 +281,7 @@ function PlaceCard({
   onOpen: (id: string) => void;
 }) {
   const colors = useColors();
+  const { travelMode } = useAppState();
   const lead = place.entries[0];
   return (
     <View style={styles.cardBody}>
@@ -320,7 +321,7 @@ function PlaceCard({
 
       <Pressable
         accessibilityRole="button"
-        onPress={() => openDirections(place)}
+        onPress={() => openDirections(place, travelMode)}
         style={({ pressed }) => [styles.directions, { backgroundColor: colors.accent, opacity: pressed ? 0.8 : 1 }]}
       >
         <Icon name="directions" size={20} color={colors.onAccent} />

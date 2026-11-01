@@ -41,7 +41,7 @@ type Row = { activity: Entry; minutes: number | null; progress: PlaceProgress | 
 export default function ChecklistScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { city, entries, origin, driveTimes, doneIds, savedIds, visitedPlaceIds, plans } = useAppState();
+  const { city, entries, origin, travelTimes, doneIds, savedIds, visitedPlaceIds, plans } = useAppState();
   const toggleDone = useToggleWithUndo();
   const [status, setStatus] = useSetting<Status>('checklistStatus', 'All');
   const [sort, setSort] = useSetting<Sort>('checklistSort', 'Name');
@@ -74,7 +74,7 @@ export default function ChecklistScreen() {
     const result: Row[] = cityActivities
       .filter((a) => matchesStatus([a.id], status, doneIds, savedIds))
       .filter(matchesQuery)
-      .map((a) => ({ activity: a, minutes: driveMinutes(a, origin, driveTimes), progress: progressOf(a) }));
+      .map((a) => ({ activity: a, minutes: driveMinutes(a, origin, travelTimes), progress: progressOf(a) }));
     const byName = (x: Row, y: Row) => x.activity.name.localeCompare(y.activity.name);
     const compare: Record<Sort, (x: Row, y: Row) => number> = {
       Name: byName,
@@ -91,7 +91,7 @@ export default function ChecklistScreen() {
       planDay: (id) => plans.get(id)?.day,
       kindLabel: (id) => subcategory(id).label,
     });
-  }, [cityActivities, status, doneIds, savedIds, visitedPlaceIds, search, origin, driveTimes, sort, grouping, city.name, plans]);
+  }, [cityActivities, status, doneIds, savedIds, visitedPlaceIds, search, origin, travelTimes, sort, grouping, city.name, plans]);
 
   // A search, or a single section, shows everything; otherwise folded kinds hide their rows.
   const showAll = searching || sections.length === 1;
@@ -105,6 +105,7 @@ export default function ChecklistScreen() {
         done={doneIds.has(item.activity.id)}
         saved={savedIds.has(item.activity.id)}
         minutes={item.minutes}
+        mode={travelTimes.mode}
         hint={entryHint(item.activity)}
         progress={item.progress}
         planned={plans.has(item.activity.id) ? formatDay(plans.get(item.activity.id)!.day) : undefined}
@@ -112,7 +113,7 @@ export default function ChecklistScreen() {
         onOpen={(id) => router.push(`/activity/${id}`)}
       />
     ),
-    [doneIds, savedIds, toggleDone, router, plans],
+    [doneIds, savedIds, toggleDone, router, plans, travelTimes.mode],
   );
 
   const header = (
