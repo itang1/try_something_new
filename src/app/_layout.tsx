@@ -89,6 +89,15 @@ function RootLayout() {
                 }}
               />
               <Stack.Screen
+                name="report"
+                options={{
+                  presentation: 'formSheet',
+                  sheetAllowedDetents: [1],
+                  sheetGrabberVisible: true,
+                  contentStyle: { backgroundColor: colors.background },
+                }}
+              />
+              <Stack.Screen
                 name="add"
                 options={{
                   presentation: 'formSheet',

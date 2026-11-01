@@ -5,6 +5,7 @@ import * as Haptics from 'expo-haptics';
 import { inSeason, LEVELS, type Level } from '@/data/catalog';
 import { formatMinutes, travelMode } from '@/data/drive';
 import {
+  ACCESSIBLE_OPTION,
   COMPANY_OPTIONS,
   COST_OPTIONS,
   DRIVE_OPTIONS,
@@ -104,6 +105,16 @@ export default function FiltersSheet() {
               onPress={() => update({ company: filters.company === company ? null : company })}
             />
           ))}
+        </Group>
+
+        <Group title="Access" hint="Places mapped as wheelchair accessible in OpenStreetMap, and ideas to do at home.">
+          <FilterChip
+            title={ACCESSIBLE_OPTION.label}
+            icon={ACCESSIBLE_OPTION.icon}
+            color={colors.accent}
+            selected={!!filters.accessible}
+            onPress={() => update({ accessible: !filters.accessible })}
+          />
         </Group>
 
         <Group title="How new">

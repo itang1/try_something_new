@@ -19,7 +19,7 @@ import { restoreBackup, shareBackup } from '@/data/backup';
 import { CREDITS, openCredit } from '@/data/credits';
 import { TRAVEL_MODES } from '@/data/drive';
 import { allowNudges } from '@/data/nudge';
-import { canReport, sendFeedback } from '@/data/report';
+import { canReport, canSendFeedback, sendFeedback } from '@/data/report';
 import { privacyLink } from '@/data/web-links';
 import { useAppState } from '@/state/app-state';
 import { useSetting } from '@/state/use-setting';
@@ -35,6 +35,7 @@ export default function SettingsSheet() {
   const router = useRouter();
   const { weekendNudge, setWeekendNudge, planReminders, setPlanReminders, travelMode, setTravelMode, reload } = useAppState();
   const [shareCounts, setShareCounts] = useSetting(ANALYTICS_SETTING, false);
+  const [weatherAware, setWeatherAware] = useSetting('weatherAware', true);
   const showToast = useToast();
   const version = Constants.expoConfig?.version;
 
@@ -203,6 +204,23 @@ export default function SettingsSheet() {
         </View>
       </View>
 
+      <Text style={[styles.section, { color: colors.secondary }]}>Suggestions</Text>
+      <View style={[styles.list, { backgroundColor: colors.card }]}>
+        <View style={styles.row}>
+          <Icon name="rainy" size={22} color={colors.accent} />
+          <View style={styles.grow}>
+            <Text style={[styles.name, { color: colors.label }]}>Weather-aware ideas</Text>
+            <Text style={[styles.use, { color: colors.secondary }]}>More indoor and at-home ideas on wet, very hot or freezing days</Text>
+          </View>
+          <Switch
+            value={weatherAware}
+            onValueChange={setWeatherAware}
+            trackColor={{ true: colors.accent }}
+            accessibilityLabel="Weather-aware ideas"
+          />
+        </View>
+      </View>
+
       {accountsAvailable() && session !== undefined && (
         <>
           <Text style={[styles.section, { color: colors.secondary }]}>Back up and sync</Text>
@@ -336,7 +354,7 @@ export default function SettingsSheet() {
         {canReport ? ' Places can be out of date, and the flag next to a place reports it.' : ''}
       </Text>
 
-      {canReport && (
+      {canSendFeedback && (
         <>
           <Text style={[styles.section, { color: colors.secondary }]}>Feedback</Text>
           <View style={[styles.list, { backgroundColor: colors.card }]}>

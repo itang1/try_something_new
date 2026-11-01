@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { ACTIVITY_ALIASES, anywhereSpotId, AT_HOME, entryHint, homeSpotId, kindsOf, LEVELS, otherWays, seasonLabel } from '@/data/catalog';
+import { accessLabel, ACTIVITY_ALIASES, anywhereSpotId, AT_HOME, entryHint, homeSpotId, kindsOf, LEVELS, otherWays, seasonLabel } from '@/data/catalog';
 import { formatDay } from '@/data/days';
 import { openDirections, searchNearby } from '@/data/directions';
 import { inviteFriend } from '@/data/invite';
 import { placeSources } from '@/data/credits';
-import { canReport, reportPlace } from '@/data/report';
+import { canReport, canReportInApp, emailPlaceReport } from '@/data/report';
 import { formatMinutes, placesByDistance } from '@/data/drive';
+import { openLabel } from '@/data/hours';
 import { useAppState } from '@/state/app-state';
 import { useMarkDone } from '@/state/use-mark-done';
 import { subcategory, useColors } from '@/theme';
@@ -180,6 +181,8 @@ export default function ActivitySheet() {
                   minutes != null && `${formatMinutes(minutes)} away`,
                   place.cost && place.cost !== entry.cost && place.cost,
                   place.duration && place.duration !== entry.duration && place.duration,
+                  openLabel(place),
+                  accessLabel(place),
                 ].filter(Boolean);
                 return (
                   <View
@@ -199,7 +202,11 @@ export default function ActivitySheet() {
                     {canReport && (
                       <Pressable
                         accessibilityRole="button"
-                        onPress={() => reportPlace(place, entry, city.name)}
+                        onPress={() =>
+                          canReportInApp
+                            ? router.push({ pathname: '/report', params: { place: place.id, entry: entry.id } })
+                            : emailPlaceReport(place, entry, city.name)
+                        }
                         hitSlop={8}
                         accessibilityLabel={`Report a problem with ${place.name}`}
                         style={({ pressed }) => ({ opacity: pressed ? 0.5 : 1 })}
