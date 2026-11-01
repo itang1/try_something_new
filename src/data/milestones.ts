@@ -58,24 +58,41 @@ export type MonthRecap = {
   picks: { id: string; name: string; icon: IconName; subcategory: string; loved: boolean }[];
 };
 
-/** Last month in review, shown in the first week of the next one. Null otherwise, or when nothing was tried. */
-export function lastMonthRecap(items: Pick<MemoryItem, 'at' | 'entry' | 'rating'>[], now = new Date()): MonthRecap | null {
-  if (now.getDate() > 7) return null;
-  const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const end = new Date(now.getFullYear(), now.getMonth(), 1);
-  const month = items.filter((i) => {
+type RecapItem = Pick<MemoryItem, 'at' | 'entry' | 'rating'>;
+
+/** What was tried from `start` up to `end`, summed up. Null when nothing was. */
+function recapOf(items: RecapItem[], start: Date, end: Date, label: string): MonthRecap | null {
+  const period = items.filter((i) => {
     const t = new Date(i.at);
     return t >= start && t < end;
   });
-  if (!month.length) return null;
+  if (!period.length) return null;
   return {
-    label: start.toLocaleDateString('en-US', { month: 'long' }),
-    tried: month.length,
-    kinds: new Set(month.map((i) => i.entry.subcategory)).size,
-    loved: month.filter((i) => i.rating === 'loved').length,
-    favorite: month.find((i) => i.rating === 'loved')?.entry.name,
-    picks: [...month]
+    label,
+    tried: period.length,
+    kinds: new Set(period.map((i) => i.entry.subcategory)).size,
+    loved: period.filter((i) => i.rating === 'loved').length,
+    favorite: period.find((i) => i.rating === 'loved')?.entry.name,
+    picks: [...period]
       .sort((a, b) => a.at.localeCompare(b.at))
       .map((i) => ({ id: i.entry.id, name: i.entry.name, icon: i.entry.icon, subcategory: i.entry.subcategory, loved: i.rating === 'loved' })),
   };
+}
+
+/** Last month in review, shown in the first week of the next one. Null otherwise, or when nothing was tried. */
+export function lastMonthRecap(items: RecapItem[], now = new Date()): MonthRecap | null {
+  if (now.getDate() > 7) return null;
+  const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const end = new Date(now.getFullYear(), now.getMonth(), 1);
+  return recapOf(items, start, end, start.toLocaleDateString('en-US', { month: 'long' }));
+}
+
+/**
+ * The year in review: all through December for the year so far, and in the first week of January for the year just
+ * gone. Null the rest of the year, or when nothing was tried.
+ */
+export function yearRecap(items: RecapItem[], now = new Date()): MonthRecap | null {
+  const year = now.getMonth() === 11 ? now.getFullYear() : now.getMonth() === 0 && now.getDate() <= 7 ? now.getFullYear() - 1 : null;
+  if (year == null) return null;
+  return recapOf(items, new Date(year, 0, 1), new Date(year + 1, 0, 1), String(year));
 }
