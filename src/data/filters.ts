@@ -1,4 +1,5 @@
 import { isAccessible, LEVELS, type Entry, type Level, type Setting } from './catalog';
+import { collection, inCollection, type CollectionId } from './collections';
 import { driveMinutes, formatMinutes, type Coordinate, type TravelTimes } from './drive';
 import type { IconName } from '@/icons/paths';
 
@@ -10,6 +11,8 @@ export type Company = 'solo' | 'together' | 'kids';
 
 /** Explore's filters. Empty lists and nulls mean "any". */
 export type Filters = {
+  /** A themed collection, like date ideas. Missing from filters saved before it existed. */
+  collection?: CollectionId | null;
   subcategories: string[];
   /** Missing from filters saved before it existed. */
   where?: Where | null;
@@ -25,6 +28,7 @@ export type Filters = {
 };
 
 export const NO_FILTERS: Filters = {
+  collection: null,
   subcategories: [],
   where: null,
   setting: null,
@@ -91,6 +95,7 @@ export function matchesFilters(
   origin: Coordinate | null,
   times?: TravelTimes,
 ): boolean {
+  if (filters.collection && !inCollection(entry, filters.collection)) return false;
   if (filters.subcategories.length && !filters.subcategories.includes(entry.subcategory)) return false;
   if (filters.where && !matchesWhere(entry, filters.where)) return false;
   if (filters.setting && entry.setting && entry.setting !== filters.setting) return false;
@@ -114,6 +119,7 @@ export function matchesFilters(
 /** Short labels for the active filters, like "Easy" or "Under 30 min away". */
 export function describeFilters(filters: Filters, subcategoryLabel: (id: string) => string): string[] {
   return [
+    filters.collection && collection(filters.collection)?.label,
     ...filters.subcategories.map(subcategoryLabel),
     filters.where && WHERE_OPTIONS.find((w) => w.where === filters.where)?.label,
     filters.setting && SETTING_OPTIONS.find((s) => s.setting === filters.setting)?.label,

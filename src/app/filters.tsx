@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { inSeason, LEVELS, type Level } from '@/data/catalog';
+import { COLLECTIONS } from '@/data/collections';
 import { formatMinutes, travelMode } from '@/data/drive';
 import {
   ACCESSIBLE_OPTION,
@@ -54,6 +55,19 @@ export default function FiltersSheet() {
             <Icon name="close" size={18} color={colors.secondary} />
           </Pressable>
         </View>
+
+        <Group title="Collections">
+          {COLLECTIONS.map(({ id, label, icon }) => (
+            <FilterChip
+              key={id}
+              title={label}
+              icon={icon}
+              color={colors.accent}
+              selected={filters.collection === id}
+              onPress={() => update({ collection: filters.collection === id ? null : id })}
+            />
+          ))}
+        </Group>
 
         <Group title="Kind">
           {subcategories.map((id) => (

@@ -12,7 +12,8 @@ import { allowNudges } from '@/data/nudge';
 import { ANYWHERE_ID } from '@/data/cities';
 import { placesByDistance, type TravelMode } from '@/data/drive';
 import { CARD_PLACES, defaultWhere, planSpot, whereOptions, type WhereOption } from '@/data/where';
-import { accessibleEntry, describeFilters, matchesFilters, NO_FILTERS } from '@/data/filters';
+import { COLLECTIONS, type CollectionId } from '@/data/collections';
+import { accessibleEntry, describeFilters, matchesFilters, NO_FILTERS, type Filters } from '@/data/filters';
 import { loadRatings, readSetting, writeSetting } from '@/data/storage';
 import { learnTaste, tasteWeight, weightedPick, type Rated } from '@/data/taste';
 import { MOOD_LABELS, poolForWeather, type Mood } from '@/data/weather';
@@ -20,7 +21,7 @@ import { useAppState } from '@/state/app-state';
 import { readable, readableOn, subcategory, useColors } from '@/theme';
 import { settingsButton, toolbarIcon } from '@/components/header-items';
 import { GradientIcon, Icon } from '@/components/icon';
-import { MetadataTag } from '@/components/chips';
+import { FilterChip, MetadataTag } from '@/components/chips';
 import { LocationControl } from '@/components/location-control';
 import { SwipeCard } from '@/components/swipe-card';
 import { useMarkDone } from '@/state/use-mark-done';
@@ -58,14 +59,14 @@ export default function ExploreScreen() {
   // Rain, heat or a hard freeze where you are, or in the city when no location is set. "Your area" has no center to ask about.
   const weather = useWeatherMood(origin ?? (city.id === ANYWHERE_ID ? null : { latitude: city.lat, longitude: city.lng }));
 
-  const showAnother = (exclude?: string) => {
+  const showAnother = (exclude?: string, using: Filters = filters) => {
     const current = exclude ?? activity?.id;
     const allowed = entries.filter(
-      (e) => e.id !== current && !hiddenIds.has(e.id) && inSeason(e) && matchesFilters(e, filters, origin, travelTimes),
+      (e) => e.id !== current && !hiddenIds.has(e.id) && inSeason(e) && matchesFilters(e, using, origin, travelTimes),
     );
     const fresh = allowed.filter((e) => !isDone(e.id));
     // Early on, skip the stretches so the first few tries are easy wins, unless levels were picked on purpose.
-    const warmingUp = !filters.levels.length && entries.filter((e) => isDone(e.id)).length < 3;
+    const warmingUp = !using.levels.length && entries.filter((e) => isDone(e.id)).length < 3;
     const gentle = warmingUp ? fresh.filter((e) => e.level !== 'stretch') : fresh;
     const unweathered = gentle.length ? gentle : fresh.length ? fresh : allowed;
     const mood = weatherAware() ? weather : null;
@@ -96,6 +97,13 @@ export default function ExploreScreen() {
   const soonEntry = soonPlan && findEntry(soonPlan.entryId);
   const soonPlace = soonEntry?.places.find((p) => p.id === soonPlan?.placeId)?.name ?? soonPlan?.placeName;
 
+  // Picking a collection shows an idea from it right away; picking it again goes back to everything.
+  const pickCollection = (id: CollectionId) => {
+    const next = { ...filters, collection: filters.collection === id ? null : id };
+    setFilters(next);
+    showAnother(undefined, next);
+  };
+
   const activeFilters = describeFilters(filters, (id) => subcategory(id).label);
   // Asked once, and only after someone has saved or done something, so it never comes up cold.
   const offerNudge = !weekendNudge && !nudgeAsked && (savedIds.size > 0 || entries.some((e) => isDone(e.id)));
@@ -122,6 +130,25 @@ export default function ExploreScreen() {
         contentContainerStyle={styles.content}
       >
         <LocationControl />
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.collections}
+          contentContainerStyle={styles.collectionsRow}
+          accessibilityLabel="Collections"
+        >
+          {COLLECTIONS.map(({ id, label, icon }) => (
+            <FilterChip
+              key={id}
+              title={label}
+              icon={icon}
+              color={colors.accent}
+              selected={filters.collection === id}
+              onPress={() => pickCollection(id)}
+            />
+          ))}
+        </ScrollView>
 
         {activeFilters.length > 0 && (
           <View style={[styles.filterBar, { backgroundColor: colors.card }]}>
@@ -616,6 +643,8 @@ const styles = StyleSheet.create({
   weatherText: { fontSize: 13 },
   screen: { flex: 1 },
   content: { ...readable, flexGrow: 1, padding: 16, gap: 16 },
+  collections: { marginHorizontal: -16, flexGrow: 0 },
+  collectionsRow: { gap: 8, paddingHorizontal: 16 },
   middle: { flex: 1, justifyContent: 'center' },
   // The scroll view runs behind the footer, so a centered card would slip under it.
   top: { justifyContent: 'flex-start' },

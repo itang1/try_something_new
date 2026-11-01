@@ -53,8 +53,8 @@ In order. These are the ones to start a thread on.
 1. [~] **Optional account with cross-device sync** · Backend · L. Backend, sync client, sign-in and Back up and sync in Settings are in (PR #32). Sync automatically is in too (Auto sync PR). Left: **Turn on Apple and Google sign-in in the dashboards** (needs you; exact steps in `supabase/README.md` under Dashboard setup), and **Back up memory photos**.
 2. [ ] **Check merged work on a real phone** · Launch · S. Backup share sheet and file picker, Sentry, the Dusk Ember theme in light and dark, the splash and Android themed icon, the map credit label, the new Settings and crash screens, the tab headers and filters, at-home crafts and the Where picker, the "tried it" share card (after Save, and from Memories; post one to an Instagram story to see it full size), the rating prompt after closing the card for a "Loved it", a plan reminder on the morning of a plan, Explore with no location set, the still Explore header and the new location sheet (pick a city, How far will you go?, search on Android, town and address suggestions as you type), the Wheelchair accessible filter and "Open now" on places (PR #39), the weather line over the Explore card on a rainy day, the Report a problem sheet, milestones and the month in review on Memories, and the accessibility pass (VoiceOver, TalkBack and the largest text size). None of these has run on a device yet. Needs you and a development build.
 3. [ ] **Build the Android widget** · Feature · M. expo-widgets covers iOS only. Add a Glance widget through a config plugin that shows the same daily idea.
-4. [ ] **Themed collections** · Data · M. Date ideas, rainy day, under $20, with kids, free this weekend. Built from existing tags.
-5. [~] **Gentle milestones and a monthly recap** · Feature · M. Milestones and the month in review are on Memories (Milestones PR). Left: a shareable recap card, on the same renderer as the "tried it" card.
+4. [~] **Gentle milestones and a monthly recap** · Feature · M. Milestones and the month in review are on Memories (Milestones PR). Left: a shareable recap card, on the same renderer as the "tried it" card.
+5. [ ] **Share your city bucket list** · Growth · S. The checklist as a poster image with done items lit up, from the progress card.
 
 ## Now: before launch
 
@@ -95,7 +95,7 @@ In order. These are the ones to start a thread on.
 
 - [x] **Weather-aware suggestions** · Feature · M. Done; see Done.
 - [x] **Learn from ratings** · Feature · M. Done; see Done.
-- [ ] **Themed collections** · Data · M. See Up next.
+- [x] **Themed collections** · Data · M. Done; see Done.
 - [~] **Gentle milestones and a monthly recap** · Feature · M. See Up next.
 
 **Getting there**
@@ -114,7 +114,7 @@ In order. These are the ones to start a thread on.
 
 **Growth after launch**
 
-- [ ] **Share your city bucket list** · Growth · S. The checklist as a poster image with done items lit up, from the progress card.
+- [ ] **Share your city bucket list** · Growth · S. See Up next.
 - [ ] **Year in review** · Feature · M. A story-style recap each December: things tried, kinds, favorite memory, photos. Builds on the monthly recap; share as cards.
 - [ ] **Make a kit for local partners** · Growth · S. A "Featured on Try Something New" sticker and poster with a QR code, and a page per partner that opens their activity. For studios, gyms, run clubs and cafés in the launch city.
 - [ ] **Web pages for each city** · Growth · L. Moved up from Later: "Things to try in Seattle" pages built from the catalog, for search, Reddit and partners. Start with the launch city's page only (S), then the rest.
@@ -146,6 +146,7 @@ Recommendation: **Supabase** (Postgres with row-level security, Sign in with App
 
 ## Done
 
+- [x] **Themed collections** · Data. A row of collections at the top of Explore, and a Collections group in Filters: Date ideas, Rainy day, Under $20, With kids and Free this weekend. Tapping one shows an idea from it straight away and works alongside the other filters; tapping it again goes back to everything. Built from the catalog's tags (indoor or at home, cost, kids), except date ideas, a hand-picked list of 56 activities in `src/data/collections.ts` since the catalog has no date tag. No rebuild needed. Collections PR.
 - [x] **Walking, cycling and transit times** · Feature. "How do you get around?" in Settings: Drive, Walk, Bike or Transit. Times on every list, the time filter and the Go and Directions buttons follow it, with the mode's icon. Walking and cycling get real times for the 25 closest places from OpenRouteService through the Worker, which now takes a `mode` and caches each one apart; the rest, and all of transit, are estimates from the distance (transit has no free router). Real walk and bike times go live with the next `npx wrangler deploy` of `server/drive-times`; until then the app estimates them. PR #42.
 - [x] **Sync automatically** · Backend. Part of **Optional account with cross-device sync**. While signed in, the app syncs on launch, when it goes to the background (so changes leave the phone), and when it comes back after 5 minutes or more. Offline just waits for next time, and a sync already running is shared with Sync now. Auto sync PR.
 - [x] **Milestones and a month in review on Memories** · Feature. Part of **Gentle milestones and a monthly recap**. Memories shows the milestones you've earned (first try, 5, 10, 25 and 50 things, every kind, five favorites, three at home, five photos, two cities) and a bar toward the closest next one. In the first week of a month, a card sums up the month before: how many things, how many kinds, how many loved and one favorite. Counts only go up, so there are still no streaks. Milestones PR.
